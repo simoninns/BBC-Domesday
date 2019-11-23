@@ -1,0 +1,124 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.TREESORT - SORT UTILITY FOR 32-BIT VALUES
+         --------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmAUTO
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         07/04/86  1       S.Young      Initial version
+         10/10/86  2       DRF          Optimised by removing
+                                          preliminary checks
+                                          before calling 32-bit
+                                          compare routine
+         10.07.87  3       SRY          AESfied version
+          1.09.87  4       SRY          UNI bug
+
+         g.nm.sort
+**/
+
+section "nmtreesort"
+GET "libhdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.gH.glNMhd"
+GET ":4.ARC.H.nmhd"
+
+/**
+         G.NM.SORT - SORT 32-BIT VALUES INTO ASCENDING ORDER
+         ---------------------------------------------------
+
+         Sorts an array of 32-bit values into ascending order,
+         using Treesort 3.
+
+         NB: the routine g.nm.sort.rank in NN.B.SORTRANK is
+             closely based on this routine; any modifications
+             should be checked in both files
+
+         INPUTS:
+
+         Base address of vector
+         Number of entries in vector
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED: none
+
+         PROGRAM DESIGN LANGUAGE:
+
+**/
+
+let g.nm.sort (first, number) be
+$(
+   let child   = ?
+   let current = ?
+   let next    = ?
+   let topofarray = first + ((number-1) * m.nm.max.data.size)
+   let second = first + m.nm.max.data.size
+   let f1 = first - m.nm.max.data.size
+   let halfway = f1 + (number/2)*m.nm.max.data.size
+
+   let savedroot = vec 1
+   let t = vec 1
+
+// Two big FOR loops follow with the same algorithm (siftup) in the
+// inner WHILE loop of both, to save procedure calls.
+
+   FOR s = halfway TO second BY -m.nm.max.data.size DO
+   $(
+      current := s
+      g.ut.mov32 (current, savedroot)
+      child := f1 + 2 * (current - f1)
+      next := child + m.nm.max.data.size
+
+      $(
+         UNLESS child = topofarray
+            UNLESS (g.ut.cmp32 (child, next) = m.gt)
+               child := next
+
+         UNLESS (g.ut.cmp32 (child, savedroot) = m.gt) break
+
+         g.ut.mov32 (child, current)
+         current := child
+         child := f1 + 2 * (current - f1)
+         next := child + m.nm.max.data.size
+
+      $) REPEATUNTIL child > topofarray
+
+      g.ut.mov32(savedroot, current)
+   $)
+
+   FOR temptop = topofarray TO second BY -m.nm.max.data.size DO
+   $(
+      current := first
+      g.ut.mov32 (current, savedroot)
+      child := second
+      next := child + m.nm.max.data.size
+
+      $( UNLESS child = temptop
+            UNLESS g.ut.cmp32 (child, next) = m.gt
+               child := next
+
+         UNLESS g.ut.cmp32 (child, savedroot) = m.gt break
+
+         g.ut.mov32 (child, current)
+         current := child
+         child := f1 + 2 * (current - f1)
+         next := child + m.nm.max.data.size
+
+      $) REPEATUNTIL child > temptop
+
+      g.ut.mov32 (savedroot, current)
+
+      // Swap elements 1 & temptop
+
+      g.ut.mov32 (first, t)
+      g.ut.mov32 (temptop, first)
+      g.ut.mov32 (t, temptop)
+   $)
+$)
+.

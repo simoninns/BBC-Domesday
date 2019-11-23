@@ -1,0 +1,14 @@
+*| spool all the Chart code into 1 file
+*dir $.ADS.NC.B
+*spool $.TMP.ALLNC
+ty. chart0
+ty. chart
+ty. chart2
+ty. chart3
+ty. chart4
+ty. chart5
+ty. chart6
+ty. chart7
+ty. chart8
+*spool
+*dir ^

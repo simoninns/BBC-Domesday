@@ -1,0 +1,326 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.ANALYSE1 - NATIONAL MAPPABLE ANALYSE OPERATION
+         -------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         mapproc
+
+         CONTAINS THE FOLLOWING GLOBAL ROUTINES:
+
+         g.nm.to.anal
+         g.nm.analyse
+         g.nm.automatic
+         g.nm.detail
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         11.03.86 1        D.R.Freed   Initial version
+         21.08.87 2        SRY         Added toggle video mode
+         16.09.87 3        SRY         Added action routines for
+                                       Automatic and Detail
+         06.06.88 4        SA          TOTAL function for Countryside disc
+         15.06.88 5        SA          fix 'total' bug
+**/
+
+section "nmanalyse1"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.sihd"
+get ":4.ARC.H.kdhd"
+get ":4.ARC.H.nmhd"
+get ":4.ARC.H.nmclhd"
+
+
+/**
+         G.NM.TO.ANAL - INITIALISATION FOR ENTRY TO ANALYSE
+         --------------------------------------------------
+
+         Initialisation for entering top level of analyse
+         operation, from anywhere.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         g.nm.s
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.to.anal []
+         ------------
+
+         initialise local data unpacked static
+
+         IF class intervals are changed THEN
+            restore class intervals from g.nm.s
+            restore palette from g.nm.s
+            clear changed flag
+         ENDIF
+
+         restore logical colour flashing white
+         restore message area
+
+         set all menu bar boxes to active
+         IF dataset is incidence THEN
+            suppress Class function
+         ENDIF
+
+         IF variable has already been windowed OR
+               area of interest was chosen by grid ref OR
+                     all data is missing THEN
+            suppress window function
+         ENDIF
+
+         draw resultant menu bar
+**/
+
+let g.nm.to.anal () be
+$(
+   // initialise static which indicates if the grid-square data within the
+   // area of interest has been unpacked into the areal vector - for the
+   // benefit of Quantiles
+   g.nm.s!m.nm.local.data.unpacked := FALSE
+
+   if g.nm.s!m.nm.intervals.changed then
+
+      $(
+         MOVE (g.nm.s + m.plotted.upb, g.nm.class.upb,
+               (m.nm.num.of.class.intervals + 1) * m.nm.max.data.size)
+
+         // reassign palette using physical colours that
+         // were saved before going to class operation
+         for i = 1 to m.nm.num.of.class.intervals do
+            g.sc.palette (g.nm.class.colour!i,
+                          g.nm.s!(m.plotted.palette + i - 1))
+
+         g.nm.s!m.nm.intervals.changed := FALSE
+      $)
+
+   // restore the logical colour flashing white which may have
+   // been temporarily reassigned in the Detail operation
+   g.sc.palette (m.nm.flash.white, m.sd.flash.white2)
+
+   //clear total flag if map reploted & not windowed  SA 15.06.88
+   UNLESS g.nm.s!m.nm.windowed DO g.nm.s!m.nm.total.displayed := FALSE
+
+   //Restore displayed total SA 07.06.88
+   TEST g.nm.s!m.nm.total.displayed
+   THEN display.total()
+   ELSE g.nm.restore.message.area ()
+
+   for i = m.box1 to m.box6 do
+      g.nm.s!(m.nm.menu + i) := m.sd.act
+
+   if (g.nm.s!m.nm.value.data.type = m.nm.incidence.type) then
+      g.nm.s!(m.nm.menu + m.box3) := m.wblank   // suppress class function
+
+   if (g.nm.s!m.nm.windowed) |
+         (g.context!m.type.AOI = -1) |
+            (g.nm.s!m.nm.num.areas = 0) then
+      g.nm.s!(m.nm.menu + m.box5) := m.wblank   // suppress window function
+
+   // SA 06.06.88
+   // IF all data is not missing
+   //   AND data is additive
+   //     AND EITHER data is already windowed
+   //         OR area of interest was chosen by grid ref
+   // THEN activate TOTAL function
+
+   if (g.nm.s!m.nm.num.areas ~= 0) &
+         (g.nm.s!m.nm.value.data.type = m.nm.absolute.type) &
+            (g.nm.s!m.nm.windowed | (g.context!m.type.AOI = -1) )
+   then g.nm.s!(m.nm.menu + m.box5) := m.wTOTAL
+
+   //if total displayed then activate clear function
+   IF g.nm.s!m.nm.total.displayed
+   THEN g.nm.s!(m.nm.menu + m.box5) := m.wClear
+
+   g.sc.menu(g.nm.s + m.nm.menu)
+$)
+
+
+/**
+         G.NM.ANALYSE - ACTION ROUTINE FOR ANALYSE SUB-OPERATION
+         -------------------------------------------------------
+
+         Action routine for top level of the analyse
+         sub-operation.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         g.nm.s
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.analyse []
+         ------------
+
+         IF function key corresponding to Window pressed THEN
+            remove "Window" option from menu bar
+            window the variable
+            reposition videodisc for underlay map
+         ENDIF
+
+**/
+
+/**
+        NEW PDL (SA 06.06.88):
+
+        IF function key 5 pressed
+        THEN
+           IF 'total displayed' in message bar
+           THEN restore the old message bar
+                clear 'total displayed' flag
+                activate total function
+           ELSE
+              IF EITHER area already windowed
+                 OR area specified by grid ref
+              THEN <execute total function>
+              ELSE <execute window option>
+              ENDIF
+           ENDIF
+        ENDIF
+
+        <execute total function>:
+
+           remove total from menubar
+           calculate the total (check for black on key)
+           display total in message bar
+           set 'total displayed flag'
+           display "Clear" in menu bar
+
+        <execute window function>:
+
+           remove "Window" option from menu bar
+           window the variable
+           reposition videodisc for underlay map
+           IF data is additive THEN activate "Total" function
+**/
+
+and g.nm.analyse () be
+$(
+   IF g.key = m.kd.fkey5
+   THEN
+      TEST g.nm.s!m.nm.total.displayed
+      THEN //clear
+      $(
+         g.sc.cachemess( m.sd.restore )
+         g.nm.s!m.nm.total.displayed := FALSE
+         g.nm.s!(m.nm.menu + m.box5) := m.wTotal
+         g.sc.menu(g.nm.s + m.nm.menu)
+      $)
+      ELSE
+         TEST (g.nm.s!m.nm.windowed | (g.context!m.type.AOI = -1) )  
+         THEN //total
+         $(
+            //remove total from menubar
+            g.nm.s!(m.nm.menu + m.box5) := m.wblank
+            g.sc.menu (g.nm.s + m.nm.menu)
+   
+            //save old message
+            g.sc.cachemess( m.sd.save )
+
+            g.sc.mess( "Evaluating total" )
+
+            //calculate & display total
+            g.nm.load.child ("cnmWIND")
+            g.nm.total()
+            display.total()
+            g.nm.position.videodisc()
+   
+            //set total displayed flag
+            g.nm.s!m.nm.total.displayed := TRUE
+   
+            //display clear in menubar
+            g.nm.s!(m.nm.menu + m.box5) := m.wClear
+            g.sc.menu (g.nm.s + m.nm.menu)
+         $)
+         ELSE //window
+         $(
+            g.nm.s!(m.nm.menu + m.box5) := m.wblank
+            g.sc.menu (g.nm.s + m.nm.menu)
+            g.nm.load.child ("cnmWIND")
+            g.nm.window.variable ()
+            g.nm.position.videodisc ()
+      
+            IF (g.nm.s!m.nm.value.data.type = m.nm.absolute.type)
+            THEN
+            $(
+               g.nm.s!(m.nm.menu + m.box5) := m.wtotal
+               g.sc.menu(g.nm.s + m.nm.menu)
+            $)
+         $)
+
+   if g.key = m.kd.tab g.nm.toggle.video.mode()
+$)
+
+// Action routine for automatic state
+and g.nm.automatic() be
+$( let menu = g.nm.s+m.nm.menu
+
+   if g.key = m.kd.tab g.nm.toggle.video.mode()
+
+   if g.key = m.kd.fkey6 // local/national
+      test g.nm.s!m.nm.scope = m.wNational // ie Local on menu bar
+      then g.nm.s!m.nm.scope := m.wlocal
+      else g.nm.s!m.nm.scope := m.wnational
+
+   test g.nm.s!m.nm.scope = m.wNational
+   then unless menu!m.box6 = m.wLocal
+        $( menu!m.box6 := m.wLocal
+           g.sc.menu(menu)
+        $)
+   else unless menu!m.box6 = m.wNational
+        $( menu!m.box6 := m.wNational
+           g.sc.menu(menu)
+        $)
+$)
+
+// Action routine for detail state
+and g.nm.detail() be if g.key = m.kd.tab g.nm.toggle.video.mode()
+
+// routine for displaying 'total' adapted for nn.retr3
+and display.total() be
+$(
+   let units.string = g.nm.s + m.nm.primary.units.string
+   let length = units.string%0   // save real length
+   g.sc.mess ("") // clear message area & fill with background colour
+   g.sc.movea (m.sd.message, m.sd.mesXtex, m.sd.mesYtex)
+
+   // display number and truncate string so that it fits
+   units.string%0 := g.nm.min (length, 
+                               (m.sd.charsperline -
+                                g.nm.mpdisp(g.nm.s + m.nm.total,
+                                            g.nm.s!m.nm.primary.norm.factor)))
+   g.sc.oprop (units.string)
+   units.string%0 := length   // restore real length
+$)
+.

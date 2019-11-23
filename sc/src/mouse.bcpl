@@ -1,0 +1,361 @@
+//  $MSC
+//  AES SOURCE  4.87
+
+/**
+         SC.MOUSE - MOUSE DRIVER INTERFACE
+         ---------------------------------
+
+         This module contains the procedures:
+
+         G.sc.mouse    - get  mouse position
+         G.sc.pointer  - turn mouse pointer on/off
+         G.sc.moveptr  - move mouse pointer
+
+         G.sc.initialise.mouse - set up mouse for A500
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         kernel
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         30.04.87 1        PAC         ADOPTED FOR AES SYSTEM
+                                       N.B. now uses G.vh.call.oscli
+         21.5.87  2        PAC         Fix osbyte bug
+         23.7.87     3     PAC         New mouse handling for A500
+         28.7.87     4     PAC         Bugfix moveptr 
+         22.12.87    5     PAC         New pointer defines
+          8.1.88     6     PAC         New pointer switch
+**/
+
+SECTION "mouse"
+
+GET "LIBHDR"
+GET "SYSHDR"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.H.sdhd"
+GET ":4.ARC.H.sdphd"
+GET ":4.ARC.H.kdhd"
+
+// mouse pointer is initially OFF
+STATIC $( s.ptrstatus = m.sd.off 
+          s.mouse.pos = 0
+          s.mouse.shape = 1
+       $) 
+
+/**
+         SC.MOUSE - MOUSE INTERFACE
+         --------------------------
+
+         This routine provides the interface to the mouse driver,
+         and is used by GETACT to obtain the current key press,
+         and the co-ordinates of the mouse pointer.
+
+         INPUTS:
+
+         pointer to results vector
+
+         OUTPUTS:
+
+         current X position, current Y position, key press
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Mouse [-> X position, Y position, keypress ]
+
+         read next key press from keyboard buffer
+         read mouse pointer X and Y positions
+         return current position
+         return keypress
+
+         RETURN
+
+**/
+LET g.sc.mouse( result ) BE
+$( 
+   LET ch, mouse.key = ?,?
+
+   // read the keyboard buffer
+   ch := Osbyte( #x81, 0, 0)
+
+   IF Result2 = #xFF THEN ch := m.kd.noact // no key read
+
+   // get pointer position and mouse buttons
+
+   mouse.key := OsMouse( result )
+
+   mouse.key := valof switchon mouse.key into
+                 $(
+                    case 4 : resultis m.kd.action
+                    case 2 : resultis m.kd.change
+               //     case 1 : resultis m.kd.other.button - could do this !!!
+                    default: resultis m.kd.noact
+                 $)
+
+   IF mouse.key ~= m.kd.noact 
+   $( OsByte( 21,9,0 ) // flush ONLY mouse buffer
+      G.ut.wait(10)    // stops mouse events going mad !!
+   $)
+
+   check.shape( result!1 )
+
+   // return with information - keyboard has priority
+
+   result!2 := (ch ~= m.kd.noact) -> ch, mouse.key
+$)
+
+  
+// new code to handle pointer changeover PAC 8.1.88
+//
+AND check.shape(Ypos) BE
+$(
+   IF (Ypos >= G.sc.Tmax) & (s.mouse.shape ~= 1) 
+   $( s.mouse.shape := 1; UNLESS s.ptrstatus = m.sd.off Osbyte(106,1,0) $)
+
+   IF (Ypos < G.sc.Tmax) & (s.mouse.shape ~= 2)
+   $( s.mouse.shape := 2; UNLESS s.ptrstatus = m.sd.off Osbyte(106,2,0) $)
+$)
+
+/**
+         G.SC.POINTER - TURN ON/OFF MOUSE POINTER
+         ----------------------------------------
+
+         Accesses the mouse driver routine to turn the pointer on
+         or off.
+
+         INPUTS:
+
+         flag for on/off (true turns it on)
+
+         OUTPUTS:
+
+         old pointer status (true=on)
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine returns the old value of mouse status,
+         which should be preserved by the calling routine.
+         e.g.
+         $( initial.state := g.sc.pointer ( m.sd.off )
+            .
+            . // code to output graphics / text
+            .
+            g.sc.pointer ( initial.state )
+         $)
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.SC.POINTER [ flag ]
+         ------------
+         IF flag = true  & pointer is off
+            THEN turn on pointer
+         IF flag = false & pointer is on
+            THEN turn off pointer
+         RETURN ( oldstatus )
+
+**/
+AND G.sc.pointer ( flag ) = VALOF
+$(
+   TEST ( flag & (~s.ptrstatus) )
+   THEN 
+   $( 
+      G.sc.moveptr( s.mouse.pos!0, s.mouse.pos!1 ) // turn on pointer
+      OsByte( 106, s.mouse.shape, 0 )              // at last position
+      s.ptrstatus := m.sd.on                       // update status
+      RESULTIS m.sd.off                            // pointer oldstate = OFF
+   $)
+   ELSE IF ( ~flag & s.ptrstatus ) THEN 
+        $( 
+           OsMouse( s.mouse.pos )     // save last position
+           OsByte( 106, 0, 0 )        // turn off pointer
+           s.ptrstatus := m.sd.off    // update status
+           RESULTIS m.sd.on           // pointer oldstate = ON
+        $)
+
+   RESULTIS s.ptrstatus // no change
+$)
+
+/**
+         G.SC.MOVEPTR - MOVE MOUSE POINTER
+         ---------------------------------
+
+         Used by cursor key accelerator to move the mouse
+         pointer around.
+
+         INPUTS:
+
+         X position, Y position in BBC graphics coordinates
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Do not move the mouse pointer around without updating
+         G.Xpoint and G.Ypoint, otherwise they will get out of
+         step.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.moveptr [ X pos, Y pos ]
+         ------------
+
+         Move the mouse pointer to the new position
+
+         If an attempt to move the pointer out of its current
+         'bounding box' is made, then this call will be ignored.
+**/
+
+AND G.sc.moveptr(x,y) BE
+$( 
+   LET pb = VEC 10/bytesperword
+
+   check.shape( y )   
+
+   pb%0 := m.sd.set.mouse.position // opcode
+   pb%1 := x                       // lo byte of x
+   pb%2 := x >> 8                  // hi byte of x
+   pb%3 := y                       // lo byte of y
+   pb%4 := y >> 8                  // hi byte of y
+
+   Osword( m.sd.osword.mouse.op, pb )
+
+   s.mouse.pos!0 := x; s.mouse.pos!1 := y
+$)
+
+/**
+         G.SC.INITIALISE.MOUSE 
+         ---------------------
+
+         Called by INIT on startup to define the pointer(s)
+         used by the mouse, etc.
+
+         A new routine for the A500 system.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.initialise.mouse []
+         ------------------------
+
+         define the pointer sprite
+         move the pointer to centre of screen,
+         (but do not turn it on yet)
+
+**/
+
+AND G.sc.initialise.mouse() BE
+$(
+   LET mp = TABLE 640,512,0,0 // extra 0 added PAC 22.12.87 - latent bug
+
+   define.pointer.sprite() // set up the definitions
+   define.cross.sprite()   // of the mouse pointer  
+
+   // now set up the colours for the pointer
+   //
+   VDU( "19,3,25,%,%,%",#xFF,#xFF,0) // sprite colour is yellow
+   VDU( "19,1,25,%,%,%",0,0,0)       // sprite border is black
+
+   G.sc.Tmax   := m.sd.disY0
+   s.ptrstatus := m.sd.off           // mouse pointer is off
+   s.mouse.pos := mp                 // pointer to table
+   s.mouse.shape := 1                // mouse pointer is an arrow
+$)
+
+//
+// define the pointer sprite
+//
+AND define.pointer.sprite() BE
+$(
+   LET pdata = TABLE #x1D000005, #x007D0000, #x0001FD00, #xFD0007FD,
+                     #x7FFD001F, #x0057FD00, #x550007DD, #x5F40001F,
+                     #x007D4000, #x00017D00, #xF40001F4, #x00500001             
+   LET pb = VEC 10/bytesperword
+
+   pdata := pdata*bytesperword
+
+   pb%0 := m.sd.define.cursor  // opcode
+   pb%1 := 1                   // shape number
+   pb%2 := 3                   // width in bytes
+   pb%3 := 16                  // height in pixels
+   pb%4 := 1                   // Active X offset from LEFT (pels)  
+   pb%5 := 1                   // Active Y offset from TOP  (pels)
+
+   pb%6 := pdata         // 
+   pb%7 := pdata >> 8    // machine address    
+   pb%8 := pdata >> 16   // of sprite data   
+   pb%9 := pdata >> 24   //
+
+   Osword( m.sd.osword.mouse.op, pb )    // define the sprite
+$)
+
+//
+// define the cross sprite
+//
+AND define.cross.sprite() BE
+$(
+   LET pdata = TABLE #x00255000, 
+                     #x002FE000, 
+                     #x002FE000, 
+                     #x002FE000,
+                     #x002FE000, 
+                     #x0AAFEA80, 
+                     #x07FFFF80, 
+                     #x07FFFF80, // centre line
+                     #x07FFFF80, 
+                     #x0AAFEA80, 
+                     #x002FE000,             
+                     #x002FE000,  
+                     #x002FE000,
+                     #x00255000 
+
+   LET pb = VEC 10/bytesperword
+
+   pdata := pdata*bytesperword
+
+   pb%0 := m.sd.define.cursor  // opcode
+   pb%1 := 2                   // shape number
+   pb%2 := 4                   // width in bytes
+   pb%3 := 14                  // height in pixels
+   pb%4 := 8                   // Active X offset from LEFT (pels)  
+   pb%5 := 8                   // Active Y offset from TOP  (pels)
+
+   pb%6 := pdata         // 
+   pb%7 := pdata >> 8    // machine address    
+   pb%8 := pdata >> 16   // of sprite data   
+   pb%9 := pdata >> 24   //
+
+   Osword( m.sd.osword.mouse.op, pb )    // define the sprite
+$)
+.

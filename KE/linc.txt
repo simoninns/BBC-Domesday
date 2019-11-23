@@ -1,0 +1,6 @@
+*|  link kernels
+*dir c                    
+*| standalone kernel
+Join init root general sram kernel1 kernel2 -to kernel
+*| non-standalone kernel n'existe pas !
+*back

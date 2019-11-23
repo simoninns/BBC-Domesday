@@ -1,0 +1,22 @@
+*spool :4.tmp.compKER  
+*| compKER AES Version 1.0 20.5.87
+*| system kernel and Help
+*|
+*time
+*dir $.ARC.KE
+c comp
+*dir ^.DH
+c comp
+*dir ^.SC
+c comp
+*dir ^.VH
+c comp
+*dir ^.UT
+c comp
+*dir ^.SI
+c comp
+*dir ^.HE
+c comp
+*dir $.ARC.utils
+*time 
+*spool

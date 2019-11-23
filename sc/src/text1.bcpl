@@ -1,0 +1,418 @@
+//  $MSC
+//  AES SOURCE  4.87
+
+/**
+         SC.TEXT1 - TEXT OUTPUT PRIMITIVES
+         ---------------------------------
+
+         These routines assume that the machine is initialised
+         to have the text and graphics cursors joined by VDU 5.
+         This has various implications for the text output:
+
+         - The text foreground and background colours are
+         irrelevant ( i.e. those set with VDU 17 ). The only
+         colours used are the graphics colours.
+
+         - Text will overwrite the current display contents,
+         rather than replacing them. Thus the area where text is
+         written must be explicitly cleared before calling these
+         primitives.
+
+         - Text and graphics will only appear in the current
+         graphics window ( this is initialised to the whole of
+         the micro display area, and should NOT be changed.
+
+         - Character origins are the TOP LEFT HAND corner of
+         the character cell.
+
+         This is the first half of the text package, 'text1',
+         containing the procedures:
+
+         G.sc.beep         - make a beep
+         G.sc.ofstr        - output formatted string
+         G.sc.oprop        - output PS string
+         G.sc.width        - find width of PS string
+         G.sc.odrop        - output drop shadow text
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         kernel
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         30.04.87 1        PAC         ADOPTED FOR AES SYSTEM
+         24.07.87 2        PAC         Remove pointer calls
+                                       mod oprop's mode tests
+                                       remove findmodes
+         31.7.87  3        PAC         fix beep (simple version)
+         24.8.87  4        PAC         Tweak OPROP to use OsPlot
+**/
+
+SECTION "sc.text1"
+
+STATIC $( s.oldWRCH   = 0
+          s.oldWRITES = 0
+       $)
+
+GET "libhdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.H.sdhd"
+
+// check.string replaces non-printing characters with #'s
+// N.B. check.string doesn't check for carriage returns/line feeds
+// this may have to change.
+LET check.string( stringptr ) BE
+$( FOR i = 1 TO stringptr%0 DO
+      IF (stringptr%i < 32) &
+         (stringptr%i ~=0 ) &
+         (stringptr%i ~='*n')
+         THEN stringptr%i := '#'
+$)
+
+/**
+         G.SC.BEEP - MAKE A BEEP
+         -----------------------
+         Outputs a 'soft low beep'.
+         This routine outputs a ^G character. The sound channel
+         used for ^G may be modified in INIT to give the desired
+         sound.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.beep []
+         ---------          
+         Make a beep using Osword
+**/
+AND G.sc.beep () BE
+$(
+   LET sound.block = TABLE           
+                   // low 16 bits      |  high 16 bits      
+                   // -----------------|----------------
+      #xFFF10013,  // channel number   |  loudness ( 0 to -15 max )
+      #x00050025   // pitch (0 to 255) |  duration in 20ths of a sec
+                   // n.b. was...#x00070015
+  //  Osword( 7, sound.block )
+   VDU("7")
+$)
+/**
+         G.SC.OFSTR - OUTPUT STRING
+         --------------------------
+
+         Output a string with optional formatting commands. This
+         provides access to the BCPL 'writef' function - see the
+         BCPL user guide for possible string formats.
+
+         INPUTS:
+
+         format string, parameter list (up to 11 parameters)
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine may be used to write numbers as well as
+         text. Text will be normally spaced with no drop shadow,
+         and in the currently selected colour.
+         The cursor is left in a suitable position for
+         concatenation of more text.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.ofstr [ stringptr, parameter list ]
+         ----------
+         Turn mouse pointer off, deleting it from the screen
+         Call WRITEF with same parameters
+         Restore mouse pointer
+         RETURN
+**/
+AND G.sc.ofstr ( format,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11 ) be
+$(
+   LET oldstate = ?
+   LET mo = 1 // G.sc.findmode()
+
+   IF mo = 2
+   THEN
+   $( s.oldWRCH   := WRCH       // redefine WRCH routine
+      WRCH        := newWRCH
+      s.oldWRITES := WRITES     // and WRITES.
+      WRITES      := newWRITES
+   $)
+
+   check.string ( format )
+
+   // oldstate := g.sc.pointer ( m.sd.off )
+   writef ( format,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11 )
+   // g.sc.pointer ( oldstate )
+
+   IF mo = 2
+   THEN
+   $( WRCH   := s.oldWRCH   // redefine WRCH routine back
+      WRITES := s.oldWRITES // and WRITES
+   $)
+$)
+
+AND newWRCH( ch ) BE
+$(
+   s.oldWRCH( ch | #x80 )
+   VDU("25,0,-32;0;")
+$)
+
+AND newWRITES( string ) BE FOR i = 1 TO string%0 DO newWRCH( string%i )
+
+/**
+         G.SC.OPROP - PROPORTIONALLY SPACE TEXT
+         --------------------------------------
+
+         This outputs a string with proportional spacing. Text is
+         output at the present graphics cursor position, and the
+         cursor is left in a suitable position for concatenation.
+         No highlighting is done by this routine.
+
+         INPUTS:
+
+         Pointer to text string
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         String must be a proper BCPL formatted string. Move the
+         cursor to the required start position before calling,
+         and set the required colour.
+         The cursor is left in a suitable position for
+         concatenation of more text.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.oprop [ string pointer ]
+         ----------
+         Turn off mouse pointer
+         Set previous space = 0
+         FOR I = 1 TO number of chars to be output
+            DO get next char
+               lookup spacing information
+               move backwards by previous space + leading space
+               output character
+               set previous space = trailing space
+         NEXT I
+         move backwards by previous space
+         Restore mouse pointer
+         RETURN
+
+**/
+AND g.sc.oprop( stringptr ) BE
+$( LET prev, ch, sp, mo = ?,?,?,?
+   // LET oldstate = g.sc.pointer ( m.sd.off ) // turn off pointer
+
+   init.table()
+
+   // check the string
+   check.string ( stringptr )
+
+   // check the screen mode
+   mo := 1 // G.sc.findmode()
+   TEST mo = 1 | mo = 4 | mo = 9 | mo = 13
+   THEN $( prev := 0                  //   Set previous space = 0
+           FOR I = 1 TO stringptr%0   //   number of chars to be output
+              DO $( ch:= stringptr%I                    // get next char
+                    sp:= G.sc.spacing%(ch-' ')          // lookup spacing info
+                    OsPLot( 0,-(prev+(sp>>4)),0 )       // move backwards
+                    OsWRCH (ch)                         // output character
+                    prev := sp & #x0F //   set previous space = trailing space
+                 $)                   //
+           OsPlot( 0,-prev,0 )        //   move backwards by previous space
+        $)
+   ELSE TEST mo = 2
+      THEN $( FOR I = 1 TO stringptr%0          // length of string
+              DO $( OsWRCH ( #x80|stringptr%I ) // output char with top bit set
+                    OsPlot( 0,-32,0 )           // back half a character space
+                 $)
+           $)
+      ELSE WRITES( stringptr )
+
+   // G.sc.pointer ( oldstate )  // restore old pointer state
+$)
+
+/**
+         G.SC.WIDTH - FIND WIDTH OF PROPORTIONALLY SPACED STRING
+         -------------------------------------------------------
+
+         The width occupied by the supplied string (in BBC
+         graphics units) is calculated and returned.
+
+         INPUTS:
+
+         Pointer to string
+
+         OUTPUTS:
+
+         Width of string in graphics units
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         The string is expected to be a proper BCPL string, with
+         the length byte at string%0
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.width [ stringptr ]
+         ----------
+         Let total width = 0
+         IF screen is mode 2
+         THEN total width = 32 * length of string
+         ELSE FOR i = 1 TO length of string
+              DO lookup spacing information byte
+                 total width := total width + width of 1 char
+                              - leading space - trailing space
+         ENDIF
+         RETURN ( total width )
+**/
+// find the width of proportionally spaced word
+AND G.sc.width ( string ) = VALOF
+$( LET tot,sp,mo = ?,?,?
+
+   init.table()
+
+   // check the screen mode
+   mo := 1 // G.sc.findmode()
+
+   TEST mo = 2
+   THEN RESULTIS (string%0*32)  // 32 units per mode 2 char
+   ELSE $( tot := 0
+           FOR i = 1 TO string%0 DO
+           $( sp  := g.sc.spacing%(string%i-' ')  // get spacing byte
+              tot := tot + 32 - (sp & #xF) - (sp>>4)
+           $)
+        $)
+   RESULTIS tot
+$)
+
+AND init.table() BE
+$(
+//       Proportional Space Factors Lookup Table
+//       ---------------------------------------
+//       This is a table of words, giving the relative
+//       offsets for leading and trailing spaces in BBC
+//       graphics units. Each word contains data for 2
+//       characters; 2 bytes, each of which has the top
+//       4 bits giving the leading space, bottom 4 the
+//       trailing space. To access any character, given
+//       the ASCII for it in 'char', use table%(char-' ')
+//
+//       N.B. The comment characters are in the wrong
+//       order, because the machine stores low byte then
+//       high byte. For example, #x8C80 is the first word
+//       in the table, the 80 corresponding to 'space'
+//       being the first byte accessed at table%0.
+//
+//       N.B. full stop spec. changed 13.10.86 as marked.
+//
+LET spaces = TABLE
+
+   #x00088C80, #x48000400,  //  Space ! " # $ % & '
+   #x04044848, #x0480044C,  //  ( ) * + , - . /  048C -> 0480
+   #x04040404, #x04040404,  //  0 1 2 3 4 5 6 7  PAC 13.10.86
+   #x4C8C0404, #x04440408,  //  8 9 : ; < = > ?
+   #x04040404, #x04040404,  //  @ A B C D E F G
+   #x04040404, #x04040004,  //  H I J K L M N O
+   #x04040404, #x00040404,  //  P Q R S T U V W
+   #x08040404, #x00044404,  //  X Y Z [ \ ] ^ _
+   #x04040404, #x04080404,  //  ` a b c d e f g
+   #x040C4804, #x04040048,  //  h i j k l m n o
+   #x04040004, #x00040408,  //  p q r s t u v w
+   #x08040404, #x0000448C   //  x y z { | } ~
+
+   G.sc.spacing := spaces
+$)
+
+/**
+         G.SC.ODROP - OUTPUT DROP SHADOW TEXT
+         ------------------------------------
+
+         Outputs the given string in 'drop shadow' text, normally
+         spaced.
+
+         INPUTS:
+
+         Pointer to string
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine uses colour 2 for the top output, and
+         colour 1 for the shadow. These are fixed.
+         The cursor is left in a suitable position for
+         concatenation of more text.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.odrop [ stringptr ]
+         ----------
+         Save current cursor position
+         Select colour 1
+         Move relative down and across 2 pixels
+         Turn off mouse pointer
+         Output string
+         Restore cursor
+         Select colour 2
+         Output string
+         Restore mouse pointer
+         RETURN
+**/
+and G.sc.odrop ( stringptr ) be
+$( let oldstate = ?
+   let coords = vec m.sd.coordsize
+   check.string ( stringptr )
+   G.sc.savcur  ( coords )
+   G.sc.selcol  ( m.sd.blue )
+   G.sc.mover  ( 4,-4 ) // down & across 2 pixels
+   // oldstate := G.sc.pointer ( m.sd.off )
+   G.sc.oprop  ( stringptr )
+   G.sc.rescur ( coords )
+   G.sc.selcol ( m.sd.yellow )
+   G.sc.oprop  ( stringptr )
+   // G.sc.pointer ( oldstate )
+$)
+// end of sc.text1
+.
+

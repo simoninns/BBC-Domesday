@@ -1,0 +1,234 @@
+//  AES SOURCE  6.87
+
+/**
+         SC.CHART9 - MACHINE-DEPENDENT CHART GRAPHICS
+         --------------------------------------------
+
+         This module contains machine dependent routines
+         for Chart Graphics:
+            G.sc.ecf, G.sc.blob, G.sc.dot, G.sc.char90, G.sc.narrow and
+            G.sc.n.width
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         l.chart9 - gets linked to chart overlay
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+       18.6.86    1        SRY         Initial version
+       14.07.86   2        NY          Add gl6hd
+        8.09.86   3        PAC         Char90 & Blob use char 128
+*******************************************************************************
+        3.06.87   4        SRY         Change names for UNI
+        11.6.87   5        PAC         Move this package into SC
+                                       remove get of NC globals
+        12.6.87   6        PAC         fix for AES system
+        25.7.87   7        PAC         Fix ecfs for A500
+        24.12.87  8        MH          Narrow chars in char90
+                                       and primitives
+**/                                                                   
+SECTION "Chart9"
+
+GET "libhdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.H.sdhd"
+
+/**
+         G.sc.ECF
+         --------
+
+         Select ECF pattern for charts
+
+         INPUTS:
+
+         col: 1 to 12
+
+         OUTPUTS:
+
+         NONE
+
+         GLOBALS MODIFIED:
+
+         NONE
+
+         SPECIAL NOTES FOR CALLERS:
+
+         NONE
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.ecf [col]
+         --------------
+
+         Define ECF pattern 1 from the 'col'th line of the table
+         Select ECF pattern 1
+**/
+
+let g.sc.ecf(col) be
+$( let offset = (col-1) << 3
+   let ecftab = table
+   #x4b1e871e, #x4b2d871e,   // this table modified for 
+   #xa55aa55a, #xa55aa55a,   // 32-bit version
+   #xb4e178e1, #xb4d278e1,
+   #xf0f0f0f0, #xf0f0f0f0,
+   #xf4f1f8f1, #xf4f2f8f1,
+   #xfaf5faf5, #xfaf5faf5,
+   #xfbfef7fe, #xfbfdf7fe,
+   #xffffffff, #xffffffff, 
+   #xbfef7fef, #xbfdf7fef,
+   #xaf5faf5f, #xaf5faf5f,
+   #x4f1f8f1f, #x4f2f8f1f,
+   #x0f0f0f0f, #x0f0f0f0f
+   g.ut.trap("NC",1,false,3,col,1,12)
+
+// +++++++++++   vdu("23,17,4,1,0;0;0;") // fix to use new ARM ecfs PAC 25.7.87
+
+//   OsByte(9,0,0) // frigged - flash colour 1 has infinite duration
+
+   vdu("23,2")
+   for i = 0 to 7 vdu("%",ecftab%(offset+i))
+   vdu("18,16,0")
+$)
+
+/**
+         g.sc.blob
+         ---------
+
+         Print filled character
+
+         INPUTS:
+
+         NONE
+
+         OUTPUTS:
+
+         NONE
+
+         GLOBALS MODIFIED:
+
+         NONE
+
+         SPECIAL NOTES FOR CALLERS:
+
+         NONE
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.blob []
+         ------------
+
+         Define character 128 as solid blob
+         Print character 128
+**/
+                                                             
+// N.B. for ARM, 'vdu' doesn't handle #x numbers - make them decimal
+
+and g.sc.blob() be vdu("23,128,65535;65535;65535;65535;128") 
+
+/**
+         G.SC.DOT
+         --------
+
+         Draw dotted line
+
+         INPUTS:
+
+         x, y, x2, y2: Domesday graphics
+         type: type code: 1..4
+               1,2 dotted; > 2 solid
+
+         OUTPUTS:
+
+         NONE
+
+         GLOBALS MODIFIED:
+
+         NONE
+
+         SPECIAL NOTES FOR CALLERS:
+
+         NONE
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.dot [x, y, x2, y2, col]
+         ----------------------------
+
+         Convert second point: Domesday - BBC
+         Move to first point
+         Define dotted pattern
+         Select dotted pattern
+**/
+
+and g.sc.dot(x,y,x2,y2,type) be
+$( y2 := g.sc.dtob(m.sd.display, y2)
+   g.sc.movea(m.sd.display,x,y)
+   vdu("23,6,%,0;0;0;0,25,29,%;%;", (type > 2 -> #xff, #xaa), x2, y2)
+$)
+
+/**
+         G.SC.CHAR90
+         -----------
+
+         Rotate character by 90 degrees
+
+         INPUTS:
+
+         char: character to be rotated
+
+         OUTPUTS:
+
+         NONE
+
+         GLOBALS MODIFIED:
+
+         NONE
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Move to position of plot first
+         Uses character 128
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.char90 [char]
+         ------------------
+
+         Read character definition
+         Transpose matrix of bits
+         Print character
+**/
+
+and g.sc.char90(char) be
+$( let a1 = vec 8/bytesperword
+   let mask = 1
+   a1%0 := char
+   Osword( 10, a1 ) // read character definition for char
+   vdu("23,128")    // define spare character
+   for byte = 1 to 8
+   $( let t = 0
+      for bit = 1 to 8
+      $( t := t << 1
+         if ((a1%bit) & mask) > 0 t := t | 1
+      $)
+      vdu("%",t)
+      mask := mask << 1
+   $)
+   vdu("128")
+$)
+
+// for narrow chart character set
+// (same as mode 2 char.set)
+and g.sc.narrow( stringptr ) be
+$( let state = g.sc.pointer(m.sd.off)
+   for i = 1 to stringptr%0     // length of string
+   $( wrch(#x80 | stringptr%i)  // output char with top bit set
+      vdu("25,0,-16;0;")        // back half a character space
+   $)
+   g.sc.pointer(state)
+$)
+
+// width of narrow string
+AND G.sc.n.width(string) = string%0 * 16
+.

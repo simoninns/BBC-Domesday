@@ -1,0 +1,194 @@
+// $MSC
+
+// /**
+//       H.CMHDR - COMMUNITY MAP MAIN HEADER
+//       -----------------------------------
+//
+//       Contains definitions of map static area, map sizes,
+//       heights, offsets etc., map cache and screen info.
+//
+//       REVISION HISTORY:
+//
+//       DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+//       14. 2.86   1       DNH        Initial version
+//        6. 3.86   2       DNH        m.grid.system in, plus
+//                                     values for L1 map limits
+//       10. 3.86   3       DNH        cache & restore sizes;
+//                                     coords for graphics;
+//                                     Dispflags manifests
+//       28. 4.86   4       DNH        Options substates & values
+//        2. 5.86   5       DNH        Channel Isles values
+//        9. 5.86   6                  L0.no.highlight map in
+//       19. 5.86   7       DNH        Reduce cache for testing
+//       20. 5.86   8                  Removed area4 substate
+//        6. 6.86   9                  Key substate in
+//       10. 6.86  10                  m.printer gone
+//       27. 6.86  11                  m.old.pointer.x/y in
+//       30.6.86   12                  m.turn.over.pending
+//        8.7.86   13                  cache size upped: 5000
+//                                     measure size upped: 108
+//       23.9.86   14                  bugfix: h.man changed
+// **********************************************
+//       30.4.87   15      DNH      UNI version
+//       5.1.87    16      DNH      Reduce cache, for debugging
+// **/
+
+manifest $(
+
+//  vector sizes in words for init and free. (Must be in step with iophdr)
+m.cm.statics.size =   45
+m.cm.cache.size   =  500      // 5000 for Master Series   $MSC
+m.cm.keep.size    =   20
+m.cm.measure.size =  108      // enough for 50 points
+
+// max size for map records in mapdata file(s)
+m.cm.map.rec.size = 816       // bytes
+
+//  word offsets for map statics into g.cm.s
+//  freespace management stuff
+m.base =0        // base of freespace
+m.top  =1       // top of freespace
+m.uptr =2         // pointer into freespace
+m.now  =3       // simple timer for freespace items
+
+m.recptr =4    // current map record number
+m.frame =5     // current map video frame, for level 0
+m.map =6       // current map video frame = map number
+m.parent =7    // parent of current map
+m.x0 =8        // current map easting in hm
+m.y0 =9        // current map northing in hm
+m.grid.system =10   // grid system of current map: GB, NI or Channel grid.
+m.a0 =11
+m.b0 =12       // a0, b0: screen offsets to corner of map's grid of submaps
+m.a1 =13       // a1, b1: offsets to top right corner of grid
+m.b1 =14
+m.cmlevel =15  // current map level
+m.width =16    // current map width
+m.height =17   // current map height
+m.texts =18    // boolean indicating presence of text assoc. with current map
+m.photos =19   // ditto photo
+m.ptaddress =20   // logical frame number of text/phot data bundle for this map
+m.istart =21      // icon offset in bytes down p for current map
+m.iend =22        // icon list end in bytes down p for current map
+m.isolatedmap =23 // is true for level 4 & 5 maps which are not part of a
+                  // submap matrix
+m.sind =24        // submap indicator
+m.keep =25        // vector for preserved info
+m.reason =26      // global reason for failure to move
+// SPARE m.printer =27     // printer stream for debugging
+
+m.old.x0 =28      // holds info for 'shrink.frame.to' about last submap
+m.old.y0 =29
+m.old.x1 =30
+m.old.y1 =31
+
+m.old.a0 =28      // NB !!   Same locations as old.x0 etc. one at a time!
+m.old.b0 =29
+m.old.a1 =30
+m.old.b1 =31
+m.clear.is.pending =32     // boolean. Set if display area must be cleared
+                           // on exit from this map due to icons
+m.substate =33       // current substate within Map
+
+m.key.pic     =34    // current Key frame (valid only when in Key substate)
+m.key.tab.ptr =35    // pointer into key table holding frame numbers
+// SPARE      =36
+
+m.old.xpoint        =37    // used for detecting cursor movement for clear of
+m.old.ypoint        =38    // final box after a zoom out.
+                           // OR used for last real point plotted on screen
+                           // in Scale, while banding;see also m.old.pointer.x
+                           // NB!! SAME LOCATIONS. ONE AT A TIME
+m.other.side.parent =37    // for turn disc over. set in g.cm.submap
+m.other.side.sind   =38    // ditto
+
+m.data.accessed =39  // boolean: true => must switch on video on redisplay of
+                     //  map in 'showframe'
+m.measure =40        // vector for Options: Distance and Area
+m.fhandle =41        // mapdata file handle.
+
+                        // The next two are for Scale only, Distance & Area:
+m.old.pointer.x =42     // position on screen to which line has been banded;
+m.old.pointer.y =43     // (-1 => no banding line on screen) see also
+                        // m.old.xpoint
+m.turn.over.pending =44    // boolean, true if awaiting reply to "Eject disc?"
+//  LAST ONE MUST BE <= 'M.CM.STATICS.SIZE'  (see top)
+
+
+//  substate values
+m.box.clear.pending.substate =-1    // just zoomed out. Awaiting cursor move
+                                    // to clear yellow box
+m.mapwalk.substate  =0     // initial Map substate
+m.options.substate  =1     // initial Options substate, cf. grid ref
+m.grid.ref.substate =2     // Grid ref. substate - action key = show grid ref.
+m.key.substate      =3     // Map Key substate - showing key frames
+m.distance.substate.bit =16   // bit set in Distance substates only
+m.distance1.substate    =16+3 // initial Distance substate. No points on screen
+m.distance2.substate    =16+4 // ... some points on screen. May enter Area...
+m.distance3.substate    =16+5 // ... measure vector full. Must clear.
+m.area.substate.bit =32       // bit set in Area substates only
+m.area1.substate    =32+6     // initial Area substate. No points on screen.
+m.area2.substate    =32+7     // ... some points on screen, banding...
+m.area3.substate    =32+8     // ... area complete; just beep on Return key
+
+//  map cache info
+headsize = 5  // word size of item header in freespace
+
+usage = -1; lastused =-2; id1 = -3; id0 = -4;
+size = -5     // offsets into item header
+
+//  special L0 map frame for passing to Find (part of the Key, really)
+L0.no.highlight = 18758
+
+//  mapdata file info
+map.L0 = 18791 // frame address of first UK L0 map; this is also the frame
+               // address of first map for which there is a map record
+
+L0.south = map.L0      // frame addresses (= map numbers) of L0 map pics
+L0.north = map.L0+1
+L0.shet  = map.L0+2
+L0.ire   = map.L0+3
+L0.man   = map.L0+4
+L0.chan  = map.L0+5
+
+map.L1 = map.L0 + 6     // frame address of first L1 map
+
+
+// widths, heights etc. for L0 map similarly to L1's below
+eo.L0 = 6200; w.L0 = 7000; h.L0 = 13000; p.L0 = 517
+
+// hectometre widths and heights of the grids of the various L1 maps:
+w.man = 400; w.ire = 2400; w.south = 6000; w.north = 5200; w.channel = 800
+w.shet = 2000
+h.man = 600; h.ire = 1800; h.south = 4800; h.north = 5400; h.channel = 900
+h.shet = 2700
+
+// graphics unit widths of grids on L1 maps:
+//    (hm width of grid) / (hm width of display area) * screenwidth
+p.man = 853; p.ire = 1280; p.south = 1200; p.north = 924; p.channel = 1024
+p.shet = 711
+
+// hectometre easting offsets to submap grid origin from origin of L1 map
+eo.man = 90; eo.ire = 0; eo.south = 0; eo.north = 1200; eo.channel = 100
+eo.shet = 700
+
+// hectometre northing offset for Isle of Man
+no.man = 20
+
+// various hectometre values for L1 maps: used to match an L1 map to a
+// GB grid reference.  Values from Helen Mounsey
+m.cm.man.L1.mine = 2140
+m.cm.man.L1.maxe = 2540
+m.cm.man.L1.minn = 4640
+m.cm.man.L1.maxn = 5070
+m.cm.south.L1.maxn = 4800
+m.cm.north.L1.minn = 4500
+m.cm.north.L1.maxn = 9900
+
+// bit values for dispflags parameter
+m.cm.no.bit       = #X00
+m.cm.frame.bit    = #X01
+m.cm.graphics.bit = #X02
+m.cm.messages.bit = #X04
+m.cm.icons.bit    = #X08
+$)

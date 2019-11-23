@@ -1,0 +1,103 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.NAME - NAME OPERATION FOR MAPPABLE DATA
+         ------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmLINK
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         16.06.86 1        D.R.Freed   Initial version
+         ********************************
+         7.7.87      2     DNH      CHANGES FOR UNI
+
+         g.nm.name.handler
+**/
+
+section "nmname"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.nmhd"
+
+get ":4.ARC.H.nmcphd"
+
+/**
+         G.NM.NAME.HANDLER - THE NAME SUB-OPERATION
+         ------------------------------------------
+
+         The guts of the name sub-operation.
+
+         INPUTS:
+
+         Item NAMES file record for new dataset
+
+         OUTPUTS:
+
+         Returns TRUE if plot of new variable was successful
+                 FALSE if plot failed and old variable remains
+
+         GLOBALS MODIFIED:
+
+         g.context
+         g.nm.s
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine is called indirectly by having its address
+         assigned to g.nm.compare.sub.op in the .ini transition
+         routine.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.name.handler [item.record] RETURNS boolean
+         -----------------
+
+         copy current item record in g.context
+         copy item.record to g.context
+
+         IF plot new variable succeeds THEN
+            clear linked.display flag
+            check availability of other Compare options
+            RETURN TRUE
+         ELSE
+            restore item record in g.context to entry state
+            RETURN FALSE
+         ENDIF
+**/
+
+let g.nm.name.handler (item.record) = valof
+$(
+   let old.item.record = vec m.itemrecord.length
+
+   // this name swap 'fools' the processor into using the temporary item
+   g.ut.movebytes (g.context + m.itemrecord, 0,
+                   old.item.record, 0, m.itemrecord.length)
+   g.ut.movebytes (item.record, 0,
+                   g.context + m.itemrecord, 0, m.itemrecord.length)
+
+   // load new variable, pick new defaults if necessary,
+   // initialise display processor and plot
+
+   test g.nm.replot (TRUE, TRUE, FALSE) then
+
+      $(
+         g.nm.s!m.linked.display := FALSE
+         g.nm.check.compare.options ()
+         resultis TRUE
+      $)
+
+   else
+
+      $(
+         g.ut.movebytes (old.item.record, 0,
+                         g.context + m.itemrecord, 0, m.itemrecord.length)
+         resultis FALSE
+      $)
+$)
+
+.

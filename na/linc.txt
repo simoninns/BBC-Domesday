@@ -1,0 +1,4 @@
+*| link the area overlay
+*dir c
+Join area0 area area2 area3 area4 -to $.ARC.l.area
+*back

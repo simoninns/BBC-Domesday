@@ -1,0 +1,79 @@
+/**
+      Tests the routines in NM.UTILS
+
+         g.nm.dual.data.type
+         g.nm.widen
+
+**/
+
+section "tutils"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.dhhd"
+get ":5.h.nmhd"
+
+
+let start() be
+$(
+   let dw = vec 2
+   let ntests = 16
+   let size.change = 8
+   let widetest = table 0, 1, -1, 10, -10, 127, -80, -128,
+                        0, 1, -1, 10, -10, 32767, -30000, -32768
+   let size = ?
+
+   get.globals()
+
+   writef ("Testing g.nm.dual.data.type %c %c", '*n', '*n')
+
+   for i = 0 to 10 do
+
+         writef ("Type= %n , result = %s %c", i,
+                  g.nm.dual.data.type(i)->"TRUE","FALSE", '*n')
+
+
+   writef ("%c %c Testing g.nm.widen %c %c", '*n', '*n', '*n', '*n')
+
+   for i = 1 to ntests do
+
+      $(
+         size := i <= size.change -> 1, 2
+         g.nm.widen (widetest!(i-1), size, dw)
+
+         writef ("In= %n , size= %n , result = %x4 %x4 %c", widetest!(i-1),
+                  size, dw!m.msw, dw!m.lsw, '*n')
+      $)
+$)
+
+and get.globals() be
+$(
+   g.nm.frame := getvec (m.nm.frame.size - 1)
+   g.nm.areal := getvec (m.nm.max.num.areas * m.nm.max.data.size)
+   g.nm.values := getvec (m.nm.fine.blocksize * m.nm.fine.blocksize *
+                                                            m.nm.max.data.size)
+   g.nm.class.upb := getvec (m.nm.num.of.class.intervals * m.nm.max.data.size)
+   g.nm.class.colour := getvec (m.nm.num.of.class.intervals)
+
+   g.nm.s := getvec (m.nm.global.statics.size)
+$)
+
+.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

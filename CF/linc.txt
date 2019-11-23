@@ -1,0 +1,4 @@
+*| link the Community find overlay
+*dir c
+Join find0 find1 find2 find3 find4 find5 find6 find7 find8 -to $.ARC.l.find
+*back

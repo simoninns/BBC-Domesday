@@ -1,0 +1,6 @@
+*| compile the AREA overlay
+co area0
+co area
+co area2
+co area3
+co area4

@@ -1,0 +1,28 @@
+*| LINKNAT AES Version 1.0 17.6.87
+*| link the national disc overlays
+*|          
+*spool $.tmp.linkNAT    
+*time
+*dir $.ARC.NA    
+c linc
+*dir $.ARC.NC         
+c linc
+*dir $.ARC.NE         
+c linc
+*dir $.ARC.NF         
+c linc
+*dir $.ARC.NM         
+c linc
+*dir $.ARC.NN         
+c linc
+*dir $.ARC.NP         
+c linc
+*dir $.ARC.NT         
+c linc
+*dir $.ARC.NV         
+c linc
+*dir $.ARC.NW         
+c linc
+*time
+*spool
+*dir $.ARC.utils   

@@ -1,0 +1,22 @@
+*| Compare AES with UNI glhdrs
+*spool $.tmp.cmpGLs
+*dir $.ADS.GHDRS
+*|
+compare glhdr   :4.UNI.GHDRS.glhdr
+*| don't bother with gldyhdr
+compare glCFhdr :4.UNI.GHDRS.glCFhdr
+compare glCMhdr :4.UNI.GHDRS.glCMhdr
+compare glCPhdr :4.UNI.GHDRS.glCPhdr
+compare glHEhdr :4.UNI.GHDRS.glHEhdr
+compare glNAhdr :4.UNI.GHDRS.glNAhdr
+compare glNChdr :4.UNI.GHDRS.glNChdr
+compare glNEhdr :4.UNI.GHDRS.glNEhdr
+compare glNFhdr :4.UNI.GHDRS.glNFhdr
+compare glNMhdr :4.UNI.GHDRS.glNMhdr
+compare glNPhdr :4.UNI.GHDRS.glNPhdr
+compare glNThdr :4.UNI.GHDRS.glNThdr
+compare glNVhdr :4.UNI.GHDRS.glNVhdr
+compare glNWhdr :4.UNI.GHDRS.glNWhdr
+*back              
+*spool
+*| *ty. $.tmp.cmpGLs 

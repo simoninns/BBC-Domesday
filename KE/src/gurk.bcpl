@@ -1,0 +1,14 @@
+
+$<debug
+   IF G.context!m.discid = m.dh.NatA DO
+   $(
+   G.Context!m.grblnorth := 930
+   G.Context!m.grbleast  := 5120
+   G.Context!m.grtrnorth := 2030
+   G.Context!m.grtreast  := 6720
+   G.Context!m.areal.unit := -1
+   G.Context!m.resolution := -1
+   G.Context!m.name.AOI := 29
+   G.Context!m.type.AOI := 14
+   $)
+$>debug

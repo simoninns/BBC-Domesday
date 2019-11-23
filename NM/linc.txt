@@ -1,0 +1,12 @@
+*| link the ADS NM parent overlay plus children 
+*|
+*dir c
+Join dy map1 map2 map3 analyse1 analyse2 analyse3 analyse4 -to t1
+Join compare1 compare2 process unpack load1 load2          -to t2
+Join subsets frame key1 key2 utils utils2                  -to t3 
+Join t1 t2 t3                                              -to $.ARC.L.nm
+Join $.ARC.L.nm $.ARC.L.nn      -to   $.ARC.L.mapproc
+*remove t1
+*remove t2
+*remove t3
+*dir ^

@@ -1,0 +1,187 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.RANKOP2 - RANKING OPERATION FOR MAPPABLE DATA
+         BASED ON NM.CORREL1
+         ------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmRANK
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+       6.08.87    1        SRY      Initial version
+
+         GLOBALS DEFINED
+
+         g.nm.init.rank
+         g.nm.hinit.rank
+**/
+
+section "nmrank2"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glNMhd"
+get ":4.ARC.H.iohd"
+get ":4.ARC.h.sdhd"
+get ":4.ARC.h.vhhd"
+get ":4.ARC.H.nmhd"
+get ":4.ARC.h.nmrehd"
+
+/**
+         G.NM.INIT.RANK - DO THE RANK SORT
+         ---------------------------------
+**/
+
+let g.nm.init.rank() be
+$( g.nm.save.screen()
+
+   // Read palette and save physical colours for restoring
+   // when we exit to mode 2 again
+   for i = 1 to m.nm.num.of.class.intervals do
+      g.nm.s!(m.nm.pal-1 + i) := g.sc.physical.colour(g.nm.class.colour!i)
+   G.sc.mode(1)
+   g.nm.s!m.nm.prev.mode := g.nm.s!m.nm.overlay.mode
+   g.nm.s!m.nm.overlay.mode := m.vh.micro.only
+   g.nm.s!m.nm.reload := false
+   g.vh.video (m.vh.micro.only)
+   g.nm.s!m.nm.help.visit := false
+   g.nm.save.context()
+   g.ut.cache(g.nm.areal.map, m.nm.areal.map.size, m.io.wa.nm.areal.map)
+
+   // Set up bit maps to reflect where current dataset has missing values
+   set.up.areal.map()
+
+   // Do the rank data processing and show first page
+   rank(1)
+$)
+
+and rank(p) be
+$( let num.values = g.nm.apply.areal.map(false) + 1
+   let menu = g.nm.s + m.nm.menu
+   let too.many = num.values > m.nm.frame.size
+                            // was m.max.num.fast.correl.points
+
+   for i = m.box1 to m.box6 menu!i := m.sd.act
+
+   G.nm.s!m.nm.num.values := num.values
+   G.nm.s!m.nm.rank.pages := too.many -> 1, (num.values-1)/m.nm.ritems.page + 1
+   G.nm.s!m.nm.rpage := p
+
+/*
+   ******** NB! ********
+   This module containing g.nm.rankop.data (rankop3) is not linked in
+   because it is never used on PUK (no Census Wards etc) and the overlay
+   is otherwise too big!
+
+   // Choose fast sort method where the number of values is
+   // small enough to allow it; otherwise use the slower method
+   test too.many
+   then $( for i = m.box3 to m.box4 menu!i := m.sd.wBlank // No First or End
+           g.sc.menu(menu)
+           G.sc.mess("The list of Areal Units is too long to sort")
+           g.nm.rankop.data(num.values)
+        $)
+   else
+*/
+        $( let d = vec 1
+           let area.name = vec 30/bytesperword
+           g.nm.s!m.nm.cum :=
+              g.nm.s!m.nm.value.data.type = m.nm.absolute.type
+
+           G.sc.mess("Sorting data values...")
+           g.nm.sort.rankop(num.values)
+
+           // Set up grand total
+           G.ut.set48(0, 0, 0, g.nm.s + m.nm.grand.total)
+           $( let nptr = g.nm.areal
+              for i = 1 to num.values
+              $( G.nm.mpadd(nptr, g.nm.s + m.nm.grand.total)
+                 if g.ut.cmp32(nptr, (table 0, 0)) = m.lt
+                    g.nm.s!m.nm.cum := false
+                 nptr := nptr + m.nm.max.data.size
+              $)
+           $)
+           g.sc.clear(m.sd.message)
+
+           G.sc.movea(m.sd.display, m.sd.disXtex, m.sd.disYtex)
+           G.sc.selcol(m.sd.cyan)
+           MOVE(G.context+m.itemrecord, area.name, 30/bytesperword)
+           if area.name%0 > 25 area.name%0 := 25
+           G.sc.ofstr("Ranked list of %s", area.name) // Only 25 chars space
+           G.sc.movea(m.sd.display, m.sd.disXtex + 12*m.sd.charwidth,
+                      m.sd.disYtex - m.sd.linW)
+           g.nm.au.usable(0, g.context!m.areal.unit, area.name, d, d, d)
+           if area.name%0 > 25 area.name%0 := 25
+           G.sc.ofstr("by %s", area.name) // Only 25 chars space
+           G.sc.movea(m.sd.display, m.sd.disXtex + 6*m.sd.charwidth,
+                      m.sd.disH - 3*m.sd.linW)
+           G.sc.ofstr("Value %% Down")
+           if g.nm.s!m.nm.cum g.sc.ofstr("*S*S*S*SCum.  %% of Grand")
+           G.sc.movea(m.sd.display, m.sd.disXtex + 13*m.sd.charwidth,
+                      m.sd.disH - 4*m.sd.linW)
+           G.sc.ofstr("List")
+           if g.nm.s!m.nm.cum g.sc.ofstr("*S*S*S*STotal    Total")
+           G.sc.movea(m.sd.display, m.sd.disXtex, m.sd.disH - 5*m.sd.linW + 4)
+           G.sc.selcol(m.sd.yellow)
+           G.sc.liner(m.sd.plot, m.sd.disW - m.sd.charwidth, 0)
+
+           g.sc.menu(menu)
+
+           // Show first set of 8 items
+           g.nm.rank.page(p)
+        $)
+$)
+
+and g.nm.hinit.rank() be
+$( g.nm.s!m.nm.reload := false
+   g.nm.s!m.nm.help.visit := true
+   set.up.areal.map()
+   rank(g.nm.s!m.nm.rpage)
+$)
+
+
+/*
+      set.up.areal.map
+
+         modifies the areal map so that areas which are accessed in the
+         current area of interest but whose value is missing, are removed
+         from the map
+*/
+
+and set.up.areal.map () be
+$( let word  = 0   // first word of bitmap
+   and bit   = 1   // first bit; 1 because !0 is not used in areal vector
+   and index = ?   // pointer into areal vector
+   and missing32 = vec 1
+
+   g.ut.set32 (0, m.nm.max.neg.high, missing32)
+
+   for i = 1 to g.nm.s!m.nm.nat.num.areas
+   $( index := i * m.nm.max.data.size
+      if ((g.nm.areal.map!word & (1 << bit)) ~= 0) &
+         (g.ut.cmp32 (g.nm.areal + index, missing32) = m.eq)
+         g.nm.areal.map!word := g.nm.areal.map!word NEQV (1 << bit)
+      next.bit (@word, @bit)
+   $)
+$)
+
+
+/*
+      next.bit
+
+         increments word, bit pair to access next bit in a map
+*/
+
+and next.bit (word.ptr, bit.ptr) be
+$( !bit.ptr := !bit.ptr + 1
+   if !bit.ptr = BITSPERWORD
+   $( !word.ptr := !word.ptr + 1
+      !bit.ptr := 0
+   $)
+$)
+.
+

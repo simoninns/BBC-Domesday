@@ -1,0 +1,337 @@
+//  UNI SOURCE  4.87
+
+section "map0"
+
+/**
+         CM.B.MAP0 - Map Record Translation Tables
+         -----------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.map
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         12.5.86  1        DNH         Initial version
+                                         split from map1
+         29.5.86  2                    m0 -> map.L0
+          1.9.86  3        DNH         Belfast, Douglas full
+                                        coverage in
+**/
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glCMhd"
+get ":4.ARC.H.dhhd"
+get ":4.ARC.H.cmhd"
+
+/**
+         transmapno(n) returns the record number down the mapdata
+         file to read for a given map number.  -1 is returned for
+         failure.  This is a critical routine and is rather
+         unpleasant in that it requires advance knowledge of the
+         data to construct a table of the last sequential level 2
+         map number and the level 3 maps with regular grids at
+         level 4.  See Domesday Videodisc Structure spec.
+         There are 2 tables, one for each disc side, since only
+         the relevant L3 map records are stored on each side.
+**/
+
+let g.cm.transmapno(n) = valof
+$(  // first word: last map number of the sequence m0,m0+1,m0+2...
+    // intermediate words: level 3 maps with associated records
+    // last word: terminator = -1
+
+
+    let north.tab = table
+19143,         // last L2 record
+
+19238,      // Douglas, IOM
+19239,
+19240,
+19241,
+
+19331,
+19332,
+19336,
+19337,
+19520,
+19521,
+19525,
+19526,
+19592,
+19597,
+19613,
+19618,
+20611,
+20612,
+20690,
+20691,
+20695,
+20696,
+20697,
+21076,
+21097,
+21248,
+21249,
+21253,
+21254,
+21301,
+21306,
+21307,
+21308,
+21312,
+21313,
+21330,
+21331,
+22004,
+22005,
+22690,
+22691,
+22765,
+22766,
+22770,
+22771,
+23352,
+23353,
+23377,
+23378,
+23382,
+23383,
+23385,
+23406,
+23409,
+23410,
+23414,
+23415,
+23532,
+23533,
+23537,
+23538,
+23568,
+23573,
+23597,
+23956,
+23961,
+24027,
+24032,
+24128,
+24129,
+24131,
+24132,
+24636,
+24637,
+24641,
+24642,
+24728,
+24733,
+24745,
+24750,
+26090,
+26095,
+27199,
+27204,
+30213,   // Belfast
+30214,
+30243,
+30244,
+   -1    // terminator
+
+    let south.tab = table
+19143,      // last L2 record
+
+19314,
+19315,
+19333,
+19334,
+19422,
+19423,
+19427,
+19428,
+20051,
+20052,
+20056,
+20057,
+20351,
+20356,
+20477,
+20478,
+20482,
+20483,
+20497,
+20498,
+20502,
+20503,
+20622,
+20623,
+20630,
+20635,
+20643,
+20644,
+20692,
+20693,
+21701,
+21702,
+21705,
+21706,
+21759,
+21764,
+21835,
+21840,
+21868,
+21869,
+21898,
+21899,
+22132,
+22133,
+22137,
+22138,
+22315,
+22316,
+22317,
+22318,
+22319,
+22455,
+22456,
+22604,
+22605,
+22608,
+22609,
+22774,
+22775,
+22779,
+22780,
+22970,
+22971,
+22975,
+22976,
+23129,
+23130,
+23134,
+23135,
+23262,
+23263,
+23264,
+23265,
+23266,
+23926,
+23927,
+23964,
+23965,
+23969,
+23970,
+23972,
+23973,
+23977,
+23978,
+24270,
+24271,
+24275,
+24276,
+24868,
+24869,
+24986,
+24987,
+25016,
+25017,
+25224,
+25225,
+25229,
+25230,
+25276,
+25277,
+25281,
+25282,
+25416,
+25417,
+25421,
+25422,
+25549,
+25550,
+26017,
+26018,
+26057,
+26058,
+26062,
+26063,
+26071,
+26072,
+26076,
+26077,
+26878,
+26879,
+26883,
+26884,
+27146,
+27572,
+27573,
+27577,
+27578,
+28069,
+28070,
+28126,
+28127,
+28131,
+28132,
+28206,
+28207,
+28211,
+28212,
+28819,
+28824,
+28862,
+28863,
+29082,
+29083,
+29087,
+29088,
+29208,
+29213,
+29398,
+29399,
+29516,
+29517,
+29521,
+29522,
+29649,
+29654,
+29705,
+29969,
+29970,
+29974,
+29975,
+29982,
+29983,
+30140,
+30141,
+30145,
+30146,
+30169,
+30359,
+30364,
+30491,
+30492,
+30496,
+30497,
+30680,
+30681,
+30685,
+30686,
+30752,
+30757,
+30773,
+30778,
+   -1    // terminator
+
+    let i = 1
+    let t = (g.context!m.discid = m.dh.south -> south.tab, north.tab)
+
+    if 0 <= n < map.L0 resultis -1
+    if map.L0 <= n <= !t resultis n
+    $(  if t!i = -1 resultis -1
+        if t!i = n resultis !t+i
+        i := i+1
+    $) repeat
+$)
+.

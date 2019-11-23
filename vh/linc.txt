@@ -1,0 +1,3 @@
+*|  join the Video Handler
+*remove c.kernel
+Join c.vh1 c.vh2 c.vh3 -to c.kernel

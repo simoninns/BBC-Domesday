@@ -1,0 +1,138 @@
+//  AES SOURCE  4.87
+
+section "nv0"
+
+/**
+         NV.NV0 - National Video State Init and Free Routines
+         ----------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+         r.film
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         1.7.86      1     DNH      Initial version
+         *****************************
+         20.5.87     2     DNH      CHANGES FOR UNI
+
+         GLOBALS DEFINED:
+         g.nv.dy.init
+         g.nv.dy.free
+**/
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glDYhd"
+get ":4.ARC.GH.glNVhd"
+get ":4.ARC.H.vhhd"
+get ":4.ARC.H.nvhd"
+
+
+/**
+         proc G.NV.DY.INIT ()
+              ------------
+
+         Initialises vectors, opens the appropriate data file and
+         reads all the data needed for this invocation of NV.
+
+         INPUTS:
+         No parameters.  Examines g.context!m.itemaddress to
+         obtain a byte offset to a National Disc Data Item from
+         DATA1 or DATA2.
+
+         OUTPUTS:
+         None
+
+         GLOBALS MODIFIED:
+         * g.context!m.justselected is set false.
+         * g.nv.s, the private statics pointer for NV, is
+         initialised to point to a vector obtained from the heap.
+
+         SPECIAL NOTES FOR CALLERS:
+         Currently does not cache or restore its statics.  Always
+         does the data read and initialises to an initial state.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         procedure g.dy.init []
+                   ------------
+            unset justselected
+            get statics vector
+            get data vector
+            open DATA1 or DATA2 according to top bit of
+                        itemaddress
+            read data item
+            close data file
+            initialise static pointers and substate
+            set video mode to 'micro only'
+**/
+
+let g.nv.dy.init () be
+$(
+   let rp = ?
+
+   g.context!m.justselected := false      // clear for return. Never examine
+
+   g.nv.s := GETVEC (m.nv.statics.size.words)
+   g.nv.s!m.recptr := GETVEC (m.nv.data.size.words)
+
+   //      only make one read from data file. closed thereafter.
+   $( let p = vec 1           // 32 bit file pointer
+      let data.handle = ?     // handle of data file
+      let ia.high = ?         // high 16 bits of itemaddress
+
+      let ia.low = g.ut.get32 (g.context+m.itemaddress, @ia.high)
+      let file = (ia.high & #X8000) = 0 -> "DATA1", "DATA2"
+      g.ut.set32 (ia.low, ia.high & #X7fff, p)
+      data.handle := g.dh.open (file)
+      g.dh.read (data.handle, p, g.nv.s!m.recptr, m.nv.rec.size)
+      g.dh.close (data.handle)
+   $)
+
+   rp := g.nv.s!m.recptr
+   g.nv.s!m.num.entries := g.ut.unpack16 (rp, m.nv.number.offset)
+   g.nv.s!m.current.entry.offset := m.nv.first.entry.offset
+
+   g.nv.s!m.substate := m.nv.initial.substate
+   g.nv.s!m.film.list.on.display := false
+
+   g.vh.video (m.vh.micro.only)
+$)
+
+
+/**
+         proc G.NV.DY.FREE ()
+              ------------
+
+         Undoes actions of g.nv.dy.init
+
+         INPUTS:
+         No parameters.  Examines NV statics set up by init.
+         Note that since NV is an Item Examination State the exit
+         routine in the state machine must be g.ov.exit to cause
+         a return to 'the last major operation'.
+
+         OUTPUTS:
+         None.
+
+         GLOBALS MODIFIED:
+         g.nv.s is undefined after call.
+
+         SPECIAL NOTES FOR CALLERS:
+         Must be called before unloading the NV overlay.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         procedure G.DY.FREE []
+                   ------------
+            free data vector
+            free statics vector
+**/
+
+and g.nv.dy.free () be
+$(
+   freevec (g.nv.s!m.recptr)
+   freevec (g.nv.s)
+$)
+.

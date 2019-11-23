@@ -1,0 +1,50 @@
+//************************************************************************
+// This routine is Machine Independent which previously ran on the
+// Master series. But when run on the Archimedes causes a run time error
+//************************************************************************ 
+
+and g.nc.next.group(v) = valof
+$( let vp = vpr(v)
+   let c.gr, s, b = (!vp) & #xff, #xff, #xff
+   for i = 1 to g.nc.area%v
+   $( let g = (vp!i) & #xff
+      unless ((vp!i) & #x8000) = 0 loop
+      if (g > c.gr) & (g < (b & #xff)) b := vp!i
+      if g < (s & #xff) s := vp!i
+   $)
+//falls over at this point
+   if b = #xff
+   $( let notall = (!vp = m.nc.all) | (g.nc.area%m.nc.add = 2) |
+                   (g.nc.area%v > 24) //doesn't seem to like this statement
+      b := notall -> s, m.nc.all
+   $) 
+
+   !vp := b
+   resultis b
+$)
+
+//**************************************************************************
+// This version is O.K.
+//**************************************************************************
+and g.nc.next.group(v) = valof
+$( let vp = vpr(v)
+   let c.gr, s, b = (!vp) & #xff, #xff, #xff
+   let notall = ?
+   for i = 1 to g.nc.area%v
+   $( let g = (vp!i) & #xff
+      unless ((vp!i) & #x8000) = 0 loop
+      if (g > c.gr) & (g < (b & #xff)) b := vp!i
+      if g < (s & #xff) s := vp!i
+   $)
+   if b = #xff
+   $( 
+      notall := (!vp = m.nc.all)|(g.nc.area%m.nc.add = 2)|(g.nc.area%v > 24)
+      b := notall -> s, m.nc.all
+   $) 
+
+   !vp := b
+   resultis b
+$)
+
+
+

@@ -1,0 +1,236 @@
+/**
+      Tests the routines in NM.CLASS and nm.square.colour in NM.DISPLAY2
+
+         g.nm.init.classes
+         g.nm.init.class.colours
+         g.nm.check.class.intervals
+
+         nm.square.colour
+
+**/
+
+section "tclass"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.dhhd"
+get ":5.h.nmhd"
+get ":5.h.nmglobs"
+
+global $(
+         tstvec1 : 600
+         tstvec2 : 601
+         tstvec3 : 602
+         intvec2 : 603
+         intvec3 : 604
+         intvec4 : 605
+       $)
+
+let start() be
+$(
+   g.ut.errorstream := 0
+
+   get.globals ()
+
+   g.nm.init.classes (m.nm.num.of.class.intervals, g.nm.class.upb)
+   g.nm.init.class.colours (g.nm.class.colour)
+
+   check.classes ()
+
+   setup.vectors ()
+
+   writef ("%c Default class intervals %c", '*n', '*n')
+   test.square.colour (tstvec1)
+
+   g.nm.init.classes (m.nm.num.of.class.intervals, g.nm.class.upb)
+   writef ("%c Second set of class intervals %c", '*n', '*n')
+   redefine.intervals (intvec2)
+   check.classes ()
+   test.square.colour (tstvec2)
+
+   g.nm.init.classes (m.nm.num.of.class.intervals, g.nm.class.upb)
+   writef ("%c Third set of class intervals %c", '*n', '*n')
+   redefine.intervals (intvec3)
+   check.classes ()
+   test.square.colour (tstvec3)
+
+   g.nm.init.classes (m.nm.num.of.class.intervals, g.nm.class.upb)
+   writef ("%c Fourth set of class intervals %c", '*n', '*n')
+   redefine.intervals (intvec4)
+   check.classes ()
+
+   writef ("%c Logical colours can be checked by CTRL Q, CTRL H..M %c",
+            '*n', '*n')
+$)
+
+and check.classes () be
+$(
+   test g.nm.check.class.intervals () then
+      writef ("%c Class intervals consistent %c", '*n', '*n')
+   else
+      writef ("%c **** CLASS INTERVALS INCONSISTENT %c", '*n', '*n')
+$)
+
+and redefine.intervals (vec.ptr) be
+$(
+   for i = 1 to vec.ptr!0 do
+      $(
+         g.nm.class.upb!(i*m.nm.max.data.size + m.lsw) :=
+                  vec.ptr!(i*m.nm.max.data.size + m.lsw)
+         g.nm.class.upb!(i*m.nm.max.data.size + m.msw) :=
+                  vec.ptr!(i*m.nm.max.data.size + m.msw)
+      $)
+$)
+
+and test.square.colour (vec.ptr) be
+$(
+   for i = 1 to vec.ptr!0 do
+         writef ("%n %c", nm.square.colour (vec.ptr+(i*m.nm.max.data.size)),
+                 '*n')
+$)
+
+and setup.vectors () be
+$(
+   tstvec1 := getvec(10)
+   tstvec1!0 := 4
+
+   tstvec1!2 := 0
+   tstvec1!3 := #X8000
+
+   tstvec1!4 := 0
+   tstvec1!5 := 0
+
+   tstvec1!6 := 10
+   tstvec1!7 := 0
+
+   tstvec1!8 := #Xffff
+   tstvec1!9 := #X7fff
+
+   tstvec2 := getvec(32)
+   tstvec2!0 := 15
+
+   tstvec2!2 := 0
+   tstvec2!3 := #X8000
+
+   tstvec2!4 := 0
+   tstvec2!5 := 0
+
+   tstvec2!6 := 1
+   tstvec2!7 := 0
+
+   tstvec2!8 := 99
+   tstvec2!9 := 0
+
+   tstvec2!10 := 100
+   tstvec2!11 := 0
+
+   tstvec2!12 := 101
+   tstvec2!13 := 0
+
+   tstvec2!14 := 1000
+   tstvec2!15 := 0
+
+   tstvec2!16 := 1001
+   tstvec2!17 := 0
+
+   tstvec2!18 := 32767
+   tstvec2!19 := 0
+
+   tstvec2!20 := #X8000   // 32768
+   tstvec2!21 := 0
+
+   tstvec2!22 := #X8001   // 32769
+   tstvec2!23 := 0
+
+   tstvec2!24 := #Xea60   // 60000
+   tstvec2!25 := 0
+
+   tstvec2!26 := #Xea61   // 60001
+   tstvec2!27 := 0
+
+   tstvec2!28 := 0        // 65536
+   tstvec2!29 := 1
+
+   tstvec2!30 := #Xffff
+   tstvec2!31 := #X7fff
+
+   tstvec3 := getvec(12)
+   tstvec3!0 := 5
+
+   tstvec3!2 := 0
+   tstvec3!3 := #X8000
+
+   tstvec3!4 := 0
+   tstvec3!5 := 0
+
+   tstvec3!6 := 200
+   tstvec3!7 := 0
+
+   tstvec3!8 := 201
+   tstvec3!9 := 0
+
+   tstvec3!10 := #Xffff
+   tstvec3!11 := #X7fff
+
+   intvec2  := getvec(10)
+   intvec2!0 := 4
+
+   intvec2!2 := 0
+   intvec2!3 := 0
+
+   intvec2!4 := 1000
+   intvec2!5 := 0
+
+   intvec2!6 := #X8000  // 32768
+   intvec2!7 := 0
+
+   intvec2!8 := #Xea60 // 60000
+   intvec2!9 := 0
+
+   intvec3  := getvec(10)
+   intvec3!0 := 4
+
+   intvec3!2 := 0
+   intvec3!3 := 0
+
+   intvec3!4 := 100
+   intvec3!5 := 0
+
+   intvec3!6 := 200
+   intvec3!7 := 0
+
+   intvec3!8 := 200
+   intvec3!9 := 0
+
+   intvec4  := getvec(10)
+   intvec4!0 := 4
+
+   intvec4!2 := 0
+   intvec4!3 := 0
+
+   intvec4!4 := 1000
+   intvec4!5 := 0
+
+   intvec4!6 := 100
+   intvec4!7 := 0
+
+   intvec4!8 := #X8000  // 32768
+   intvec4!9 := 0
+$)
+
+and get.globals() be
+$(
+   g.nm.frame := getvec (m.nm.frame.size - 1)
+   g.nm.areal := getvec (m.nm.max.num.areas * m.nm.max.data.size)
+   g.nm.values := getvec (m.nm.fine.blocksize * m.nm.fine.blocksize *
+                                                            m.nm.max.data.size)
+   g.nm.class.upb := getvec (m.nm.num.of.class.intervals * m.nm.max.data.size)
+   g.nm.class.colour := getvec (m.nm.num.of.class.intervals)
+
+   g.nm.s := getvec (m.nm.global.statics.size)
+$)
+
+.
+
+
+
+

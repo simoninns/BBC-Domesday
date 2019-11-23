@@ -1,0 +1,328 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.AUTO3 - QUANTILE CLASSING FOR MAPPABLE DATA
+         ----------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmAUTO
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR  DETAILS OF CHANGE
+         07/04/86  1       D.R.Freed      Initial version
+         ********************************
+         3.7.87      2     DNH     CHANGES FOR UNI
+         13.7.87     3     DNH     set32 for widen
+         11.9.87     4     SRY     Quantile bug
+         28.9.87     5     SRY     set local/nat on menu bar
+
+         g.nm.to.quantile
+**/
+
+section "nmauto3"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.sihd"
+get ":4.ARC.H.iohd"
+get ":4.ARC.H.nmhd"
+get ":4.ARC.H.nmclhd"
+
+
+/**
+         G.NM.TO.QUANTILE - TRANSITION TO QUANTILES
+         ------------------------------------------
+
+         Initialisation routine for transition to quantiles
+         classing from anywhere.
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         g.redraw
+         g.nm.s
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.to.quantile []
+         ----------------
+
+         set method static to quantiles
+         suppress Quantiles on menu bar
+         IF scope = National THEN
+            IF summary data is good THEN
+               get class intervals
+            ELSE
+               issue error message
+            ENDIF
+         ELSE
+            IF too little or too much detail for calculation THEN
+               issue error message
+            ELSE
+               put "calculating" message in message area
+               IF areal-mappable data THEN
+                  cache areal vector
+               ENDIF
+               calculate quantile class intervals for AOI,
+                  using areal vector as workspace
+               reposition videodisc for underlay map
+               IF areal-mappable data THEN
+                  restore areal vector
+               ENDIF
+            ENDIF
+         ENDIF
+
+         IF able to get new intervals THEN
+            set intervals changed flag
+            shuffle the key
+            set redraw flag to get Replot on menu bar
+         ELSE
+             IF intervals have been changed already THEN
+                set redraw to get Replot on menu bar
+               ELSE
+                  leave Quantiles box blank
+               ENDIF
+         ENDIF
+         display key
+**/
+
+let g.nm.to.quantile () be
+$( let menu = g.nm.s+m.nm.menu
+   let   mp.var   =  vec 2       // enough for 48 bit value
+   and   ok, r1, r2, temp, error.message  =  ?, ?, ?, ?, ?
+
+   g.nm.s!m.nm.gen.purp := m.wquantiles
+
+   for i = m.box1 to m.box4 menu!i := m.sd.act
+   menu!m.box5 := m.wblank
+   menu!m.box6 := (g.nm.s!m.nm.scope = m.wNational) -> m.wLocal, m.wNational
+   g.sc.menu (menu)
+
+   test g.nm.s!m.nm.scope = m.wnational then
+      $(
+         ok := g.nm.check.summary.data (g.nm.s + m.nm.quantile.classes,
+                                        g.nm.s!m.nm.num.auto.cut.points)
+         if ok then
+            MOVE (g.nm.s + m.nm.quantile.classes, g.nm.class.upb,
+                  (m.nm.num.of.class.intervals + 1) * m.nm.max.data.size)
+      $)
+   else
+      $(
+      // check that the calculation is sensible
+      error.message :=
+            g.nm.s!m.nm.num.areas < m.nm.num.of.class.intervals ->
+               "Too little detail for quantiles",
+                  g.nm.s!m.nm.num.areas > m.nm.max.num.areas ->
+                     "Too much detail for quantiles", 0
+
+      ok := error.message = 0
+      test ok then
+         $(
+         g.sc.mess ("Calculating new class intervals...")
+
+         // cache areal vector before manipulating areal values
+         if (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data) then
+            g.ut.cache (g.nm.areal, m.nm.areal.cache.size,
+                                                m.io.wa.nm.areal)
+
+         // sort non-missing values within area of interest (AOI) ;
+
+         test (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data) then
+
+            // move all the elements that have been accessed to one end for
+            // sorting - exclude missing values
+            g.nm.s!m.nm.num.areas := g.nm.apply.areal.map (TRUE) + 1
+
+         else
+            $(gridsquare
+            // unpack the data into the areal vector for sorting
+            if NOT g.nm.s!m.nm.local.data.unpacked then
+               $(
+               g.nm.s!m.next := 0
+               g.nm.init.processor (g.context!m.grbleast,
+                                    g.context!m.grblnorth,
+                                    g.context!m.grtreast,
+                                    g.context!m.grtrnorth)
+
+               g.nm.process.variable (nm.unpack.uniform, nm.unpack.fine)
+               g.nm.s!m.nm.local.data.unpacked := TRUE
+               g.nm.position.videodisc ()
+               $)
+            $)gridsquare
+
+         // sort the data values into ascending order
+         g.nm.sort (g.nm.areal, g.nm.s!m.nm.num.areas)
+
+         // find quantile classes by retrieving values at equally spaced
+         // indexes in vector as follows :
+         //    For the i th cut-point (i = 1 to num intervals - 1) ;
+         //    r1 = ROUND (num areas * i / num of intervals) - 1
+         //    r2 = num areas -
+         //          ROUND (num areas * (num intervals - i) / num of intervals)
+         //    i th cut-point = ROUND ((areal!r1 + areal!r2) / 2)
+
+         for i = 1 to (m.nm.num.of.class.intervals -1) do
+          $(
+
+            let bot16, mid16, hi16 = ?, ?, ?
+
+            r1 := muldiv (g.nm.s!m.nm.num.areas, i,m.nm.num.of.class.intervals)
+            if RESULT2 * 2 >= m.nm.num.of.class.intervals then
+               r1 := r1 + 1
+            r1 := (r1 - 1) * m.nm.max.data.size
+
+            temp := m.nm.num.of.class.intervals - i
+            r2 := muldiv (g.nm.s!m.nm.num.areas, temp,
+                          m.nm.num.of.class.intervals)
+            if RESULT2 * 2 >= m.nm.num.of.class.intervals then
+               r2 := r2 + 1
+            r2 := (g.nm.s!m.nm.num.areas - r2) * m.nm.max.data.size
+
+            bot16 := g.ut.get32 (g.nm.areal + r1, @mid16)
+            hi16 := (g.ut.cmp32(g.nm.areal+r1, (table 0, 0)) = m.lt) ->
+                   #xffff, 0
+            g.ut.set48 (bot16, mid16, hi16, mp.var)
+            g.nm.mpadd (g.nm.areal + r2, mp.var)
+            g.nm.mpdiv (mp.var, 2, g.nm.class.upb + (i * m.nm.max.data.size))
+          $)
+
+         if (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data) then
+            g.nm.restore.areal.vector ()
+         $)
+      else
+         g.nm.auto.ermess (error.message)
+      $)
+
+   if ok
+   $( g.nm.s!m.nm.intervals.changed := TRUE
+      g.nm.shuffle.key ()
+   $)
+
+   // g.redraw := g.nm.s!m.nm.intervals.changed // get Replot on menu bar
+   if g.nm.s!m.nm.intervals.changed
+   $( menu!m.box5 := m.sd.act
+      g.sc.menu(menu)
+   $)
+
+   g.nm.display.key (TRUE)
+$)
+
+
+
+/* Unpacking routines, for grid square data, to be used by
+   g.nm.process.variable follow ; they unpack the data into the areal vector,
+   which is available as workspace since it serves no function for grid data
+*/
+
+/*
+      nm.unpack.uniform
+
+         unpacks the values of a non-missing uniform block into the areal
+         vector
+*/
+
+and nm.unpack.uniform (record.number, offset, east, north, block.size) be
+$(
+   let value = vec m.nm.max.data.size
+   and num.e, num.n, num = ?, ?, ?
+
+   // ignore missing data
+   if (record.number = m.nm.uniform.missing) then
+         return
+
+   test g.nm.dual.data.type (g.nm.s!m.nm.raster.data.type) then
+      g.nm.widen (offset, 2, value)
+   else
+      g.nm.widen ( - record.number, 2, value)
+
+   // calculate the number of squares that actually lie within the
+   // area of interest
+
+   num.e := g.nm.min (east + block.size, g.nm.s!m.nm.grid.sq.top.e) -
+                                g.nm.max (east, g.nm.s!m.nm.grid.sq.low.e)
+
+   num.n := g.nm.min (north + block.size, g.nm.s!m.nm.grid.sq.top.n) -
+                                 g.nm.max (north, g.nm.s!m.nm.grid.sq.low.n)
+
+   num := g.nm.max (num.e, 0) * g.nm.max (num.n, 0)
+
+   if num > 0 then
+      $(
+      MOVE (value, g.nm.areal + (g.nm.s!m.next * m.nm.max.data.size),
+            m.nm.max.data.size)
+
+      MOVE (g.nm.areal + g.nm.s!m.next * m.nm.max.data.size,
+            g.nm.areal + (g.nm.s!m.next + 1) * m.nm.max.data.size,
+            (num - 1) * m.nm.max.data.size)
+
+      g.nm.s!m.next := g.nm.s!m.next + num
+      $)
+$)
+
+
+/*
+      nm.unpack.fine
+
+         unpacks the non-missing values in the fine block which fall
+         within the AOI into the areal vector
+*/
+
+and nm.unpack.fine (start.east, start.north) be
+$(
+   let wholly.within, curr.e, curr.n, index =  ?, ?, ?, ?
+   and missing32 = vec 1
+
+   g.ut.set32 (0, m.nm.max.neg.high, missing32)
+
+   // see if whole fine block is within area of interest - if it is
+   // then processing of the block can be performed more quickly
+
+   wholly.within :=
+         (start.east >= g.nm.s!m.nm.grid.sq.low.e) &
+         (start.east + m.nm.fine.blocksize <= g.nm.s!m.nm.grid.sq.top.e) &
+         (start.north >= g.nm.s!m.nm.grid.sq.low.n) &
+         (start.north + m.nm.fine.blocksize <= g.nm.s!m.nm.grid.sq.top.n)
+
+   // process block
+
+   for north = 1 to m.nm.fine.blocksize do
+
+      for east = 1 to m.nm.fine.blocksize do
+
+         $(square
+         curr.e := start.east + east - 1
+         curr.n := start.north + north - 1
+
+         // see if this square is within area of interest;
+         // NOTE that since BCPL evaluates conditional expressions from
+         //      left to right and stops as soon as value is known, then
+         //      blocks wholly within the area will only perform the first
+         //      part of the test
+
+         if wholly.within |
+               ( (curr.e >= g.nm.s!m.nm.grid.sq.low.e) &
+                 (curr.e < g.nm.s!m.nm.grid.sq.top.e) &
+                 (curr.n >= g.nm.s!m.nm.grid.sq.low.n) &
+                 (curr.n < g.nm.s!m.nm.grid.sq.top.n) )   then
+            $(inside
+            index := ((north-1) * m.nm.fine.blocksize + east) *
+                                                         m.nm.max.data.size
+            // only unpack non-missing grid-square values
+            if ( g.ut.cmp32 (g.nm.values + index, missing32) ~= m.eq) then
+               $(
+                  MOVE (g.nm.values + index,
+                        g.nm.areal + g.nm.s!m.next * m.nm.max.data.size,
+                        m.nm.max.data.size)
+                  g.nm.s!m.next := g.nm.s!m.next + 1
+               $)
+            $)inside
+         $)square
+$)
+
+.

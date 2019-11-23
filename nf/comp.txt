@@ -1,0 +1,8 @@
+*| compile all national find source
+co find0
+co find1
+co find2
+co find3
+co find5
+co find7
+co find9

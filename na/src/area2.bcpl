@@ -1,0 +1,265 @@
+//  PUK SOURCE  6.87
+
+/**
+         NATIONAL AREA INITIALISATION
+         ----------------------------
+
+         This module contains
+         G.na.areaini, G.na.rectangle and G.na.icon
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.area
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         26.6.86  5        SRY         Mouse pointer off
+         19.8.86  6        SRY         Add windows
+*******************************************************************************
+          8.6.87  7        SRY         Changes for UNI
+**/
+
+SECTION "Area2"
+
+GET "libhdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.GH.glNAhd"
+GET ":4.ARC.H.sdhd"
+GET ":4.ARC.H.nahd"
+GET ":4.ARC.H.vhhd"
+
+STATIC
+$( ble = ? bln = ? tre = ? trn = ?
+$)
+
+/**
+         G.NA.AREAINI - ENTER AREA AT TOP LEVEL
+         --------------------------------------
+
+         Area initialisation and reselect
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         contents of G.na.buff
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Display the menu bar if altered
+         Turn mouse pointer off
+         Display screen
+         Turn mouse pointer on
+         Initialise data buffer variables
+         Set 'justselected' false
+         Set video mode to superimpose
+         Display initial map
+         Draw a blue rectangle for the  previous area (if it exists)
+**/
+
+LET G.na.areaini() BE
+$( LET boxes = TABLE m.sd.act, m.sd.act, m.sd.wBlank,
+                     m.sd.act, m.sd.act, m.sd.act
+   G.sc.menu(boxes)
+   G.sc.pointer(m.sd.off)
+   G.sc.clear(m.sd.display)
+   G.sc.clear(m.sd.message)
+   G.sc.movea(m.sd.display, m.na.posX, m.na.typeY+m.sd.linW)
+   G.sc.odrop("Type of area (eg County):")
+   G.sc.movea(m.sd.display, m.na.posX, m.na.nameY+m.sd.linW)
+   G.sc.odrop("Name of area (eg Kent):")
+   G.sc.movea(m.sd.display, m.na.posX, m.na.gr1Y+m.sd.linW)
+   G.sc.odrop("Grid Ref. 1:")
+   G.sc.movea(m.sd.display, m.na.posX, m.na.gr2Y+m.sd.linW)
+   G.sc.odrop("Grid Ref. 2:")
+   G.sc.selcol(m.sd.blue)
+   G.sc.movea(m.sd.display, m.na.posX, m.na.typeY)
+   G.sc.rect(m.sd.plot, m.na.auX-m.na.posX, -m.sd.linW)
+   G.sc.movea(m.sd.display, m.na.posX, m.na.nameY)
+   G.sc.rect(m.sd.plot, m.na.auX-m.na.posX, -m.sd.linW)
+   G.sc.movea(m.sd.display, m.na.posX, m.na.gr1Y)
+   G.sc.rect(m.sd.plot, m.na.grX-m.na.posX, -m.sd.linW)
+   G.sc.movea(m.sd.display, m.na.posX, m.na.gr2Y)
+   G.sc.rect(m.sd.plot, m.na.grX-m.na.posX, -m.sd.linW)
+   G.na.buff!m.na.box          := m.na.unknown
+   G.na.buff!m.na.format       := m.na.unknown
+   G.na.buff!m.na.screen.state := m.na.unknown
+   G.na.buff!m.na.other.box    := m.na.unknown
+   G.na.buff!m.na.entered.box  := m.na.unknown
+   G.na.buff!m.na.auname       := 0
+   G.na.buff!m.na.autype       := 0
+   G.na.buff!m.na.gr1          := 0
+   G.na.buff!m.na.gr2          := 0
+   G.na.buff!m.na.country      := 'E'
+   G.context!m.justselected    := FALSE
+   G.vh.video(m.vh.superimpose)
+   G.vh.frame(m.na.initial.map)
+   G.vh.video(m.vh.video.on)
+   G.na.rectangle(m.sd.blue)
+$)
+
+/**
+         G.NA.RECTANGLE - DRAW RECTANGLE FOR CO-ORDINATES
+         ------------------------------------------------
+
+         Old or new area display
+
+         INPUTS:
+
+         Colour of rectangle
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.na.rectangle [colour]
+         -----------------------
+
+         Set static grid-refs from G.context
+         Map them to screen co-ordinates
+         IF failed THEN RETURN ENDIF
+         Set screen window
+         Select input colour
+         Draw rectangle
+         Reset screen window
+**/
+
+AND G.na.rectangle(colour) BE
+$( G.sc.pointer(m.sd.off)
+   ble := G.context!m.grbleast
+   tre := G.context!m.grtreast
+   bln := G.context!m.grblnorth
+   trn := G.context!m.grtrnorth
+   IF grid.to.screen() // initial case
+   $( G.sc.selcol(colour)
+      G.sc.setwin(m.na.NIx1, 0, m.sd.disW-1, m.sd.disH-1)
+      G.sc.movea(m.sd.display, ble, bln)
+      G.sc.linea(m.sd.plot, m.sd.display, tre, bln)
+      G.sc.linea(m.sd.plot, m.sd.display, tre, trn)
+      G.sc.linea(m.sd.plot, m.sd.display, ble, trn)
+      G.sc.linea(m.sd.plot, m.sd.display, ble, bln)
+      G.sc.defwin()
+   $)
+   G.sc.pointer(m.sd.on)
+$)
+
+/**
+         G.NA.ICON - DRAW ICON FOR CO-ORDINATES
+         --------------------------------------
+
+         Display yellow cross icon
+
+         INPUTS:
+
+         Pointer to grid ref pair (easting, northing)
+         On or off switch
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.na.icon [refptr, on.off]
+
+         Set bottom left static grid-refs from refptr
+         Zero top right grid ref statics
+         Map them to screen co-ordinates
+         IF failed THEN RETURN ENDIF
+         Set screen window
+         Draw icon
+         Reset window
+**/
+
+
+AND G.na.icon(refptr, on.off) BE
+$( ble := refptr!0
+   bln := refptr!1
+   tre, trn := 0, 0
+   UNLESS grid.to.screen() RETURN
+   G.sc.setwin(m.na.NIx1, 0, m.sd.disW-1, m.sd.disH-1)
+   G.sc.movea(m.sd.display, ble, bln)
+   G.sc.icon(m.sd.cross2, on.off)
+   G.sc.defwin()
+$)
+
+
+AND grid.to.screen() = VALOF   // Map grid refs onto screen coords
+$( LET bw.s = m.sd.disW
+   LET bh.s = m.sd.disH
+   LET bw.g = m.na.UKtreast - m.na.UKbleast
+   LET bh.g = m.na.UKtrnorth - m.na.UKblnorth
+   LET system = (ble >> 15) + ((bln & #X8000) >> 14)
+
+   SWITCHON system  INTO
+   $( CASE 0: // UK
+         ble := ble - m.na.UKbleast
+         tre := tre - m.na.UKbleast
+         bln := bln - m.na.UKblnorth
+         trn := trn - m.na.UKblnorth
+         ble := muldiv(ble, bw.s, bw.g)
+         tre := muldiv(tre, bw.s, bw.g)
+         bln := muldiv(bln, bh.s, bh.g)
+         trn := muldiv(trn, bh.s, bh.g)
+      ENDCASE
+      CASE 1: // NI
+         ble  := (ble & #X7FFF) - m.na.NIbleast
+         tre  := (tre & #X7FFF) - m.na.NIbleast
+         bln  := bln - m.na.NIblnorth
+         trn  := trn - m.na.NIblnorth
+         bw.s := m.na.NIx2 - m.na.NIx1
+         bh.s := m.na.NIy2 - m.na.NIy1
+         bw.g := m.na.NItreast - m.na.NIbleast
+         bh.g := m.na.NItrnorth - m.na.NIblnorth
+         ble  := muldiv(ble, bw.s, bw.g) + m.na.NIx1
+         tre  := muldiv(tre, bw.s, bw.g) + m.na.NIx1
+         bln  := muldiv(bln, bh.s, bh.g) + m.na.NIy1
+         trn  := muldiv(trn, bh.s, bh.g) + m.na.NIy1
+         ENDCASE
+      CASE 2: RESULTIS FALSE // Initial
+      CASE 3: // CI
+         ble  := (ble & #X7FFF) - m.na.CIbleast // Easting inside box
+         tre  := (tre & #X7FFF) - m.na.CIbleast
+         bln  := (bln >> 1) - (m.na.CIblnorth >> 1)  // Shifted for top bit
+         trn  := (trn >> 1) - (m.na.CIblnorth >> 1)
+         bw.g := m.na.CItreast - m.na.CIbleast
+         bh.g := (m.na.CItrnorth & #X7FFF) - (m.na.CIblnorth & #X7FFF)
+         bw.s := m.na.CIx2 - m.na.CIx1
+         bh.s := m.na.CIy2 - m.na.CIy1
+         ble  := muldiv(ble, bw.s, bw.g) + m.na.CIx1
+         tre  := muldiv(tre, bw.s, bw.g) + m.na.CIx1
+         bln  := (muldiv(bln, bh.s, bh.g) << 1) + m.na.CIy1
+         trn  := (muldiv(trn, bh.s, bh.g) << 1) + m.na.CIy1
+   $)
+   RESULTIS TRUE
+$)
+.

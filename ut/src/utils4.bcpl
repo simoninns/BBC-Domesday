@@ -1,0 +1,89 @@
+//  $MSC
+//  AES SOURCE  7.87
+
+/**
+         UT.UTILS4 - UTILITIES PACKAGE PART 4
+         ------------------------------------
+
+         Created purely for NM, which uses 48 bit variables
+         internally but never gets them from data structures.
+
+         This file contains:
+
+         g.ut.set48 - set a 48 bit value
+         g.ut.get48 - split a 48 bit value
+         g.ut.mov48 - copy a 48 bit value
+
+         This version is for a machine of the following type:
+
+         * 32 bit, 4 bytes per word, BCPL
+         * low-byte-first in a word
+
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         L.utils4
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         30.6.87     1     DNH      CREATED FOR UNI 
+         2.7.87      2     PAC      ADOPTED FOR AES
+**/
+
+SECTION "utils4"
+
+GET "LIBHDR"
+GET ":4.ARC.GH.glhd"
+
+
+/**
+         function g.ut.set48 (bot.16, mid.16, top.16, a48.adr)
+         -----------------------------------------------------
+
+         g.ut.set48 returns the address at which it has put the
+         three 16 bit values 'top.16', 'mid.16' and 'bot.16'.
+
+         a48.adr := g.ut.set48 (bot.16, mid.16, top.16, a48.adr)
+**/
+
+let g.ut.set48 (bot.16, mid.16, top.16, a48.adr) = valof
+$(
+   a48.adr!0, a48.adr!1 := bot.16 | (mid.16<<16), top.16 & #xFFFF
+   resultis a48.adr
+$)
+
+
+/**
+         function g.ut.get48 (a48.adr, mid.16.adr, top.16.adr)
+         -----------------------------------------------------
+
+         g.ut.get48 returns the low 16 bits of the 48 bit value
+         at a48.adr, putting the middle 16 bits and the high 16
+         bits into the locations at mid.16.adr and top.16.adr
+         respectively.  No sign- extension is performed on any of
+         the returned values.
+
+         bot.16 := g.ut.get48 (a48.adr, mid.16.adr, top.16.adr)
+**/
+
+let g.ut.get48 (a48.adr, mid.16.adr, top.16.adr) = valof
+$(
+   !top.16.adr := a48.adr!1 & #xFFFF
+   !mid.16.adr := a48.adr!0>>16
+   resultis a48.adr!0 & #xFFFF
+$)
+
+
+/**
+         procedure g.ut.mov48 (s48.adr, d48.adr)
+         ---------------------------------------
+
+         g.ut.mov48 moves the 48 bit value from s48.adr to
+         d48.adr.
+
+         g.ut.mov48 (s48.adr, d48.adr)
+**/
+
+let g.ut.mov48 (s48, d48) be d48!0, d48!1 := s48!0, s48!1
+.

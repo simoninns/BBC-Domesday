@@ -1,0 +1,520 @@
+//  $MSC
+//  AES SOURCE  4.87
+
+/**
+         SC.NUMBER - OUTPUT A NUMBER IN RESTRICTED FIELD WIDTH
+         -----------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         kernel
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         30.04.87 1        PAC         ADOPTED FOR AES SYSTEM
+         10.6.87  2        PAC         m.ut.lt/gt -> m.lt,m.gt
+         27.07.87 3        PAC         Remove pointer calls
+                                       remove findmode
+         18.9.87  4        PAC         Fix optimisation bug
+**/
+
+SECTION "number"
+
+GET "LIBHDR"
+GET "SYSHDR"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.H.sdhd"
+
+/**
+         G.SC.OPNUM - OUTPUT REAL NUMBER
+         -------------------------------
+
+         This routine is provided to output real numbers, or
+         large integers. It outputs the number as an integer if
+         this is possible in the field width, otherwise as
+         mantissa and exponent.
+
+         INPUTS:
+
+         Number         (32 bit signed integer, stored as low
+                                                 word then hi)
+         Scaling factor (Power of 10 - a signed 16 bit number)
+         Field width    (No. of characters)
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Set up the cursor to the start of the field before
+         calling, and ensure that the correct colour is selected
+         before calling. (This  routine uses the current colour)
+         Cursor is left at a suitable point for concatenation of
+         more text/numbers.
+
+         If the field width is too small, then asterisks to fill
+         the field width are output, with a leading "-" sign if
+         the number is negative. (The "-" has precedence over the
+         asterisks)
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.opnum [ number.vector, scale, field width ]
+         ----------
+         { stage 1 }
+         convert number into
+            - a string of digits, and length of string
+            - exponent (power of 10)
+            - residual field width (res.fw), accounting for sign
+
+         { stage 2 }
+         check whether it must be displayed using scientific
+         notation. Criterion for this is:
+         res.fw < exponent
+            OR ( exponent < 2 - res.fw ) AND exponent is negative
+
+         IF scientific  notation is required
+            THEN print in scientific notation
+            ELSE print in normal format
+
+         RETURN
+
+         { print the number in scientific notation }
+
+         { zero all the spacing parameters }
+            leading digits  = 0
+            leading spaces  = 0
+            trailing digits = 0
+
+         { stage 1 - do the exponent }
+
+         IF absolute value of exponent > 9
+            THEN res.fw decreases by 2
+                 put 2 digits of exponent into end of string
+            ELSE res.fw decreases by 1
+                 put 1 digit of exponent into end of string
+         ENDIF
+
+         IF exponent < 0
+            THEN res.fw decreases by 2 { "E-" }
+                 put "E-" into end of string
+            ELSE res.fw decreases by 1 { "E" }
+                 put "E" into end of string
+         ENDIF
+
+         IF res.fw not negative
+            THEN
+            CASE OF res.fw
+
+               0: leading digits  = 0
+
+               1: leading digits  = 1
+
+
+               2: IF  -8 <= orig.expo <= 9
+                  THEN
+                  leading.digits     = 2
+                     IF original exponent was positive
+                     THEN decrement exponent
+                     ELSE increment exponent
+                     ENDIF
+                  ELSE
+                  leading digits = 1
+                  leading spaces = 1
+                  ENDIF
+
+         default: leading digits  = 1
+                  trailing digits = MIN ( digits-1, res.fw-2 )
+                  leading space   = res.fw - trailing digits+2
+            ENDCASE
+         ENDIF
+
+         { ready to print the number in scientific format }
+         IF res.fw < 0
+            THEN print error message
+            ELSE print 'leading space' spaces
+                 print "-" if number was negative
+                 print 'leading digits' digits
+                 IF trailing digits <> 0
+                    THEN print "."
+                 ENDIF
+                 print 'trailing digits' digits
+                 print last section of string, as compiled above
+         ENDIF
+
+         RETURN { scientific notation print }
+
+
+         { print the number in normal notation }
+
+         { zero all the spacing parameters }
+         leading spaces              = 0
+         leading digits              = 0
+         trailing zeroes             = 0
+         leading zeroes after point  = 0
+         trailing digits after point = 0
+
+         IF exponent < 0  { a number less than 1 }
+            THEN res.fw decreases by 2
+                 leading zeroes after point = ABS( exponent-1 )
+                 leading zeroes = 1
+                 IF digits in number string + zeroes after point
+                      is greater than res.fw
+                    THEN digits = res.fw - zeroes after point
+                    ELSE leading spaces = res.fw -digits-zeroes
+                 ENDIF
+
+            ELSE IF exponent > digits { an integer }
+                 THEN trailing zeroes = exponent - digits
+                    IF exponent < res.fw
+                       THEN leading spaces = res.fw - exponent
+                    ENDIF
+                 leading digits = digits
+                 ENDIF
+
+                 ELSE { a fraction > 1 }
+                      res.fw decreases by 1
+                      IF digits > res.fw
+                         THEN digits = res.fw
+                         ELSE leading space = res.fw - digits
+                      ENDIF
+                      leading digits = exponent
+                      trailing digits after point = digits - exponent
+
+                      IF digits after point = 0
+                      THEN leading spaces = leading spaces + 1
+
+                      IF digits after point < 0
+                      THEN digits after point := 0
+         ENDIF
+
+         { ready to print the number in normal notation }
+
+         IF res.fw < 0
+            THEN print error message { T.B.A. }
+            ELSE print 'leading space' spaces
+                 IF negative number
+                   THEN print "-"
+                 ENDIF
+                 print 'leading digits ' digits
+                 print 'trailing zeroes' zeroes
+                 print "."
+                 print 'leading zeroes after point' zeroes
+                 print 'trailing digits after point' digits
+         ENDIF
+
+         RETURN
+**/
+
+LET G.sc.opnum ( number, scale, fwidth ) BE
+$( // LET oldstate = G.sc.pointer (m.sd.off)
+   LET digits,negative = 0,false
+   LET residual.width  = fwidth
+   LET exponent,mode = ?,?
+   LET string   = VEC 26/bytesperword
+   LET divisor  = VEC 1
+   LET fraction = VEC 1
+   LET numcopy  = VEC 1
+   LET zero32   = VEC 1
+   LET LOn, HIn = ?,?
+
+   // check screen mode
+   mode := 1 // G.sc.findmode()
+
+   G.ut.set32( 10,0, divisor )         // set divisor to 10
+   G.ut.set32( 0,0,zero32 )            // set zero to zero !
+   G.ut.mov32( zero32, numcopy )       // set copy number = 0
+
+   // check for negative
+   //
+   TEST G.ut.cmp32( number, zero32 ) = m.lt
+   THEN
+   $(
+      G.ut.sub32( number, numcopy )    // invert it
+
+      negative := TRUE
+      residual.width := residual.width - 1
+   $)
+   ELSE G.ut.mov32( number, numcopy )
+
+   // convert to string
+   FOR j = 10 TO 1 BY - 1    // max 10 digits
+   $(
+      G.ut.div32 ( divisor,numcopy,fraction )
+      string%(j) := G.ut.get32(fraction, @HIn) + '0'   // build up string
+      digits := digits + 1                 // increment digits count
+
+      IF G.ut.cmp32( zero32, numcopy) = m.eq THEN BREAK // early exit
+   $)
+
+   // shuffle up the digits to front of string
+   FOR j = 1 to digits
+   string%(j) := string%((10-digits)+j)
+   string%0   := digits            // set string length
+   exponent   := scale + digits -1 // exponent in power of 10
+
+   // check for zero with a non-zero exponent
+   IF (digits = 1) & (string%1 ='0')
+      THEN exponent := 0
+
+   // check for stupidly big exponents
+   IF exponent >= 100 THEN exponent := exponent REM 100
+
+ // WRITEF ("*nNumber is : <%s> digits : %n expo : %n*n",string,digits,exponent)
+   TEST (residual.width < exponent+1) |
+            ( (exponent < (2 - residual.width)) & (exponent < 0) )
+      THEN print.in.scientific ( negative,string,exponent,residual.width,mode )
+      ELSE print.in.normal ( negative,string,exponent,residual.width,mode )
+
+   // G.sc.pointer( oldstate )
+$)
+
+//
+// print the number in scientific notation
+//
+AND print.in.scientific ( negative, number.string, exponent, res.fw, mode ) BE
+$( // zero all the spacing parameters
+   LET leading.digits  = 0
+   LET leading.spaces  = 0
+   LET trailing.digits = 0
+   LET exp.string      = VEC 2
+   LET digits          = ?
+   LET point           = FALSE  // flag for existence of decimal point
+   LET exp.ptr         = 2      // pointer into exponent string
+   LET original.width  = res.fw // save original res.width
+   LET orig.expo       = exponent
+
+   // stage 1 - do the exponent
+
+   digits := number.string%0   // number of digits in string
+   exp.string%1 := 'E'
+   res.fw := res.fw - 1
+
+   IF exponent < 0
+   THEN $( res.fw := res.fw - 1
+           exp.string%exp.ptr := '-'
+           exp.ptr := exp.ptr + 1
+           exponent := ABS exponent
+        $)
+
+   TEST exponent > 9                    // fix 19.9.86 PAC
+   THEN $( exponent := exponent REM 100 // make sure it's less than 100
+           res.fw := res.fw - 2
+           exp.string%exp.ptr     := (exponent/10+'0') & #xFF // first digit
+           exp.string%(exp.ptr+1) := (exponent REM 10)+'0'  // second digit
+           exp.string%0 := exp.ptr + 1 // set string length
+        $)
+   ELSE $( res.fw := res.fw -1
+           exp.string%exp.ptr := exponent+'0'
+           exp.string%0 := exp.ptr
+        $)
+
+   IF res.fw > 0 // residual space not negative or zero
+   THEN SWITCHON res.fw INTO
+
+        $( CASE 1: leading.digits := 1
+           ENDCASE
+
+           CASE 2: $( // optimised PAC 19.9.86: '1.E3' -> 10E2'
+                      // N.B. only for single digit exponents
+                      TEST -8 <= orig.expo <= 9
+                      THEN
+                      $(
+                         LET ch = exp.string%exp.ptr
+                         exp.string%exp.ptr := (orig.expo > 0) -> ch-1,ch+1
+                         leading.digits     := 2
+
+                         // sorry about this ! - fix 18.9.87 PAC
+                         // Special case of a single digit in the string
+
+                         IF digits = 1 THEN number.string%2 := '0'
+                      $)
+                      ELSE
+                      $( leading.digits := 1 ; point := TRUE $)
+                   $)
+            ENDCASE
+
+            DEFAULT:$( leading.digits := 1
+                       point          := TRUE
+                       TEST (digits-1)<(res.fw-2)
+                           THEN trailing.digits := digits-1
+                           ELSE trailing.digits := res.fw-2
+                        leading.spaces := res.fw - (trailing.digits+2)
+                     $)
+             ENDCASE
+        $)
+
+   /* debug code
+   WRITES("*nReady to print: scientific")
+   WRITEF("*nres.field %n*nnumber.string %s",res.fw,number.string)
+   WRITEF("*nlead sp %n*nlead digit %n",leading.spaces,leading.digits)
+   WRITEF("*ntrail digits %n*nexponent string :",trailing.digits)
+   FOR i = 1 TO (exp.string%0 & #xF) DO WRITEN(exp.string%i)
+   NEWLINE()
+   // res.fw := res.fw REPEATUNTIL RDCH()=32
+   // wait a bit
+   // end of debug code
+   */
+
+   // ready to print the number in scientific format
+   TEST res.fw < 0
+      THEN $( // WRITES("*nERROR - too small !*n") // print error message
+              IF negative THEN printch('-',mode)
+              UNTIL original.width = 0 DO
+                 $( printch('**',mode)
+                    original.width := original.width - 1
+                 $)
+           $)
+      ELSE $( LET ptr  = 2
+              LET dptr = 1
+              UNTIL leading.spaces = 0 DO
+                 $( printch(' ',mode)
+                    leading.spaces := leading.spaces - 1
+                 $)
+
+              IF negative THEN printch('-',mode)
+
+              UNTIL leading.digits = 0 DO
+                 $( printch (number.string%dptr,mode)
+                    dptr := dptr+1
+                    leading.digits := leading.digits - 1
+                 $)
+
+              IF point    THEN printch('.',mode)
+
+              UNTIL trailing.digits = 0 DO
+                 $( printch (number.string%ptr,mode)
+                    ptr := ptr + 1
+                    trailing.digits := trailing.digits - 1
+                 $)
+
+              FOR i=1 TO exp.string%0
+                 DO printch( exp.string%i,mode )
+           $)
+
+$)
+
+//
+// print the number in normal notation }
+//
+AND print.in.normal ( negative, number.string, exponent, res.fw, mode ) BE
+$( //  zero all the spacing parameters
+   LET leading.spaces     = 0
+   LET leading.digits     = 0
+   LET trailing.zeroes    = 0
+   LET zeroes.after.point = 0
+   LET digits.after.point = 0
+   LET digits             = ?
+
+   digits := number.string%0
+   exponent := exponent + 1
+
+   TEST exponent <= 0  // a number less than 1
+      THEN $( res.fw := res.fw - 2
+              zeroes.after.point := ( ABS exponent )
+              trailing.zeroes := 1      // i.e. the zero before the point
+              TEST (digits + zeroes.after.point) > res.fw
+                 THEN digits.after.point := res.fw - zeroes.after.point
+                 ELSE $( leading.spaces := res.fw-digits-zeroes.after.point
+                         digits.after.point := digits
+                      $)
+           $)
+
+           ELSE TEST exponent >= digits // an integer
+                THEN $( trailing.zeroes := exponent - digits
+                        IF exponent < res.fw
+                           THEN leading.spaces := res.fw - exponent
+                        leading.digits := digits
+                     $)
+
+                 ELSE $( // number is a fraction > 1
+                         res.fw := res.fw - 1    // account for a "."
+                         TEST digits > res.fw    // no. of digits to display
+                            THEN digits := res.fw
+                            ELSE leading.spaces := res.fw - digits
+                         leading.digits := exponent
+                         digits.after.point := digits - exponent
+
+                         // this added 19.9.86 PAC
+                         IF digits.after.point = 0
+                         THEN leading.spaces := leading.spaces + 1
+
+                         // it will crash if this is not done...
+                         IF digits.after.point < 0
+                            THEN digits.after.point := 0
+                      $)
+
+
+
+   /* debug code
+   WRITES("*nReady to print: normal")
+   WRITEF("*nres.field %n*nnumber.string %s",res.fw,number.string)
+   WRITEF("*nlead sp %n*nlead digit %n", leading.spaces,leading.digits)
+   WRITEF("*ntrailing zeroes %n",trailing.zeroes)
+   WRITEF("*nzeroes after pt %n digits after pt %n*n",
+               zeroes.after.point,digits.after.point)
+   // res.fw := res.fw REPEATUNTIL RDCH()=32
+   // wait a bit
+   // end of debug code
+   */
+
+   // ready to print the number in normal notation
+
+   TEST res.fw < 0       // this should never happen
+      THEN printch('**',mode) // WRITES("*nERROR - normal won't fit !*n")
+      ELSE $( LET ptr = 1
+
+              UNTIL leading.spaces = 0 DO
+                 $( printch(' ',mode)
+                    leading.spaces := leading.spaces - 1
+                 $)
+
+              IF negative THEN printch('-',mode)
+
+              // print 'leading digits ' digits
+              UNTIL leading.digits = 0 DO
+                 $( printch( number.string%ptr,mode )
+                    ptr := ptr+1
+                    leading.digits := leading.digits - 1
+                 $)
+
+              // print 'trailing zeroes' zeroes
+              UNTIL trailing.zeroes = 0 DO
+                 $( printch('0',mode)
+                    trailing.zeroes := trailing.zeroes - 1
+                 $)
+
+              // print "."
+              IF digits.after.point ~=0 THEN printch('.',mode)
+
+              // print 'leading zeroes after point' zeroes
+              UNTIL zeroes.after.point = 0 DO
+                 $( printch( '0',mode )
+                    zeroes.after.point := zeroes.after.point - 1
+                 $)
+
+              // print 'trailing digits after point' digits
+              UNTIL digits.after.point = 0 DO
+                 $( printch( number.string%ptr,mode )
+                    ptr := ptr+1
+                    digits.after.point := digits.after.point - 1
+                 $)
+
+           $)
+
+$)
+
+AND printch ( ch,mode ) BE
+$( TEST mode = 2
+   THEN $( WRCH( ch|#x80 )
+           VDU("25,0,-32;0;")
+        $)
+   ELSE WRCH( ch )
+$)
+.

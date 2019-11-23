@@ -1,0 +1,3 @@
+*| compile the NW source
+co walk1
+co walk2

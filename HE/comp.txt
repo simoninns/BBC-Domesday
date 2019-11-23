@@ -1,0 +1,14 @@
+*| compile all HE source
+co helpinit
+co help0
+co help1
+co helpA
+co helpB
+co helpC
+co helpD
+co htext1
+co htext2
+co htext4
+co htext5
+co htext6
+co htext7

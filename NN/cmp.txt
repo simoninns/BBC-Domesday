@@ -1,0 +1,36 @@
+*| compare AES NN (children)
+*|
+c $.diff area
+c $.diff auto1
+c $.diff auto2
+c $.diff auto3
+c $.diff auto4
+c $.diff class32
+c $.diff context
+c $.diff correl1
+c $.diff correl2
+c $.diff detail1
+c $.diff detail2
+c $.diff display1
+c $.diff display2
+c $.diff fpwrite
+c $.diff link
+c $.diff manual1
+c $.diff manual2
+c $.diff mpadd
+c $.diff mpconv
+c $.diff mpdisp
+c $.diff mpdiv
+c $.diff name
+c $.diff plot
+c $.diff rank
+c $.diff retr1
+c $.diff retr2
+c $.diff retr3
+c $.diff retr4
+c $.diff sortrank
+c $.diff tiefactor
+c $.diff treesort
+c $.diff valid
+c $.diff window
+c $.diff write

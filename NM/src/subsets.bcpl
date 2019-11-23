@@ -1,0 +1,224 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.SUBSETS - SUBSET INDEX PRIMITIVES FOR NATIONAL MAPPABLE
+         ----------------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         MAPPROC
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         24.01.86 1        D.R.Freed   Initial version
+         02.05.86 2        DRF         g.nm.find.subset returns
+                                          key field
+                                       all routines take index
+                                          parameter &
+                                       nm.load.index modified to
+                                          pick appropriate one
+         ********************************
+         18.6.87  4        DNH         CHANGES FOR UNI
+         11.08.87 5        SRY         Modified for DataMerge
+
+         g.nm.num.of.subsets
+         g.nm.look.for.subset
+         g.nm.find.subset
+**/
+
+section "nmsubsets"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.nmhd"
+
+
+/**
+         G.NM.NUM.OF.SUBSETS - GET NUMBER OF SUB-DATASETS
+         ------------------------------------------------
+
+         Returns the number of sub-datasets available in the
+         index ;
+         their positions are 0 -> (g.nm.num.of.subsets - 1)
+
+
+         INPUTS:
+
+         Index specifier
+
+         OUTPUTS:
+
+         Returns number of sub-datasets
+
+         GLOBALS MODIFIED: none
+
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.num.of.subsets [index]
+         -------------------
+
+         load sub-dataset index
+         RETURN (first field in index)
+**/
+
+let g.nm.num.of.subsets (index) = valof
+$(
+   let offset = ?
+
+   nm.load.index (index, @offset)
+
+   resultis g.ut.unpack16.signed (g.nm.frame, offset)
+$)
+
+
+/**
+         G.NM.LOOK.FOR.SUBSET - LOOK FOR SUBSET BY KEY IN INDEX
+         ------------------------------------------------------
+
+         Searches for a matching key in the sub-dataset index ;
+         returns, as an output parameter, the position in the
+         index of the matching entry. If there is no match,
+         position is set to a negative value.
+
+         INPUTS:
+
+         Index specifier
+         Key
+         Pointer to position
+
+         OUTPUTS:
+
+         Position put at pointer
+
+         GLOBALS MODIFIED:
+
+         none
+
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.look.for.subset [index, key, ->position]
+         --------------------
+
+         load sub-dataset index
+         search linearly for match on key
+         IF match THEN
+            position = offset within index of match
+         ELSE position = negative value
+         ENDIF
+**/
+
+and g.nm.look.for.subset (index, key, pos.ptr) = valof
+$(
+   let   offset, num.subsets, count, entry.key  = ?, ?, ?, ?
+
+   unless nm.load.index (index, @offset) resultis false
+
+   num.subsets := g.ut.unpack16.signed (g.nm.frame, offset)
+   count := 0
+
+   $(repeat
+
+      unless g.nm.inc.frame.ptr (@offset) resultis false
+      entry.key := g.ut.unpack16.signed (g.nm.frame, offset)
+
+      unless g.nm.inc.frame.ptr (@offset) resultis false  // skip record number and offset fields
+      unless g.nm.inc.frame.ptr (@offset) resultis false
+
+      count := count + 1
+
+   $)repeat
+
+      repeatuntil (entry.key = key) | (count >= num.subsets)
+
+   !pos.ptr := (entry.key = key) -> count - 1, -1
+   resultis true
+$)
+
+
+/**
+         G.NM.FIND.SUBSET - FIND SUBSET BY POSITION IN INDEX
+         ---------------------------------------------------
+
+         Finds the key, relative record number and byte offset of
+         the dataset whose position in the sub-dataset index is
+         given. The position is assumed to be valid.
+
+         INPUTS:
+
+         Index specifier
+         Position
+         Pointer to key
+         Pointer to record number
+         Pointer to offset
+
+         OUTPUTS:
+
+         Key put at pointer
+         Record number put at pointer
+         Byte offset put at pointer
+
+         GLOBALS MODIFIED:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.find.subset [index, position, ->key,
+         ----------------         ->record.number, ->offset]
+
+         load sub-dataset index
+         skip to position
+         read key, record number and offset from index entry
+**/
+
+and g.nm.find.subset (index, position, key.ptr,
+                            record.number.ptr, offset.ptr) = valof
+$(
+   let   frame.ptr   =  ?
+
+   unless nm.load.index (index, @frame.ptr)  resultis false
+
+   while position >= 0 do
+   $(
+      unless g.nm.inc.frame.ptr (@frame.ptr) resultis false
+      !key.ptr := g.ut.unpack16.signed (g.nm.frame, frame.ptr)
+      unless g.nm.inc.frame.ptr (@frame.ptr) resultis false
+      !record.number.ptr := g.ut.unpack16 (g.nm.frame, frame.ptr)
+      unless g.nm.inc.frame.ptr (@frame.ptr) resultis false
+      !offset.ptr := ( g.ut.unpack16.signed (g.nm.frame, frame.ptr) * 2 )
+                        // * 2 to convert 2-byte offset to byte offset
+      position := position - 1
+   $)
+   resultis true
+$)
+
+
+/*
+      nm.load.index
+
+         loads the appropriate sub-dataset index
+*/
+
+and nm.load.index (index, frame.ptr) = valof
+$(
+   test (index = m.nm.raster.data.type) then
+
+      $(
+         unless g.nm.read.frame (g.nm.s!m.nm.raster.index.record)
+            resultis false
+         !frame.ptr := g.nm.s!m.nm.raster.index.offset
+      $)
+
+   else
+
+      $(
+         unless g.nm.read.frame (g.nm.s!m.nm.sub.dataset.index.record.number)
+            resultis false
+         !frame.ptr := g.nm.s!m.nm.sub.dataset.index.offset
+      $)
+   resultis true
+$)
+.

@@ -1,0 +1,145 @@
+//  PUK SOURCE  6.87
+
+
+/**
+         NM.MANUAL2 - STRING TO NUMBER CONVERSION FOR MANUAL OPN
+         -------------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmMANU
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         20.02.86 1        D.R.Freed   Initial version
+         ********************************
+         30.6.87     3     DNH      CHANGES FOR UNI
+
+         g.nm.string.to.num
+**/
+
+section "nmmanual2"
+
+$<RCP
+needs "FLEXP"
+needs "FLAR1"
+needs "FLAR2"
+needs "FLIO1"
+needs "FLCONV"
+$>RCP
+
+get "libhdr"
+$<RCP
+get "fphdr"
+$>RCP
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.nmhd"
+
+/**
+      g.nm.string.to.num
+
+         inputs:
+            string.ptr     pointer to string for conversion
+            norm.factor    normalising factor (power of 10)
+            vec.ptr        pointer to vector for 32 bit integer
+                                                      result
+         outputs:
+            returns TRUE if conversion was successful,
+                    FALSE otherwise
+
+            converts a floating point string literal into a class
+            interval cut-point by inversely applying normalising
+            factor and then converting floating point result into
+            a rounded 32 bit integer
+
+            note that the number must not be converted to an
+            integer until it has been denormalised, since it
+            may be too big in its absolute form
+**/
+
+let g.nm.string.to.num (string.ptr, norm.factor, vec.ptr) = valof
+$(
+   let   fp.num = vec FP.LEN
+   and   fp.div = vec FP.LEN
+   and   fp.2.to.8 = vec FP.LEN
+   and   fp.2.to.16 = vec FP.LEN
+   and   fp.result = vec FP.LEN
+   and   fp.temp = vec FP.LEN
+   and   temp32 = vec 1
+   and   low16  = ?
+   and   high16 = ?
+   and   neg   =  ?
+
+   FPEXCEP := 0
+
+   // convert fp string to number
+   FLIT (string.ptr, fp.num)
+
+   // evaluate normalising factor - 10 to power of factor
+
+   FLN (FFLOAT (10, fp.temp), fp.div)
+   FMULT (fp.div, FFLOAT (norm.factor, fp.temp), fp.result)
+   FEXP (fp.result, fp.div)
+
+   // apply normalising factor inversely to number to get internal
+   // representation of number
+
+   FDIV (fp.num, fp.div, fp.result)
+
+
+   // convert fp result into 32 bit integer;
+
+   neg := FSGN (fp.result) < 0
+   if neg then
+      FABS (fp.result, fp.result)
+
+   // multiply by a correction factor to ensure correct rounding for numbers
+   // of all magnitudes - this compensates for the loss of accuracy after
+   // floating point division ; the correction factor is derived as follows:-
+   //    let i = original number
+   //        n = normalising factor
+   //    result = i/n + (i/n * 1e-10)
+   //           = i/n * (1 + 1e-10)
+
+   FLIT ("10000000001e-10", fp.temp)
+   FMULT (fp.result, fp.temp, fp.result)
+
+   //    get ms 16 bits
+   FLIT ("65536", fp.2.to.16)
+   FDIV (fp.result, fp.2.to.16, fp.div)
+   high16 := FINT (fp.div)
+
+   //    get ls 16 bits
+   FMULT ( FFLOAT (high16, fp.temp), fp.2.to.16, fp.num )
+   FMINUS (fp.result, fp.num, fp.result)
+
+   // convert ls word byte by byte to handle full 16-bit unsigned numbers;
+
+   //    get ms 8 bits of ls 16
+   FFLOAT (256, fp.2.to.8)
+   FDIV (fp.result, fp.2.to.8, fp.div)
+   low16 := FINT (fp.div) << 8
+
+   //    get ls 8 bits of ls 16
+   FMULT ( FFLOAT (low16 >> 8, fp.temp), fp.2.to.8, fp.num )
+   FMINUS (fp.result, fp.num, fp.result)
+   low16 := low16 | FFIX (fp.result)
+
+   test neg then
+      $(
+         // negate signed 32-bit number by two's complement
+
+         high16 := high16 NEQV #Xffff
+         low16  := low16  NEQV #Xffff
+         g.ut.set32 (low16, high16, vec.ptr)
+         g.ut.add32 ( g.ut.set32 (1, 0, temp32), vec.ptr )
+      $)
+   else
+      g.ut.set32 (low16, high16, vec.ptr)
+
+   resultis (FPEXCEP = 0)
+$)
+
+.

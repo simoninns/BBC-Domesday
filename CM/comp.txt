@@ -1,0 +1,13 @@
+*|  compile CM
+co map0
+co map1
+co map2
+co map3
+co map4
+co map5
+co map6
+co cm0
+co cm1
+co cm2
+co cm3
+co cm4

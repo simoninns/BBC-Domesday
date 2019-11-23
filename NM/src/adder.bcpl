@@ -1,0 +1,29 @@
+section "nod"
+get "libhdr"
+
+let start() be
+$(
+   let i = ?
+
+   i := 32760
+
+   for l=1 to 10  do
+      $(
+         i := i + 1
+         writef ("%n %x4*n", i, i)
+      $)
+$)
+.
+
+
+
+
+
+
+
+
+
+
+
+
+

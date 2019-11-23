@@ -1,0 +1,454 @@
+//  AES SOURCE  4.87
+
+/**
+         COMPHO2 - COMMUNITY PHOTO
+         -------------------------
+
+         This section contains :
+
+         G.cp.picopt
+         G.cp.otini
+         G.cp.find.sc.start
+
+         NAME OF FILE CONTAINING RUNNABLE CODE: r.phtx
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+          9.10.86 9        DNH      Bugfix Write at Level 5
+                                    allow.print.write
+         17.10.86 10       PAC      Clear message bar for Write
+         ****************************
+         6.5.87      11    DNH      CHANGES FOR UNI
+         31.7.87     12    PAC      Fix print bugs
+**/
+
+SECTION "com.photo2"
+
+GET"LIBHDR"
+GET":4.ARC.GH.glhd"
+GET":4.ARC.GH.glCPhd"
+GET":4.ARC.H.sdhd"
+GET":4.ARC.H.sihd"
+GET":4.ARC.H.kdhd"
+GET":4.ARC.H.cphd"
+GET":4.ARC.H.uthd"
+GET":4.ARC.H.vhhd"
+
+/**
+         G.CP.OTINI - INITIALISE FOR PHOTO OPTIONS
+         -----------------------------------------
+
+         This routine is called upon the transition from photo to
+         photo options.
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Options initialise expects G.cp.buffA to hold the
+         current data frame, and that the context data (eg.
+         npics) has been set up by G.cp.phoini.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Display short caption for currently displayed picture
+         IF no long caption for this picture is available
+         THEN make local menu bar box 3 blank
+         Set up local menu bar with:
+            box 4 'Clear', boxes 5 & 6 active
+**/
+
+LET G.cp.otini() BE
+$(
+   G.sc.pointer( m.sd.off )
+
+   // check long caption present
+   IF ~lcpresent() THEN G.cp.context!m.cp.box3 := m.wBlank
+
+   IF G.menubar!m.box4 ~= m.wClear
+      THEN G.cp.shortcapt()
+   G.cp.context!m.cp.box4   := m.wClear
+   G.cp.context!m.cp.phosub := m.cp.capt // in caption substate
+
+   G.cp.context!m.cp.box5 := m.sd.act // make "Print"
+   G.cp.context!m.cp.box6 := m.sd.act //      "Write" boxes active
+
+   G.cp.context!m.cp.write.pending := FALSE
+$)
+
+
+/**
+         G.CP.PICOPT - PHOTO OPTIONS
+         ---------------------------
+
+         Specific action routine for photo options
+
+         GLOBALS MODIFIED:
+
+         G.menubar vector may be changed
+         G.cp.buffA vector may be changed
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine uses the current picture number in
+         G.context to obtain its offsets into the data buffer for
+         captions.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.cp.picopt []
+         -----------
+
+         Convert a 'Change' keypress into function keys 7/8
+
+         CASE OF G.key
+
+            Function 3 : IF   Long caption is displayed
+                           THEN Clear long caption
+                                Put "Description" in menu box 3
+                                disallow Print and Write
+                           ELSE Display long caption
+                                Put "Clear" in menu box 3
+                                allow Print and Write
+                         ENDIF
+                         Put "Caption" in menu box 4
+                         ENDCASE
+
+            Function 4 : IF   Short caption is displayed
+                           THEN Clear short caption
+                                Put "Caption" in menu box 4
+                                disallow Print and Write
+                           ELSE Display short caption
+                                Put "Clear" in menu box 4
+                                allow Print and Write
+                         ENDIF
+                         IF   Long caption is available
+                           THEN Put "Description" in menu box 3
+                         ENDIF
+                         ENDCASE
+
+            Function 5 : Do print
+
+            Function 6 : Do write
+
+            Function 7 : Page backwards
+
+            Function 8 : Page forwards
+
+         ENDCASE
+
+         IF menu bar needs redrawing
+            THEN redraw menu bar
+
+         RETURN
+**/
+
+AND G.cp.picopt() BE
+$( LET local.key = G.key
+
+   IF local.key ~= m.kd.noact THEN G.sc.pointer( m.sd.off )
+
+   //  if buffer not right, then load data buffer
+   // G.cp.find.data ()      should always be correct...
+
+   // restore video on return from Help
+   IF G.cp.context!m.cp.turn.on DO
+   $( G.vh.video( m.vh.video.on )
+      G.cp.context!m.cp.turn.on := FALSE
+   $)
+
+   // have to tidy up the pending write first
+   IF ( G.cp.context!m.cp.write.pending ) &
+      ( local.key ~= m.kd.noact ) & ( CAPCH(G.key) ~='R' ) DO
+   $(
+      LET ch = ( G.key > ' ' & G.key <= 'z' ) -> G.key, 'Q'
+      G.sc.movea( m.sd.message, m.cp.EOS, m.sd.mesYtex )
+      G.sc.ofstr( "%C",ch )
+      G.ut.wait ( 100 )
+      G.sc.clear( m.sd.message )
+      G.cp.context!m.cp.write.pending := FALSE
+   $)
+
+   IF (local.key = m.kd.change) & (G.screen = m.sd.display)
+      THEN TEST G.Xpoint < m.cp.LHS
+           THEN local.key := m.kd.Fkey7
+           ELSE TEST G.xpoint > m.cp.RHS
+                THEN local.key := m.kd.Fkey8
+                ELSE G.sc.beep()
+
+   SWITCHON local.key INTO
+      $( CASE m.kd.noact : ENDCASE  // do nothing
+
+         CASE m.kd.Fkey3 :
+         $( TEST G.cp.context!m.cp.phosub = m.cp.desc
+               THEN $( G.cp.clearcapt (G.cp.context!m.cp.descr.siz)
+                       G.cp.context!m.cp.box3   := m.wDescription
+                       G.cp.context!m.cp.phosub := m.cp.none
+                       allow.print.write (FALSE)
+                    $)
+               ELSE $( longcapt()            // Display long caption
+                       G.cp.context!m.cp.box3   := m.wClear
+                       G.cp.context!m.cp.phosub := m.cp.desc
+                       allow.print.write (TRUE)
+                    $)
+               G.cp.context!m.cp.box4 := m.wCaption
+         $)
+         ENDCASE
+
+         CASE m.kd.Fkey4 :
+         $( TEST G.cp.context!m.cp.phosub = m.cp.capt
+               THEN $( G.cp.clearcapt(1)          // clear short caption
+                       G.cp.context!m.cp.box4   := m.wCaption
+                       G.cp.context!m.cp.phosub := m.cp.none
+                       allow.print.write (FALSE)
+                    $)
+               ELSE $( G.cp.shortcapt()           // Display short caption
+                       G.cp.context!m.cp.box4   := m.wClear
+                       G.cp.context!m.cp.phosub := m.cp.capt
+                       allow.print.write (TRUE)
+                    $)
+               IF G.menubar!m.box3 ~= m.wBlank // Long caption is available
+                  THEN G.cp.context!m.cp.box3 := m.wDescription
+         $)
+         ENDCASE
+
+         //////////////////////////////////////////////////////////////
+         //      do print, or set up a 'pending write' state         //
+         //////////////////////////////////////////////////////////////
+         CASE m.kd.Fkey5 :
+         $( TEST G.menubar!m.box4 = m.wClear // a short caption is up
+               THEN sc.print()
+               ELSE IF G.menubar!m.box3 = m.wClear  // a long caption is up
+                  THEN lc.print()
+         $)
+         ENDCASE
+
+         CASE m.kd.Fkey6 :
+         $( G.sc.mess("Insert floppy disc; type R (ready) or Q (quit): ")
+            G.cp.context!m.cp.write.pending := TRUE
+         $)
+         ENDCASE
+
+         //////////////////////////////////////////////////////////////
+         //            paging forwards and backwards                 //
+         //////////////////////////////////////////////////////////////
+         CASE m.kd.Fkey7 :   // page backwards
+         $(
+            IF G.cp.page( m.cp.back )
+            THEN do.captions()
+         $)
+         ENDCASE
+
+         CASE m.kd.Fkey8 :   // page forwards
+         $(
+            IF G.cp.page( m.cp.forwards )
+            THEN do.captions()
+         $)
+         ENDCASE
+
+         ////////////////////////////////////////////////////////////////
+         //           this code actually does the write                //
+         ////////////////////////////////////////////////////////////////
+         CASE 'R':
+         CASE 'r':
+         $( IF G.cp.context!m.cp.write.pending
+            THEN $( G.sc.movea( m.sd.message, m.cp.EOS, m.sd.mesYtex )
+                    G.sc.ofstr( "%C",G.key ) ; G.ut.wait( 50 )
+                    G.sc.clear( m.sd.message )       // added 17.10.86 PAC
+                    TEST G.menubar!m.box4 = m.wClear // a short caption is up
+                       THEN sc.write()
+                       ELSE IF G.menubar!m.box3 = m.wClear  // long caption is up
+                            THEN lc.write()
+                 $)
+            G.sc.clear( m.sd.message )
+            G.cp.context!m.cp.write.pending := FALSE
+            G.vh.video( m.vh.video.on ) // added 8.8.86 PAC - write mutes video
+            G.sc.keyboard.flush() // added 26.9.86 PAC - kill typeahead
+         $)
+         ENDCASE
+
+      $) // end of all case statements
+
+    IF G.redraw | G.cp.check.menu( G.cp.context+m.cp.box1 )
+       THEN G.sc.menu( G.cp.context+m.cp.box1 )
+
+    G.sc.pointer( m.sd.on )
+$)
+
+
+AND allow.print.write (yes) BE
+$(
+   LET entry = yes -> m.sd.act, m.wBlank
+   G.cp.context!m.cp.box5, G.cp.context!m.cp.box6 := entry, entry
+$)
+
+
+//////////////////////////////////////////////////////////////////////
+//         do.captions()                                            //
+//         - sorts out the short and long captions when             //
+//         paging within a photo set.                               //
+//////////////////////////////////////////////////////////////////////
+
+AND do.captions() BE
+$(
+   IF G.cp.context!m.cp.phosub = m.cp.capt // a short caption is up
+   THEN G.cp.shortcapt()
+
+   TEST lcpresent()                               // a long caption exists
+   THEN TEST G.cp.context!m.cp.phosub = m.cp.desc // and last one was displayed
+        THEN                                      // so display this one
+        $( G.cp.clearcapt (G.cp.context!m.cp.descr.siz) // clear long caption
+           longcapt()
+           G.cp.context!m.cp.box3 := m.wClear
+        $)
+        ELSE G.cp.context!m.cp.box3 := m.wDescription
+
+   ELSE $(                                // no long caption
+           IF G.menubar!m.box3 = m.wClear
+           THEN G.cp.clearcapt(G.cp.context!m.cp.descr.siz) // remove old one
+           G.cp.context!m.cp.box3 := m.wBlank
+        $)
+$)
+
+
+//////////////////////////////////////////////////////////////////////
+//         lcpresent() - returns TRUE if the entry in the data      //
+//         buffer for the long caption for the current picture has  //
+//         any characters that are NOT ' ' or NUL.                  //
+//////////////////////////////////////////////////////////////////////
+AND lcpresent() = VALOF
+$(
+   LET start = find.lc.start()
+
+   FOR j = 0 TO (G.cp.context!m.cp.descr.siz-1) DO
+   $(
+      LET j1 = m.cp.lclength*j
+      FOR i = 0 TO m.cp.lclength-1 DO
+      $(
+         LET ch = G.cp.buffA%(start+i+j1)
+         IF (ch ~= 0) & (ch ~= ' ') THEN RESULTIS TRUE
+      $)
+   $)
+   RESULTIS FALSE
+$)
+
+
+//////////////////////////////////////////////////////////////////////
+//       longcapt()                                                 //
+//       - displays the long caption for the current picture. The   //
+//       picture number is given by G.context!m.picture.no. This    //
+//       routine moves the string to its private buffer one line    //
+//       at a time before outputting it with G.sc.odrop.            //
+//////////////////////////////////////////////////////////////////////
+AND longcapt() BE
+$(
+   LET start = find.lc.start()
+   LET oldstate = G.sc.pointer( m.sd.off )
+
+   G.cp.clearcapt( 1 )                       // clear maximum caption size
+
+   FOR j = 0 TO (G.cp.context!m.cp.descr.siz-1) DO
+   $(
+      G.sc.movea (m.sd.display,m.cp.lcXpos,
+                        (G.cp.context!m.cp.descr.siz-j)*m.sd.linW )
+      G.ut.movebytes (G.cp.buffA, start+j*m.cp.lclength,
+                        G.cp.context+m.cp.txtbuff, 1, m.cp.lclength)
+      G.sc.odrop (G.cp.context+m.cp.txtbuff)
+   $)
+   G.sc.pointer( oldstate )
+$)
+
+
+//////////////////////////////////////////////////////////////////////
+//             sc.print() - prints a short caption                  //
+//////////////////////////////////////////////////////////////////////
+AND sc.print() BE
+$(
+   LET start = G.cp.find.sc.start()
+
+   G.ut.movebytes (G.cp.buffA, start,
+                     G.cp.context+m.cp.txtbuff, 1, m.cp.sclength)
+   IF G.ut.print ( TABLE 0 )               // initial C/R
+   THEN G.ut.print (G.cp.context+m.cp.txtbuff)
+$)
+
+
+//////////////////////////////////////////////////////////////////////
+//             lc.print() - prints a long caption                   //
+//////////////////////////////////////////////////////////////////////
+AND lc.print() BE
+$(
+   LET start = find.lc.start()
+
+   UNLESS G.ut.print ( TABLE 0 ) RETURN // initial C/R
+
+   FOR j = 0 TO (G.cp.context!m.cp.descr.siz-1) DO
+   $(
+      G.ut.movebytes (G.cp.buffA, start+j*m.cp.lclength,
+                        G.cp.context+m.cp.txtbuff, 1, m.cp.lclength)
+      IF G.ut.print (G.cp.context+m.cp.txtbuff) = FALSE THEN BREAK
+   $)
+$)
+
+
+//////////////////////////////////////////////////////////////////////
+//             sc.write() - writes a short caption to disc          //
+//////////////////////////////////////////////////////////////////////
+AND sc.write() BE
+$(
+   LET start = G.cp.find.sc.start()
+   IF G.ut.open.file() = m.ut.success DO
+      G.ut.write( G.cp.buffA*BYTESPERWORD+start, m.cp.sclength, m.ut.text )
+   G.ut.close.file()
+$)
+
+
+//////////////////////////////////////////////////////////////////////
+//             lc.write() - writes a long caption to disc           //
+//////////////////////////////////////////////////////////////////////
+AND lc.write() BE
+$(
+   LET result = ?
+   LET start  = find.lc.start()
+   LET lcma = ?         // long caption machine address
+
+   result := G.ut.open.file()
+
+   FOR j = 0 TO (G.cp.context!m.cp.descr.siz-1) DO
+   $(
+      UNLESS result = m.ut.success BREAK
+      lcma := G.cp.buffA*BYTESPERWORD + start + j*m.cp.lclength
+      result := G.ut.write( lcma, m.cp.lclength, m.ut.text )
+   $)
+   G.ut.close.file()
+$)
+
+
+//////////////////////////////////////////////////////////////////////
+//    G.cp.find.sc.start      GLOBAL
+//    find the start address of the current short caption
+//    address is byte offset from G.cp.buffA to first byte
+//    Also sets length byte in text buffer.
+//    Used by G.cp.shortcapt as well as print & write stuff
+//////////////////////////////////////////////////////////////////////
+
+AND G.cp.find.sc.start() = VALOF
+$(
+   LET st = G.cp.context!m.cp.short.start       // start of short captions
+   (G.cp.context+m.cp.txtbuff)%0 := m.cp.sclength     // set length byte
+   RESULTIS st + m.cp.sclength*(G.context!m.picture.no-1) // this caption
+$)
+
+
+//////////////////////////////////////////////////////////////////////
+//    find the start address of the current long caption            //
+//    address is byte offset from G.cp.buffA to first byte.         //
+//    Also sets length byte in text buffer.                         //
+//////////////////////////////////////////////////////////////////////
+AND find.lc.start() = VALOF
+$(
+   LET st = G.cp.context!m.cp.long.start        // start of long captions
+   (G.cp.context+m.cp.txtbuff)%0 := m.cp.lclength     // set length byte
+   RESULTIS st + (m.cp.lclength*G.cp.context!m.cp.descr.siz)*
+                                             (G.context!m.picture.no-1)
+$)
+.

@@ -1,0 +1,28 @@
+*| LINKMODS AES Version 1 18.5.87
+*| link the system kernel modules...
+*| ... and make l.kernel   
+*SPOOL $.tmp.LINKMODS
+*time
+*dir $.ARC.KE
+c linc
+*dir $.ARC.UT
+c linc
+*dir $.ARC.SC
+c linc
+*dir $.ARC.DH
+c linc
+*dir $.ARC.VH
+c linc     
+*| make the state tables
+*dir $.ARC.SI
+c linc        
+*dir $.ARC.HE
+c linc
+*| now make l.kernel - all but the KE package
+*dir $.ARC                                                       
+*remove l.kernel
+Join DH.c.kernel SC.c.kernel UT.c.kernel VH.c.kernel -to l.kernel
+*ex l
+*time
+*SPOOL
+*dir $.ARC.utils

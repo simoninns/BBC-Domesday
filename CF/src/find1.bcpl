@@ -1,0 +1,285 @@
+//  AES SOURCE  4.87
+
+/**
+         CF.FIND1 - TEXT INPUT ROUTINES
+         ------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         R.FIND
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         7.5.86   1        M.F.Porter  Initial working version
+         13.5.86  2            "       New 'get' directives
+         2.6.86   3            "       trap.() for trap()
+         10.6.86  4            "       fg, bg -> fgcol, bgcol
+         19.6.86  5        NY          Add gl5hd
+         18.7.86  6        MFP         $<debug removed
+         *********************************************
+         8.6.87   7        MFP         ADOPTED FOR UNI
+**/
+
+
+section "find1"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glCFhd"
+get ":4.ARC.H.kdhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.cfhd"
+
+static $(  i = 0  // offset down string
+           imax = 0 // max val taken by i
+           len = 0 // length of string (in chars)
+           xlen = 0 // length of box in x-direction (in chars)
+           x0 = 0; y0 = 0; // top left corner of box
+           s = 0 // the string
+           fgcol = 0; bgcol = 0  // foreground & background colours
+       $)
+
+/**
+         trap.(...) is a local version of the g.ut.trap
+         routine
+**/
+
+let trap.(n,val,low,high) be g.ut.trap("CF",10+n,true,3,val,low,high)
+
+/**
+         move.() positions the graphics cursor at the i-th
+         character in the display area. wrline.(colour) writes a
+         line (which the user will interpret as a text cursor)
+         under the i-th character. If colour=bgcol the line
+         disappears. c.on.() and c.off.() call wrline.() to
+         switch the cursor on and off. At the end of a text line
+         the cursor is temporarily invisible.
+**/
+
+let move.() be g.sc.movea(m.sd.display,
+                          x0+i rem xlen*m.sd.charwidth, y0-i/xlen*m.sd.linw)
+
+and wrline.(colour) be
+$(  move.(); g.sc.mover(0,-m.sd.linw)
+    g.sc.selcol(colour); g.sc.liner(m.sd.plot,m.sd.charwidth,0)
+$)
+
+and c.on.() be unless i = len do wrline.(fgcol)
+and c.off.() be unless i = len do wrline.(bgcol)
+
+/**
+         wrchar.(ch) writes character ch at the i-th character
+         position. First the area is is blanked out by wroting a
+         rectangle in the background colour ('bgcol'), the the
+         character is written over the rectangle in the
+         foreground colour ('fgcol').
+**/
+
+and wrchar.(ch) be
+$(  move.()
+    g.sc.selcol(bgcol); g.sc.rect(m.sd.plot,m.sd.charwidth,-m.sd.linw)
+    g.sc.mover(-m.sd.charwidth,m.sd.charheight); g.sc.selcol(fgcol); wrch(ch)
+$)
+
+/**
+         fillbox.(t,colour) fills the box t with the given
+         colour. See below for a definition of boxes.
+**/
+
+and fillbox.(t,colour) be
+$(  g.sc.movea(m.sd.display,t!0,t!1)
+    g.sc.selcol(colour); g.sc.rect(m.sd.plot, m.sd.charwidth * t!2,
+                                             -m.sd.linw * t!3-4)
+$)
+
+/**
+         setupinput.(t,s) sets up the box at t and the BCPL
+         string s to receive typed input. It is assumed that the
+         box has already been filled with a suitable colour. The
+         string s is initialised to contain all spaces.
+**/
+
+and setupinput.(t,s.) be
+$(  x0, y0, fgcol, bgcol, xlen, s := t!0, t!1, t!4, t!5, t!2, s.
+            trap.(1,x0,0,m.sd.disw)
+            trap.(2,y0,0,m.sd.disYtex)
+            trap.(3,xlen,0,m.sd.charsperline)
+            trap.(4,t!3,0,m.sd.displines)
+    len := t!2 * t!3
+    i := 0; imax := 0; c.on.()
+    for i = 1 to len do s%i := ' '
+$)
+
+/**
+         addtoinput.(ch) adds ch to the current box. There are
+         various special cases when ch is an editing character
+         ('delete' or cursor movement), and when the ch occurs in
+         a word at the end of a line, when wrap around is done.
+         ch = m.kd.return terminates the input.
+**/
+
+and addtoinput.(ch) be test g.ut.printingchar(ch) then
+    // ordinary character
+    test i = len then g.sc.beep() or      // beep if no room to add in
+    $(  wrchar.(ch); i := i+1; s%i := ch  // write to screen & add to s
+        // if ch is a non-space at the end of a line in the box (other
+        // than the last line) wrap the word containing ch over onto the
+        // next line.
+        if i rem xlen = 0 & i < len & ch ~= ' ' do
+        $(  let j = i-1
+            // j will be the offset in s of the last space in the current
+            // line of typed input.
+            $(  if j < i-xlen return   // do nothing if no space found
+                if s%(j+1) = ' ' break
+                j := j-1
+            $) repeat
+            j := j+1   // j at first char of word
+            // now readjust the placing of the word in s
+            for k = 1 to i-j do $( s%(i+k) := s%(j+k); s%(j+k) := ' ' $)
+            // now copy this adjustment to s onto the screen
+            $(  let m = 2*(i-j)
+                i := j
+                for k = 1 to m do $( wrchar.(s%(i+1)); i := i+1 $)
+            $)
+        $)
+        if i > imax do imax := i
+    $)
+or   // special character
+$(  let inc = ?  // this will contain the increment to be added to i
+    switchon ch into
+    $(  case m.kd.delete:
+            if i = 0 | i < imax do $( g.sc.beep(); endcase $)
+            s%i := ' '; i := i-1; imax := imax-1; wrchar.(' ')
+            return
+        case m.kd.up: if i < xlen return; inc := -xlen; goto lab
+        case m.kd.down: if i >= len-xlen return; inc := xlen; goto lab
+        case m.kd.left: if i = 0 return; inc := -1; goto lab
+        case m.kd.right:
+            if i = len return; inc := 1
+        lab:
+            if i+inc > imax return
+            i := i+inc; return
+        case m.kd.noact: return
+        case m.kd.return:
+            $(  let i = imax
+                while i > 0 & s%i = ' ' do i := i-1
+                s%0 := i; return
+            $)
+    $)
+$)
+
+/**
+         addstringtoinput.(u) calls addtoinput.(ch) for each
+         character ch in the BCPL string u. If the string is too
+         long to be added in we beep and return. The test for
+         string too long is not quite exact however, since
+         subsequent word wraparound is liable to increase its
+         length.
+**/
+
+and addstringtoinput.(u) be
+$(  let ulen = u%0
+    if ulen > len-i do $( g.sc.beep(); return $)
+    for j = 1 to ulen do
+    $(  let ch = u%j
+        test ch = ' ' = s%(i+1) then
+        $(  i := i+1
+            if i > imax do imax := i
+        $) or addtoinput.(ch)
+    $)
+$)
+
+/**
+         highlightinput.(ibase,itop,fg,bg) takes the characters
+         in s at character offsets ibase to itop inclusive, and
+         writes them back into the box with the specified
+         foreground and background colours. Thus
+
+            highlightinput.(1,len,m.sd.pink,m.sd.cream)
+
+         fills the whole box with cream and rewrites the text in
+         pink.
+**/
+
+and highlightinput.(ibase,itop,newfgcol,newbgcol) be
+$(  let a,b,c = i,fgcol,bgcol
+            trap.(5,ibase,0,255)
+            trap.(6,itop,0,len)
+    i,fgcol,bgcol := ibase-1, newfgcol,newbgcol
+    until i >= itop do $( wrchar.(s%(i+1)); i := i+1 $)
+    i,fgcol,bgcol := a,b,c
+$)
+
+/**
+         Text input is done by defining an area of the screen
+         called a 'box'. A box is a rectangle with top left hand
+         corner at (x0,y0), width xlen (measured in characters),
+         height ylen (measured in lines), and default foreground
+         and background colours fgcol and bgcol. To use a box it
+         is defined as a table:
+
+                    box := table x0,y0, xlen,ylen, fgcol,bgcol
+
+         The total character size of the box is len = xlen *
+         ylen. Text added into the box is formed in a BCPL string
+         with room for len characters. This string will be
+         denoted by s. The current character position in s is
+         indicated on the screen by a text cursor.
+
+         The first argument of g.cf.boxinput defines the
+         interpretation of the subsequent arguments. The possible
+         modes of use are as follows:
+
+         g.cf.boxinput('i',box,s)
+             Initialise the given box to collect input in string
+             s. 'box' becomes the current box.
+         g.cf.boxinput('f',box,colour)
+             Fill the given box on the screen with the given
+             colour.
+         g.cf.boxinput('c',ch)
+             Character ch is added to the current box.
+         g.cf.boxinput('s',str)
+             String str is added to the current box.
+         g.cf.boxinput('h',i0,i1,fg,bg)
+             Highlight the input in the current box between
+             character positions i0 and i1, using fg and bg as
+             foreground and background colours.
+         g.cf.boxinput('+' or '-')
+             Switch the text cursor on or off explicitly.
+
+         Each call of g.cf.boxinput return as result the total
+         number of characters so far in s.
+**/
+
+and g.cf.boxinput(mode,p1,p2,p3,p4) = valof
+$(  // pick up statics:
+    let h = g.cf.p+p.s
+    i,imax,len,xlen,x0,y0,s,fgcol,bgcol := h!0,h!1,h!2,h!3,h!4,h!5,h!6,h!7,h!8
+    test mode = 'c' then
+    $(  if p1 = m.kd.noact resultis imax
+        $(  let state = g.sc.pointer(m.sd.off)
+            c.off.(); addtoinput.(p1)
+            if p1 ~= m.kd.return do c.on.()
+            g.sc.pointer(state)
+        $)
+        trap.(7,i,0,len)
+    $)
+    or
+    $(  let state = g.sc.pointer(m.sd.off)
+        switchon mode into
+        $(  case 'f': fillbox.(p1,p2); endcase
+            case 'i': setupinput.(p1,p2); endcase
+            case 's': c.off.(); addstringtoinput.(p1); c.on.(); endcase
+            case 'h': highlightinput.(p1,p2,p3,p4); endcase
+            case '+': c.on.(); endcase
+            case '-': c.off.()
+        $)
+        g.sc.pointer(state)
+    $)
+    // restore statics:
+    h!0,h!1,h!2,h!3,h!4,h!5,h!6,h!7,h!8 := i,imax,len,xlen,x0,y0,s,fgcol,bgcol
+    resultis imax
+$)
+
+

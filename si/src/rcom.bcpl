@@ -1,0 +1,131 @@
+//  AES SOURCE  4.87
+
+section "rcom"
+
+/**
+         SI.Rcom - State Routine Init for Community
+         ------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.stinit
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         23.4.87     1     DNH      Created from stiniXX
+         12.5.87     2     DNH      Add AAtext, AAtexopt
+**/
+
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glCFhd"
+get ":4.ARC.GH.glCMhd"
+get ":4.ARC.GH.glCPhd"
+get ":4.ARC.GH.glHEhd"
+get ":4.ARC.H.sthd"
+get ":4.ARC.H.stphd"
+
+
+let g.st.rcom () be
+$(
+
+//  action routines when in state
+
+    G.stactr!m.st.mapwal  := @G.cm.Mapwal - @G.dummy
+    G.stactr!m.st.mapopt  := @G.cm.Mapopt - @G.dummy
+    G.stactr!m.st.mapsca  := @G.cm.Mapsca - @G.dummy
+    G.stactr!m.st.mapkey  := @G.cm.Mapkey - @G.dummy
+    G.stactr!m.st.cphoto  := @G.cp.Photo - @G.dummy
+    G.stactr!m.st.picopt  := @G.cp.Picopt - @G.dummy
+    G.stactr!m.st.ctext   := @G.ct.Text - @G.dummy
+    G.stactr!m.st.ctexopt := @G.ct.Texopt - @G.dummy
+    G.stactr!m.st.AAtext  := @G.ct.AA.text - @G.dummy
+    G.stactr!m.st.AAtexopt:= @G.ct.AA.texopt - @G.dummy
+    G.stactr!m.st.cfinde  := @G.cf.eAction - @G.dummy
+    G.stactr!m.st.cfindm  := @G.cf.mAction - @G.dummy
+    G.stactr!m.st.cfindr  := @G.cf.rAction - @G.dummy
+
+//  initialisation routines for transitions
+
+    G.stinit!((m.st.mapwal-1)*m.st.barlen+1)      := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.mapwal-1)*m.st.barlen+2)     := @G.cm.Optini - @G.dummy
+      G.stinit!((m.st.mapwal-1)*m.st.barlen+3)    := 0
+       G.stinit!((m.st.mapwal-1)*m.st.barlen+4)   := @G.cp.Phoini - @G.dummy
+        G.stinit!((m.st.mapwal-1)*m.st.barlen+5)  := @G.ct.Texini - @G.dummy
+         G.stinit!((m.st.mapwal-1)*m.st.barlen+6) := @G.cf.einit - @G.dummy
+    G.stinit!((m.st.mapopt-1)*m.st.barlen+1)      := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.mapopt-1)*m.st.barlen+2)     := @G.cm.Mapini2 - @G.dummy
+      G.stinit!((m.st.mapopt-1)*m.st.barlen+3)    := @G.cm.Scaini - @G.dummy
+       G.stinit!((m.st.mapopt-1)*m.st.barlen+4)   := @G.cm.Keyini - @G.dummy
+        G.stinit!((m.st.mapopt-1)*m.st.barlen+5)  := 0
+         G.stinit!((m.st.mapopt-1)*m.st.barlen+6) := 0
+    G.stinit!((m.st.mapsca-1)*m.st.barlen+1)      := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.mapsca-1)*m.st.barlen+2)     := @G.cm.Mapini2 - @G.dummy
+      G.stinit!((m.st.mapsca-1)*m.st.barlen+3)    := @G.cm.Unitsini - @G.dummy
+       G.stinit!((m.st.mapsca-1)*m.st.barlen+4)   := 0
+        G.stinit!((m.st.mapsca-1)*m.st.barlen+5)  := 0
+         G.stinit!((m.st.mapsca-1)*m.st.barlen+6) := 0
+    G.stinit!((m.st.mapkey-1)*m.st.barlen+1)      := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.mapkey-1)*m.st.barlen+2)     := @G.cm.Mapini2 - @G.dummy
+      G.stinit!((m.st.mapkey-1)*m.st.barlen+3)    := 0
+       G.stinit!((m.st.mapkey-1)*m.st.barlen+4)   := 0
+        G.stinit!((m.st.mapkey-1)*m.st.barlen+5)  := 0
+         G.stinit!((m.st.mapkey-1)*m.st.barlen+6) := 0
+    G.stinit!((m.st.cphoto-1)*m.st.barlen+1)      := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.cphoto-1)*m.st.barlen+2)     := @G.cp.Otini - @G.dummy
+      G.stinit!((m.st.cphoto-1)*m.st.barlen+3)    := @G.cm.Mapini - @G.dummy
+       G.stinit!((m.st.cphoto-1)*m.st.barlen+4)   := 0
+        G.stinit!((m.st.cphoto-1)*m.st.barlen+5)  := @G.ct.Texini - @G.dummy
+         G.stinit!((m.st.cphoto-1)*m.st.barlen+6) := @G.cf.einit - @G.dummy
+    G.stinit!((m.st.picopt-1)*m.st.barlen+1)      := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.picopt-1)*m.st.barlen+2)     := @G.cp.P3oini - @G.dummy
+      G.stinit!((m.st.picopt-1)*m.st.barlen+3)    := 0
+       G.stinit!((m.st.picopt-1)*m.st.barlen+4)   := 0
+        G.stinit!((m.st.picopt-1)*m.st.barlen+5)  := 0
+         G.stinit!((m.st.picopt-1)*m.st.barlen+6) := 0
+    G.stinit!((m.st.ctext-1)*m.st.barlen+1)       := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.ctext-1)*m.st.barlen+2)      := @G.ct.Otini - @G.dummy
+      G.stinit!((m.st.ctext-1)*m.st.barlen+3)     := @G.cm.Mapini - @G.dummy
+       G.stinit!((m.st.ctext-1)*m.st.barlen+4)    := @G.cp.P2oini - @G.dummy
+        G.stinit!((m.st.ctext-1)*m.st.barlen+5)   := 0
+         G.stinit!((m.st.ctext-1)*m.st.barlen+6)  := @G.cf.einit - @G.dummy
+    G.stinit!((m.st.ctexopt-1)*m.st.barlen+1)      := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.ctexopt-1)*m.st.barlen+2)     := @G.ct.unoptini - @G.dummy
+      G.stinit!((m.st.ctexopt-1)*m.st.barlen+3)    := 0
+       G.stinit!((m.st.ctexopt-1)*m.st.barlen+4)   := 0
+        G.stinit!((m.st.ctexopt-1)*m.st.barlen+5)  := 0
+         G.stinit!((m.st.ctexopt-1)*m.st.barlen+6) := 0
+    G.stinit!((m.st.AAtext-1)*m.st.barlen+1)      := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.AAtext-1)*m.st.barlen+2)     := @G.ct.AA.otini - @G.dummy
+      G.stinit!((m.st.AAtext-1)*m.st.barlen+3)    := @G.cm.Mapini - @G.dummy
+       G.stinit!((m.st.AAtext-1)*m.st.barlen+4)   := @G.cp.P2oini - @G.dummy
+        G.stinit!((m.st.AAtext-1)*m.st.barlen+5)  := 0
+         G.stinit!((m.st.AAtext-1)*m.st.barlen+6) := @G.cf.einit - @G.dummy
+    G.stinit!((m.st.AAtexopt-1)*m.st.barlen+1)     := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.AAtexopt-1)*m.st.barlen+2)    := @G.ct.AA.unoptini - @G.dummy
+      G.stinit!((m.st.AAtexopt-1)*m.st.barlen+3)   := 0
+       G.stinit!((m.st.AAtexopt-1)*m.st.barlen+4)  := 0
+        G.stinit!((m.st.AAtexopt-1)*m.st.barlen+5) := 0
+         G.stinit!((m.st.AAtexopt-1)*m.st.barlen+6):= 0
+    G.stinit!((m.st.cfinde-1)*m.st.barlen+1)       := 0
+     G.stinit!((m.st.cfinde-1)*m.st.barlen+2)      := 0
+      G.stinit!((m.st.cfinde-1)*m.st.barlen+3)     := 0
+       G.stinit!((m.st.cfinde-1)*m.st.barlen+4)    := 0
+        G.stinit!((m.st.cfinde-1)*m.st.barlen+5)   := 0
+         G.stinit!((m.st.cfinde-1)*m.st.barlen+6)  := 0
+    G.stinit!((m.st.cfindm-1)*m.st.barlen+1)       := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.cfindm-1)*m.st.barlen+2)      := 0
+      G.stinit!((m.st.cfindm-1)*m.st.barlen+3)     := @G.cm.Mapini2 - @G.dummy
+       G.stinit!((m.st.cfindm-1)*m.st.barlen+4)    := @G.cp.Phoini - @G.dummy
+        G.stinit!((m.st.cfindm-1)*m.st.barlen+5)   := @G.ct.Texini - @G.dummy
+         G.stinit!((m.st.cfindm-1)*m.st.barlen+6)  := @G.cf.rInit - @G.dummy
+    G.stinit!((m.st.cfindr-1)*m.st.barlen+1)       := @G.he.Helpini - @G.dummy
+     G.stinit!((m.st.cfindr-1)*m.st.barlen+2)      := @G.cf.mInit - @G.dummy
+      G.stinit!((m.st.cfindr-1)*m.st.barlen+3)     := 0
+       G.stinit!((m.st.cfindr-1)*m.st.barlen+4)    := 0
+        G.stinit!((m.st.cfindr-1)*m.st.barlen+5)   := 0
+         G.stinit!((m.st.cfindr-1)*m.st.barlen+6)  := 0
+$)
+.

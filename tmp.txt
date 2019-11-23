@@ -1,0 +1,102 @@
+Search for \SIHD\
+   - from root directory arc
+
+Searching AM.b, 40 files
+File analyse1
+File analyse2
+File analyse3
+File analyse4
+File compare2
+File find
+File map1
+File map2
+File retr1
+
+Searching AN.b, 46 files
+File auto1
+File auto2
+File auto3
+File auto4
+File detail1
+File detail2
+File manual1
+File retr1
+File retr2
+File retr3
+
+Searching CP.b, 3 files
+File cominit
+File compho1
+File compho2
+
+Searching CT.b, 11 files
+File aatext1
+File aatext2
+File aatext3
+File aatext4
+File ctext1
+File ctext2
+File ctext3
+File ctext4
+File gdctext3
+
+Searching HE.b, 14 files
+File helpD
+File htext2
+File htext4
+File htext5
+File htext6
+
+Searching KE.b, 8 files
+File kernel2
+
+Searching NE.b, 7 files
+File ntext1
+File ntext2
+File ntext4
+File ntext5
+File ntext6
+
+Searching NM.b, 40 files
+File analyse1
+File analyse2
+File analyse3
+File analyse4
+File compare2
+File find
+File map1
+File map2
+File retr1
+
+Searching NN.b, 46 files
+File auto1
+File auto2
+File auto3
+File auto4
+File detail1
+File detail2
+File manual1
+File retr1
+File retr2
+File retr3
+
+Searching NT.b, 4 files
+File nt3
+
+Searching NV.b, 4 files
+File nv1
+
+Searching SC.b, 16 files
+File menu
+
+Searching SI.b, 13 files
+File scom
+File sexam
+File sgalwal
+File she
+File snm
+File ssear
+File stinit
+
+Searching H, 39 files
+File sdhd

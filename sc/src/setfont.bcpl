@@ -1,0 +1,106 @@
+//  $MSC
+//  AES SOURCE  4.87
+
+/**
+         SC.SETFONT - SPECIAL FONT SETTING ROUTINE
+         -----------------------------------------
+
+         This routine is used to compensate for the special
+         character set used by schools form essays (which were
+         written using the BBC MODE 7, or TELETEXT, character
+         set).
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         l.setfont
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         30.04.87 1        PAC         ADOPTED FOR AES SYSTEM
+                                       changed opsys to osbyte
+**/
+
+SECTION"setfont"
+GET"libhdr"
+GET":4.ARC.GH.glhd"
+GET":4.ARC.H.sdhd"
+
+/**
+         G.SC.SETFONT - SET UP SPECIAL FONT
+         ----------------------------------
+
+         Either set up or reset the special schools form text
+         font.
+
+         INPUTS:
+
+         type of change (manifest from sdhdr)
+         either m.sd.schools OR m.sd.normal
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine should ONLY ever be called by the Community
+         photo/text overlay, before displaying a text page. It
+         can be used either to set the special font, or to
+         restore the normal font (on exit from community
+         photo/text)
+
+         Characters changed are:
+            ^  goes to up arrow
+            ~  goes to division sign
+            \  goes to 1/2
+            |  goes to double bar
+            _  goes to long hyphen
+            [  goes to left arrow
+            ]  goes to right arrow
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.SC.SETFONT [ type ]
+         ------------
+         IF type is m.sd.schools
+
+         THEN set up special font definitions for characters
+              shown above, using VDU 23
+
+         ELSE reset normal font definitions for characters 64-127
+              using OSBYTE 25,2 and OSBYTE 25,3
+**/
+LET G.sc.setfont( type ) BE
+$(
+   LET ft = TABLE
+
+   #x5B, #x1000, #x7F30, #x307F, #x0010, // character #x5B ( [ )
+   #x5C, #x4040, #x5C40, #x0C06, #x1E10, // character #x5C ( \ )
+   #x5D, #x0400, #x7F06, #x067F, #x0004, // character #x5D ( ] )
+   #x5E, #x3C18, #x187E, #x1818, #x0018, // character #x5E ( ^ )
+   #x5F, #x0000, #x7F00, #x0000, #x0000, // character #x5F ( _ )
+   #x7C, #x3636, #x3636, #x3636, #x0036, // character #x7C ( | )
+   #x7E, #x0800, #x7F00, #x007F, #x0008  // character #x7E ( ~ )
+
+   TEST type = m.sd.schools
+   THEN
+   $(
+      FOR i = 0 TO 30 BY 5 DO
+      VDU( "23,%,%;%;%;%;", ft!i, ft!(i+1), ft!(i+2), ft!(i+3), ft!(i+4) )
+      G.sc.addspace := TRUE  // replace highlight characters with spaces
+   $)
+
+   ELSE
+   $(
+      OSByte(25,2)
+      OSByte(25,3)
+      G.sc.addspace := FALSE // 'swallow' highlight characters
+   $)
+$)
+.
+

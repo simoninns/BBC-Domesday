@@ -1,0 +1,313 @@
+//  $MSC
+//  AES SOURCE  4.87
+
+/**
+         UT.UTILS1 - UTILITIES PACKAGE PART 1
+         ------------------------------------
+
+         This file contains:
+
+         G.ut.videodisc.error - handle message & abort on error
+         G.ut.abort    - tidy up and abort with given param
+         G.ut.trap     - trap invalid parameters
+         G.ut.wait     - delay for a specified time
+         G.ut.printingchar - test for printable character
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         kernel
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         11.06.86   1      PAC         This file split from UTILS
+         25.06.86   2      DNH         Add g.ut.abort &
+                                          g.ut.videodisc.error
+         04.07.86   3      PAC         Add stack unwind
+         07.07.86   4      PAC         Comment out stack unwind
+          23.7.86   5      DNH         Improve abort handling
+          5.8.86    6      DNH         I/O proc error message
+          7.8.86    7      PAC         Remove stack unwind completely
+         24.9.86    8      DNH         LVerror:set defwin for NM
+         8.10.86    9      DNH         Ignore soft traps unless
+                                          debug set
+         13.10.86   10     PAC         Set up default window for
+                                       TRAP message
+         12.5.87    11     PAC       Adopted for AES system
+**/
+
+SECTION "utils1"
+
+GET "LIBHDR"
+GET "SYSHDR"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.H.kdhd"
+GET ":4.ARC.H.sdhd"
+GET ":4.ARC.H.uthd"
+GET ":4.ARC.H.vhhd"
+
+/**
+         G.UT.VIDEODISC.ERROR - Handle Fatal Error in DH or VH
+         -----------------------------------------------------
+
+         Outputs a message from the I/O processor, then aborts
+         using g.ut.abort.
+
+         INPUTS: error code from VFS
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED: none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.ut.videodisc.error []
+         DO
+            get VFS error message from I/O proc
+            copy message
+            reset default window (for NM)
+            output message
+            call abort with videodisc abort code
+         END
+**/
+
+let g.ut.videodisc.error () be
+$(  
+   let hed = "*SVideodisc error:*S"
+   let str = vec (50/bytesperword)
+   
+   g.ut.get.ermess(str, 50)
+                      
+   g.ut.movebytes( str, 1, str, hed%0+1, str%0 )
+   g.ut.movebytes( hed, 1, str, 1,       hed%0 )
+
+   str%0 := str%0 + hed%0
+
+   g.sc.defwin ()
+   g.sc.mess (str)
+   g.sc.beep ()
+   g.ut.abort (m.ut.videodisc.abort)
+$)
+
+/**
+         G.UT.ABORT - Tidy Up and Abort on Fatal Error
+         ---------------------------------------------
+
+         Provides a common routine to tidy up and stop after a
+         fatal error occurs.  In particular it enables the front
+         panel buttons to allow the user to eject the disc
+         manually, since these are maintained disabled elsewhere.
+
+         INPUTS: Abort code, as defined in uthdr header file
+
+         OUTPUTS: none. never returns.
+
+         GLOBALS MODIFIED: none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         ABORT PROGRAM [abort code number]
+         DO
+            set VP mode to ensure any error message visible
+            enable front panel buttons
+            enable remote control
+            move to sensible screen position
+            call abort with abort code
+         END
+**/
+
+let g.ut.abort (abort.code) be
+$(
+   g.vh.video (m.vh.superimpose)
+   g.vh.send.fcode ("I1")
+   g.vh.send.fcode ("J1")
+   G.sc.movea  ( m.sd.display, m.sd.disX0, m.sd.dish-3*m.sd.linW )
+   G.sc.rect   ( m.sd.clear, m.sd.disW, (-7*m.sd.linW ))
+   G.sc.movea  ( m.sd.display, m.sd.disXtex, m.sd.disYtex-3*m.sd.linW)
+   g.sc.selcol (m.sd.blue)
+   ABORT (abort.code)
+$)
+
+/**
+         G.UT.TRAP - TRAP INVALID PARAMETER
+         ----------------------------------
+
+         Perform indicated check on parameter; report error
+         to console if out of bounds.
+         SOFT TRAPS NOW IGNORED unless debug flag is set at
+         compile time.
+         If error is fatal, then call g.ut.abort to terminate
+         execution.
+         In all cases the cursor is restored.
+
+         INPUTS:
+
+         package identifier, module number, 'fatal flag' ( true
+         if fatal error ), type of check ( lower limit, upper
+         limit, or both ), parameter to be checked, low limit,
+         high limit.
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED: none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Trap invalid parameter [ Package ID, Module number,
+         ----------------------   Fatal flag, check type,
+                                  parameter, low limit, high limit ]
+
+         CASE check type OF
+
+            1: check ( parameter > high limit ) -> errorflag
+
+            2: check ( parameter < low limit  ) -> errorflag
+
+            3: check ( parameter > high limit ) OR
+                     ( parameter < low limit  ) -> errorflag
+
+         ENDCASE
+
+         IF errorflag = true THEN
+
+            IF G.UT.ERRORSTREAM <> 0 THEN send output to file
+                                     ELSE send output to console
+            ENDIF
+
+            write out error message to current o/p stream
+
+            IF fatal flag = true THEN abort program ENDIF
+
+         ENDIF
+
+**/
+
+LET G.ut.trap ( packid,trapno,fatalflg,checktype,param,lolim,hilim ) be
+
+$( LET errorflag   = false
+   LET show.soft   = false
+   LET errtext,lim = ?,?
+   LET coords  = vec m.sd.coordsize // co-ordinates of last graphics cursor
+
+   $<DEBUG
+   show.soft := true       // if debug set we want to see soft traps
+   $>DEBUG
+
+   UNLESS show.soft | fatalflg  RETURN    // no debug and non fatal
+
+   SWITCHON checktype INTO
+   $( CASE 1:
+         errorflag := ( param > hilim )
+         IF errorflag
+         THEN lim := hilim
+      ENDCASE
+
+      CASE 2:
+         errorflag := ( param < lolim )
+         IF errorflag
+         THEN lim := lolim
+      ENDCASE
+
+      CASE 3:
+         errorflag := (param > hilim) | (param < lolim)
+         IF errorflag
+         THEN TEST param > hilim
+              THEN lim := hilim
+              ELSE lim := lolim
+         ENDCASE
+   $)
+
+   IF errorflag
+   THEN
+   $(   G.sc.savcur ( coords )  // find cursor
+        G.sc.defwin () // set default graphics window - added PAC 13.10.86
+        G.sc.movea  ( m.sd.display,m.sd.disX0,m.sd.dish )
+        G.sc.rect   ( m.sd.clear,m.sd.disW,(-2*m.sd.linW ))
+        G.sc.movea  ( m.sd.display,m.sd.disXtex,m.sd.disYtex)
+
+        WRITES ("TRAP: ")
+
+        TEST fatalflg
+        THEN WRITES ("fatal")
+        ELSE WRITES ("soft")
+
+        TEST lim = lolim
+        THEN errtext := "less"
+        ELSE errtext := "more"
+
+        WRITEF (" error detected in %S at %N*n",packid,trapno)
+        WRITEF ("      param %N is %S than limit %N*n",param,errtext,lim)
+
+        IF fatalflg
+        THEN g.ut.abort( m.ut.trap.abort )  // crash out on fatal errors
+
+        G.sc.rescur( coords )
+      $)
+$)
+
+
+/**
+         G.UT.WAIT - WAIT A SPECIFIED TIME
+         ---------------------------------
+
+         Delay for the specified number of centiseconds
+
+         INPUTS:
+
+         Delay time ( cs )
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+
+         SPECIAL NOTES FOR CALLERS:
+           
+         Set interval timer to zero using Osword 4
+         Wait until interval timer >= delay time
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.ut.wait [ delay ]
+         ---------
+         Do nothing for 'delay' centiseconds.
+         RETURN
+**/
+AND G.ut.wait ( delay.time ) BE
+$( LET v = VEC 2
+   v!0 := 0 ; OSWord(4,v) // zero interval timer
+   While time() < delay.time LOOP
+$)
+
+/**
+         G.UT.PRINTINGCHAR - CHECK FOR PRINTABLE CHARACTER
+         -------------------------------------------------
+
+         INPUTS:
+
+         Character to be checked
+
+         OUTPUTS:
+
+         TRUE if char is printable
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.ut.printingchar(ch) = 31 < ch < m.kd.delete
+**/
+AND G.ut.printingchar( ch ) = 31 < ch < m.kd.delete
+
+// end of utils 1 package
+.

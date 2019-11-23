@@ -1,0 +1,4 @@
+*| link the national find overlay
+*dir C
+Join find0 find1 find2 find3 find5 find7 find9 -to $.ARC.l.natfind
+*back

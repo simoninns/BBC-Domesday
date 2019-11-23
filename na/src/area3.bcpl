@@ -1,0 +1,309 @@
+//  PUK SOURCE  6.87
+
+/**
+         AREA3 - DISPLAY UNDERLAY MAP & HIGHLIGHT FIELD
+         ----------------------------------------------
+
+         This section contains :
+
+            G.na.display.map
+            G.na.highlight
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.area
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+        21.10.86  9        SRY      Blank background
+        27.10.86  10       SRY      Adjust for misaligned maps
+****************************************
+        8.6.87    11       SRY      Changes for UNI
+       19.8.87    12       DNH      Fix & release AOI name change
+       30.9.87    13       SRY      Fix special case 20th char (UNI)
+**/
+
+SECTION "Area3"
+
+GET "libhdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.GH.glNAhd"
+GET ":4.ARC.H.sdhd"
+GET ":4.ARC.H.dhhd"
+GET ":4.ARC.H.nmhd"
+GET ":4.ARC.H.nahd"
+GET ":4.ARC.H.vhhd"
+
+/**
+         G.NA.DISPLAY.MAP - FIND UNDERLAY MAP & DISPLAY
+         ----------------------------------------------
+
+         INPUTS:
+
+         G.na.buff!m.na.auname & autype strings
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         G.context!m.underlay.frame.no
+         G.context grid refs & AOI entries
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Read a buffer's worth of AU types from GAZETTEER
+         Search through them for a match on AU type entered by user
+         IF not found, message & exit
+         Binary chop the area of GAZETTEER for a match on the AU name
+         IF not found, message and exit
+         Read buffer from MAPDATA file
+         Get the grid refs & frame number
+         Blot out old blue rectangle
+         Update G.context with grid refs
+         Display yellow rectangle of current area
+         Display grid refs
+         Wait for 3 seconds
+         Blot out yellow rectangle
+         Display the underlay map
+**/
+
+LET G.na.display.map() = VALOF
+$( LET map.number, record, result = 0, 0, 0
+   LET found, bottom, top, handle = FALSE, 1, 0, ?
+   LET name, type = G.na.buff + m.na.auname, G.na.buff + m.na.autype
+   LET typeptr = G.na.buff
+   LET AOItype, AOIname, mapframe = ?, ?, ?
+   let s = ?
+   LET offset = VEC 1
+   LET start = VEC 1
+   LET record.offset = VEC 1
+   LET end = TABLE #XFF01
+   let align = vec 40/bytesperword
+
+   // Find Area Type and Names offset from gazetteer
+
+   G.ut.set32(0, 0, offset)
+   handle := G.dh.open("GAZETTEER")
+   G.dh.read(handle, offset, G.na.buff, m.na.bytes)
+   $( IF typeptr%2 > m.na.aulength typeptr%2 := m.na.aulength
+      s := G.ut.align(typeptr, 2, align, m.na.aulength+1)
+      IF compstring(s, type) = 0
+      $( found := TRUE
+         break
+      $)
+      // Special case for last char space
+      IF (type%0 = 19) & (s%20 = ' ')
+      $( s%0 := 19
+         IF compstring(s, type) = 0
+         $( found := TRUE
+            break
+         $)
+      $)
+      typeptr := typeptr + m.na.gazrecordbytes/bytesperword
+   $) REPEATUNTIL compstring(s, end) = 0
+
+   if G.ut.unpack16(typeptr, 2+m.na.autypebytes) > m.nm.max.num.areas
+      found := FALSE
+   UNLESS found
+   $( G.vh.frame(m.na.initial.map)
+      G.vh.video(m.vh.video.on)
+      G.sc.ermess("Area type not recognised - See Help")
+      G.dh.close(handle)
+      RESULTIS FALSE
+   $)
+   AOItype := G.ut.unpack16(typeptr, 0)
+
+   // Do a binary chop on Names to find the right one
+
+   G.ut.unpack32(typeptr, m.na.autypebytes + 4, start)
+   found := FALSE
+   top := G.ut.unpack16(typeptr, m.na.autypebytes + 2)
+   WHILE bottom <= top
+   $( record := (top + bottom) >> 1
+      G.ut.set32(record-1, 0, offset)
+      G.ut.set32(m.na.gazrecordbytes, 0, record.offset)
+      G.ut.mul32(offset, record.offset)    // Get relative offset of record
+      G.ut.add32(start, record.offset)     // add beginning of bunch of records
+      typeptr := G.na.buff + m.na.gbuff
+      G.dh.read(handle, record.offset, typeptr, m.na.gazrecordbytes)
+      IF typeptr%2 > m.na.aulength typeptr%2 := m.na.aulength
+      s := G.ut.align(typeptr, 2, align, m.na.aulength+1)
+      result := compstring(name, s)
+      IF result = 0
+      $( found := TRUE
+         break
+      $)
+      // Special case for last char space
+      IF (name%0 = 19) & (s%20 = ' ')
+      $( s%0 := 19
+         IF compstring(name, s) = 0
+         $( found := TRUE
+            break
+         $)
+      $)
+      TEST result > 0
+      THEN bottom := record + 1
+      ELSE top := record - 1
+   $)
+   G.dh.close(handle)
+
+   AOIname := G.ut.unpack16(typeptr, 0)
+   map.number := G.ut.unpack16(typeptr, m.na.aunamebytes+2)
+   IF (map.number = 0) | ~found // No underlay map or grid refs
+   $( G.vh.frame(m.na.initial.map)
+      G.vh.video(m.vh.video.on)
+      G.sc.ermess("Area name not recognised - See Help")
+      RESULTIS FALSE
+   $)
+
+   // Get frame number and grid refs of associated underlay map from MAPDATA
+
+   handle := G.dh.open("MAPDATA")
+   G.ut.set32(map.number * m.na.maprecordbytes, 0, offset)
+   G.dh.read(handle, offset, G.na.buff, m.na.maprecordbytes)
+   G.dh.close(handle)
+
+   // Display information on screen
+
+   G.vh.frame(m.na.initial.map)
+   G.vh.video(m.vh.video.on)
+   G.context!m.type.AOI := AOItype
+   G.context!m.name.AOI := AOIname
+   G.na.rectangle(m.sd.black)   // Blot out blue rectangle
+
+   G.context!m.grbleast  := G.ut.unpack16(G.na.buff, 0)
+   G.context!m.grblnorth := G.ut.unpack16(G.na.buff, 2)
+   G.context!m.grtreast  := G.ut.unpack16(G.na.buff, 4)
+   G.context!m.grtrnorth := G.ut.unpack16(G.na.buff, 6)
+   mapframe := G.ut.unpack16(G.na.buff, 8)
+   unless mapframe = 0 adjust.gr() // Map frame zero but valid area
+   G.na.rectangle(m.sd.yellow)  // Display yellow rectangle
+   display.grid.refs()
+   G.context!m.underlay.frame.no := mapframe
+
+   unless mapframe = 0            // Map frame zero but valid area
+   $( G.ut.wait(m.na.delay)
+      G.na.rectangle(m.sd.black)  // Blot out yellow rectangle
+      G.vh.frame(mapframe)
+   $)
+
+   resultis true
+$)
+
+AND adjust.GR() BE // Adjust easting because the maps don't line up
+$( let easting1 = G.context!m.grbleast
+   let easting2 = G.context!m.grtreast
+   let topbit1 = easting1 & #x8000
+   let topbit2 = easting2 & #x8000
+   let pix.adj = ?
+   easting1 := easting1 & #x7fff
+   easting2 := easting2 & #x7fff
+   pix.adj := muldiv(m.na.pix.adj, easting2-easting1, m.nm.pixel.width)
+   easting1 := easting1 + pix.adj
+   easting2 := easting2 + pix.adj
+   easting1 := easting1 | topbit1
+   easting2 := easting2 | topbit2
+   g.context!m.grbleast := easting1
+   g.context!m.grtreast := easting2
+$)
+
+AND display.grid.refs() BE
+$( LET easting = G.context!m.grbleast
+   LET northing = G.context!m.grblnorth
+   LET string = G.na.buff + G.na.buff!m.na.box
+   G.na.buff!m.na.box := m.na.gr1
+   FOR i = 1 TO 2
+   $( G.na.highlight(m.sd.cyan)
+      G.sc.selcol(m.sd.blue)
+      G.ut.grid.eight.digits(easting, northing, string)
+      G.sc.ofstr(string)
+      easting := G.context!m.grtreast
+      northing := G.context!m.grtrnorth
+      G.na.buff!m.na.box := m.na.gr2
+      string := G.na.buff + m.na.gr2
+   $)
+$)
+
+/**
+         G.NA.DISPLAY.HIGHLIGHT - HIGHLIGHT CURRENT BOX
+         ----------------------------------------------
+
+         INPUTS:
+
+         colour to highlight in
+
+         OUTPUTS:
+
+         G.na.buff!m.na.other.box
+         G.na.buff+m.na.box - length byte of string
+
+         GLOBALS MODIFIED:
+
+         see outputs
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.na.highlight [colour]
+         -----------------------
+
+         Set width and Y-position of box according to type of box
+         IF colour is cyan THEN set other box according to type of box
+         Set the length byte of the box to zero
+         Move to the start of the box
+         Draw coloured rectangle
+         Move back to the start of the text for the box
+**/
+
+
+AND G.na.highlight(colour) BE
+$( LET posY, width = ?,?
+   LET string = G.na.buff + G.na.buff!m.na.box
+   LET on = (colour=m.sd.cyan)
+
+   SWITCHON G.na.buff!m.na.box INTO
+   $( CASE m.na.autype :
+         posY := m.na.typeY
+         width := m.na.auX - m.na.posX
+         IF on THEN G.na.buff!m.na.other.box := m.na.auname
+      ENDCASE
+
+      CASE m.na.auname :
+         posY := m.na.nameY
+         width := m.na.auX - m.na.posX
+         IF on THEN G.na.buff!m.na.other.box := m.na.autype
+      ENDCASE
+
+      CASE m.na.gr1 :
+         posY := m.na.gr1Y
+         width := m.na.grX - m.na.posX
+         IF on THEN G.na.buff!m.na.other.box := m.na.gr2
+      ENDCASE
+
+      CASE m.na.gr2 :
+         posY := m.na.gr2Y
+         width := m.na.grX - m.na.posX
+         IF on THEN G.na.buff!m.na.other.box := m.na.gr1
+      ENDCASE
+
+      default: RETURN
+   $)
+
+   string%0 := 0
+
+   G.sc.movea(m.sd.display, m.na.posX, posY)
+   G.sc.selcol(colour)
+   G.sc.rect(m.sd.plot, width, -m.sd.linW)
+   G.sc.movea(m.sd.display, m.na.posX+2, posY-2)
+$)
+.

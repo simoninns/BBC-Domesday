@@ -1,0 +1,10 @@
+dir b
+ty.natinit
+ty.ntext1
+ty.ntext2
+ty.ntext3
+ty.ntext4
+ty.ntext5
+ty.ntext6
+
+dir ^

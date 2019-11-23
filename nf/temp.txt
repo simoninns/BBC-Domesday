@@ -1,0 +1,56 @@
+
+and searchforname.(string, item.record.ptr) = valof
+$(
+   let match, result = false, ?
+   and length = vec 1
+   and rec.len = vec 1
+   and lwb = vec 1
+   and upb = vec 1
+   and middle = vec 1
+   and byte.offset = vec 1
+   and dummy = vec 1
+   and one = vec 1
+   and two = vec 1
+
+   // record length in bytes
+   g.ut.set32(m.item.rec.size-4,0,rec.len)  //28.7.87 MH
+// $<debug
+//   g.ut.set32(36,0,rec.len)
+// $>debug
+
+   // determine file length in records to set up bounds for log chopping
+   g.dh.length(g.nf.p!c.names, length)   // in bytes
+   g.ut.div32(rec.len, length, dummy)   // in records
+
+   g.ut.set32(1,0,one); g.ut.set32(2,0,two)
+   g.ut.sub32(one,length)   // recs are from 0 to n-1
+   g.ut.set32(0,0,lwb); g.ut.mov32(length,upb)
+
+   while (NOT match) & g.ut.cmp32(lwb, upb) <= 0 do
+
+      $(
+         // find mid-point of current bounds
+         g.ut.mov32(lwb,middle)
+         g.ut.add32(upb, middle)
+         g.ut.div32(two, middle, dummy) // in records
+
+         g.dh.read.names.rec (g.nf.p!c.names, middle, item.record.ptr,
+                      m.item.rec.size)  //MH 16.12.87
+// $<debug
+//         g.dh.read (g.nf.p!c.names, byte.offset, item.record.ptr, 36)
+// $>debug
+
+         result := COMPSTRING (string, item.record.ptr)
+
+         match := (result = 0)
+
+         unless match do
+
+            test result < 0
+            then $( g.ut.sub32(one, middle); g.ut.mov32(middle,upb) $)
+            else $( g.ut.add32(one, middle); g.ut.mov32(middle,lwb) $)
+      $)
+   g.nf.p!c.file.rec := !middle
+   resultis match
+$)
+

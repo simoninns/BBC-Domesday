@@ -1,0 +1,50 @@
+*basic
+*| first print code
+VDU 2
+*ty. b.kernel1
+VDU 12
+*ty. b.kernel2
+VDU 12
+*ty. b.kerneln
+VDU 12
+*ty. b.root
+VDU 12
+*ty. b.general
+VDU 12
+*ty. b.sram
+VDU 12
+*ty. b.init
+VDU 12
+*| now the headers
+*ty. h.ovhdr
+VDU 12
+*ty. h.glhdr
+VDU12
+*ty. h.gldyhdr
+VDU12
+*ty. h.glCFhdr
+VDU12
+*ty. h.glCMhdr
+VDU12
+*ty. h.glCPhdr
+VDU12
+*ty. h.glHEhdr
+VDU12
+*ty. h.glNAhdr
+VDU12
+*ty. h.glNChdr
+VDU12
+*ty. h.glNEhdr
+VDU12
+*ty. h.glNFhdr
+VDU12
+*ty. h.glNMhdr
+VDU12
+*ty. h.glNPhdr
+VDU12
+*ty. h.glNThdr
+VDU12
+*ty. h.glNVhdr
+VDU12
+*ty. h.glNWhdr
+VDU12,3

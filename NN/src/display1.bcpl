@@ -1,0 +1,564 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.DISPLAY1 - INITIALISE DISPLAY FOR NATIONAL MAPPABLE
+         ------------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmDISP
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         15.01.86 1        D.R.Freed  Initial version
+         26.02.86 2        DRF      Count number of areas
+                                    AOI passed as params
+                                    G.nm.pick.initial.subset
+                                      implemented
+                                    Use Gazetteer to find
+                                      boundary dataset &
+                                      names offset
+                                    G.nm.calc.mapping moved
+                                      to library file valid
+                                    nm.calc.window modified to
+                                      centre map displays
+                                      vertically within the
+                                      full display area
+                                    change to graphics coord
+                                      based statics
+                                    calc.expected.num.areas
+                                      handles v.large areas
+                                      properly
+         ********************************
+         19.6.87     3     DNH      CHANGES FOR UNI
+         16.7.87     4     DNH      areal control vec changes
+         11.08.87 5        SRY         Modified for DataMerge
+         11.09.87 6        SRY         Fix to above
+
+         g.nm.init.display
+         g.nm.pick.initial.subset
+**/
+
+section "nmdisplay1"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.h.dhhd"
+get ":4.ARC.H.iohd"
+get ":4.ARC.H.nmhd"
+get ":4.ARC.H.nmcohd"
+
+/**
+         G.NM.INIT.DISPLAY - INITIALISE DISPLAY MODULE
+         ---------------------------------------------
+
+         Initialises the display variable processor.
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         g.nm.areal.map
+         g.nm.s!m.nm.num.areas
+         g.nm.s!m.nm.x.min
+         g.nm.s!m.nm.x.max
+         g.nm.s!m.nm.y.min
+         g.nm.s!m.nm.y.max
+         g.nm.s!m.nm.x.graph.per.grid.sq
+         g.nm.s!m.nm.y.graph.per.grid.sq
+         g.nm.s!m.nm.x.graph.start
+         g.nm.s!m.nm.y.graph.start
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine must be called before g.nm.display.variable
+         is called whenever the area of interest or sub-dataset
+         changes.
+
+         Also, g.nm.pick.initial.subset must be called before
+         this routine when NM is first entered.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.init.display []
+         -----------------
+
+         load dataset for current variable
+         IF dataset is areal mappable data THEN
+            initialise areal map for counting
+         ENDIF
+
+         initialise variable processor
+         initialise number of areas count
+         calculate grid square to graphics coordinates mappings
+         calculate display window limits
+         calculate graphics coordinates of bottom left
+                                                grid square
+**/
+
+
+let g.nm.init.display () = valof
+$(
+   let posn, success, x.pix.per.grid.sq, y.pix.per.grid.sq = ?, ?, ?, ?
+
+   unless g.nm.load.dataset () resultis false
+
+   if (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data) then
+      $(
+         // initialise areal map for counting no. of areal units in area of
+         // interest
+         g.nm.areal.map!0 := 0
+         MOVE (g.nm.areal.map, g.nm.areal.map + 1, m.nm.areal.map.size)
+      $)
+
+   g.nm.init.processor (g.context!m.grbleast, g.context!m.grblnorth,
+                        g.context!m.grtreast, g.context!m.grtrnorth)
+
+   g.nm.s!m.nm.num.areas := 0
+
+   g.nm.calc.mapping (g.context!m.resolution,
+                      @x.pix.per.grid.sq, @y.pix.per.grid.sq)
+
+   g.nm.s!m.nm.x.graph.per.grid.sq :=
+            x.pix.per.grid.sq * m.nm.x.pixels.to.graphics
+   g.nm.s!m.nm.y.graph.per.grid.sq :=
+            y.pix.per.grid.sq * m.nm.y.pixels.to.graphics
+
+   nm.calc.window (x.pix.per.grid.sq, y.pix.per.grid.sq)
+
+   // calculate the graphics coordinates of the bottom left grid
+   // square that falls within the area of interest; all further
+   // graphics coordinates for other grid squares are calculated
+   // relative to this one
+   g.nm.s!m.nm.x.graph.start :=
+      (((g.nm.s!m.nm.grid.sq.low.e *
+            g.context!m.resolution -
+               g.nm.s!m.nm.km.low.e) *
+                  x.pix.per.grid.sq) /
+                     g.context!m.resolution) *
+                        m.nm.x.pixels.to.graphics +
+                           g.nm.s!m.nm.x.min
+
+   g.nm.s!m.nm.y.graph.start :=
+      (((g.nm.s!m.nm.grid.sq.low.n *
+            g.context!m.resolution -
+               g.nm.s!m.nm.km.low.n) *
+                  y.pix.per.grid.sq) /
+                     g.context!m.resolution) *
+                        m.nm.y.pixels.to.graphics +
+                           g.nm.s!m.nm.y.min
+
+   resultis true
+$)
+
+
+/**
+         G.NM.PICK.INITIAL.SUBSET - PICK INITIAL SUB-DATASET
+         ---------------------------------------------------
+
+         Works out the best default resolution (and areal unit)
+         for the current area of interest and sets global(s) for
+         the initial display of a sub-dataset.
+
+         If the current resolution (and/or areal unit) is usable,
+         it is always selected in preference to choosing new
+         one(s).
+
+         If no suitable resolution or areal unit can be found
+         for the current area of interest, then an error message
+         is issued, the context on entry is restored and
+         FALSE is returned.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         RETURNS success boolean
+
+         GLOBALS MODIFIED:
+
+         g.context!m.resolution
+         g.context!m.areal.unit
+         g.nm.s!m.nm.boundary.address
+         g.nm.s!m.nm.names.offset
+         g.nm.s!m.nm.km.low.e
+         g.nm.s!m.nm.km.low.n
+         g.nm.s!m.nm.km.top.e
+         g.nm.s!m.nm.km.top.n
+         g.nm.s!m.nm.grid.system
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This must be called when NM is first entered.
+
+         NB:  it is assumed that the rasterised boundaries
+              are available at all resolutions
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.pick.initial.subset [] RETURNS success
+         ------------------------
+
+         save current context
+         convert grid references of AOI to km
+         calculate width and height of AOI in km squared
+         load dataset header for current variable
+
+         IF dataset is areal mappable data THEN
+            IF current areal unit is undefined or unusable THEN
+               choose default areal unit
+               IF default is not usable THEN
+                  write error message
+                  restore context
+                  return FALSE
+               ENDIF
+            ENDIF
+            find location of rasterised boundary dataset
+               from gazetteer
+            find offset to area names records
+            load boundary dataset header
+         ELSE
+            set areal unit to -1
+         ENDIF
+
+         IF current resolution is undefined or unusable THEN
+            choose default resolution
+            IF default is unusable THEN
+               write error message
+               restore context
+               return FALSE
+            ENDIF
+         return TRUE
+         ENDIF
+**/
+
+and g.nm.pick.initial.subset () = valof
+$(
+   let pos = ?
+   let old.res = g.context!m.resolution
+   let old.au = g.context!m.areal.unit
+   and width, height, num.areas  =  ?, ?, ?
+   and success = ?
+   and names.offset = vec 1
+   and boundary.address = vec 1
+   and name = vec 32/BYTESPERWORD
+
+   g.nm.s!m.nm.file.system :=
+      (g.context+m.itemrecord)%1 = '~' -> m.dh.adfs, m.dh.vfs
+
+   g.ut.cache (g.nm.s, m.nm.global.statics.size, m.io.wa.nm.statics)
+
+   g.nm.convert.refs.to.km (g.context!m.grbleast, g.context!m.grblnorth,
+                            g.context!m.grtreast, g.context!m.grtrnorth,
+                            g.nm.s + m.nm.km.low.e, g.nm.s + m.nm.km.low.n,
+                            g.nm.s + m.nm.km.top.e, g.nm.s + m.nm.km.top.n,
+                            g.nm.s + m.nm.grid.system)
+
+   width := g.nm.s!m.nm.km.top.e - g.nm.s!m.nm.km.low.e
+   height := g.nm.s!m.nm.km.top.n - g.nm.s!m.nm.km.low.n
+
+   unless g.nm.load.dataset.header (g.context + m.itemaddress) resultis false
+
+   test g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data then
+      $( let au = g.context!m.areal.unit
+
+         //g.sc.ermess( "areal unit %n", au )
+
+         unless g.nm.look.for.subset (m.nm.value.data.type, au, @pos)
+            resultis false
+         success := pos >= 0  // previous au available ?
+         if success then     // usable ?
+            success := g.nm.au.usable (0, au, name, @num.areas,
+                                       names.offset, boundary.address)
+
+         unless success // no; try to choose a new one
+         $( success := choose.au (width, height, @au, name,
+                                  names.offset, boundary.address)
+            if success = -5
+            $( g.sc.ermess("Invalid areal unit")
+               restore.context(old.au, old.res)
+               resultis false
+            $)
+         $)
+
+         test success then
+            $(
+               g.context!m.areal.unit := au
+               g.ut.mov32 (names.offset, g.nm.s + m.nm.names.offset)
+               g.ut.mov32 (boundary.address, g.nm.s + m.nm.boundary.address)
+               g.nm.s!m.nm.file.system := m.dh.vfs // VFS until further notice
+               unless g.nm.load.dataset.header (g.nm.s + m.nm.boundary.address)
+                  resultis false
+            $)
+
+         else
+            $(
+               g.sc.ermess ("No suitable areal unit for this area")
+               restore.context (old.au, old.res)
+               resultis FALSE
+            $)
+      $)
+
+   else
+      g.context!m.areal.unit := -1
+
+
+   unless g.nm.res.usable (g.context!m.resolution)
+
+      $( let res = ?
+         success := choose.res (width, height, @res)
+
+         test success then
+            g.context!m.resolution := res
+         else
+            $(
+               g.sc.ermess ("No suitable resolution for this area")
+               restore.context (old.au, old.res)
+               resultis FALSE
+            $)
+      $)
+
+$<debug
+if g.ut.diag () then
+   g.sc.ermess ("Res=%n AU=%n",
+                g.context!m.resolution, g.context!m.areal.unit)
+$>debug
+
+   resultis TRUE
+$)
+
+
+/*
+      choose.au
+
+         try to choose a default areal unit, by finding one
+         which best matches the target parameters
+*/
+
+and choose.au (width, height,
+               au.ptr, name.ptr, names.offset.ptr, boundary.ptr) = valof
+$(
+   let diff, min.diff, exp.num, num.areas, control, frame.ptr =
+                                                         ?, ?, ?, ?, ?, ?
+   let result = 0
+   and new.au = ?
+   and names = vec 1
+   and boundary = vec 1
+
+   !au.ptr := -1
+                  // default is invalid
+
+   min.diff := m.nm.max.pos.high
+
+   // build combined sub-dataset index/Gazetteer records in frame buffer
+   control := g.nm.build.areal.units ()
+
+
+   // check each entry in control list for best match
+   // NB  RELIES ON GAZETTEER RECORD LENGTH BEING DIVISIBLE BY BYTESPERWORD
+   //    AND RECORDS BEING WORD ALIGNED
+
+   $( let a = ?
+      frame.ptr := !control
+      new.au := g.ut.unpack16 (g.nm.frame, frame.ptr)
+
+      a := g.nm.au.usable (g.nm.frame + frame.ptr/BYTESPERWORD, new.au,
+                           name.ptr, @num.areas, names, boundary)
+      if num.areas > m.nm.max.num.areas
+      $( result := -5
+         goto nloop
+      $)
+      if a
+         $(
+            exp.num := calc.expected.num.areas (width, height, num.areas)
+
+            // get measure of closeness to parameters
+            diff := ABS (m.nm.target.num.of.areas - exp.num) +
+                      2 * g.nm.max (m.nm.lo.num.of.areas - exp.num, 0) +
+                       g.nm.max (exp.num - m.nm.hi.num.of.areas, 0) / 2
+
+            if (diff < min.diff) then
+               $(
+                  !au.ptr := new.au
+                  g.ut.mov32 (names, names.offset.ptr)
+                  g.ut.mov32 (boundary, boundary.ptr)
+                  min.diff := diff
+               $)
+         $)
+
+nloop:
+      control := control + 1
+   $)
+      repeatuntil !control = -1   // until end of list is reached
+
+   test !au.ptr > 1
+   then resultis true
+   else test result = -5
+        then resultis -5
+        else resultis false
+$)
+
+
+/*
+      choose.res
+
+         try to choose a default resolution, by finding one which
+         best matches the target parameters
+*/
+
+and choose.res (width, height, res.ptr) = valof
+$(
+   let req.res.sqd, num.squares, key   =  ?, ?, ?
+   and diff, min.diff   =  ?, ?
+   and rec.num, offset  =  ?, ?
+
+   !res.ptr := -1
+   req.res.sqd := muldiv (width, height, m.nm.target.num.of.squares)
+   nm.round (@req.res.sqd, RESULT2, m.nm.target.num.of.squares)
+
+   test req.res.sqd < 1 then
+      req.res.sqd := 1
+   else if req.res.sqd > 100 then
+      req.res.sqd := 100
+
+   // find resolution which gives closest number of squares to target
+   min.diff := m.nm.max.pos.high
+
+   for pos = 0 to g.nm.num.of.subsets (m.nm.raster.data.type) - 1 do
+      $(
+         g.nm.find.subset (m.nm.raster.data.type, pos,
+                           @key, @rec.num, @offset)
+         num.squares := muldiv (width, height, key * key)
+         nm.round (@num.squares, RESULT2, key * key)
+         diff := ABS (num.squares - m.nm.target.num.of.squares)
+         if (diff < min.diff) & g.nm.res.usable (key) then
+            $(
+               !res.ptr := key
+               min.diff := diff
+            $)
+      $)
+
+   resultis (!res.ptr > -1)
+$)
+
+
+/*
+      restore.context
+
+         restores the context that has been changed by trying to
+         choose default areal unit and/or resolution
+*/
+
+and restore.context (old.au, old.res) be
+$(
+   g.context!m.areal.unit := old.au
+   g.context!m.resolution := old.res
+
+   g.ut.restore (g.nm.s, m.nm.global.statics.size, m.io.wa.nm.statics)
+$)
+
+
+/*
+      calc.expected.num.areas
+
+         calculates the expected number of areas for the specified
+         width and height for an areal unit with the specifed
+         total number of areas
+*/
+
+and calc.expected.num.areas (width, height, total.num) = valof
+$(
+   let a32 =  vec 1
+   and b32 =  vec 2
+   and average.size = vec 1
+   and remdr = vec 1
+   and junk = ?
+
+   // calculate average area size from total land surface area, unless
+   // area of interest is greater - in this case total.num is the expected
+   // number of areas
+
+   g.ut.set32 (width, 0, a32)
+   g.ut.set32 (height, 0, b32)
+   g.ut.mul32 (a32, b32)
+   g.ut.set32 (m.nm.land.surface.area.lo, m.nm.land.surface.area.hi,
+                                                               average.size)
+   if g.ut.cmp32 (b32, average.size) = m.gt then
+      resultis total.num
+
+   g.ut.set32 (total.num, 0, a32)
+   g.ut.div32 (a32, average.size, remdr)
+
+   // calculate expected number of areas for specified AOI
+   g.ut.div32 (average.size, b32, remdr)
+
+   resultis g.ut.get32 (b32, @junk)
+$)
+
+
+/*
+      nm.calc.window
+
+         calculate the limits of the window through which the
+         variable will be displayed; the window is responsible
+         for hiding parts of grid squares which fall outside the
+         area of interest
+*/
+
+and nm.calc.window (x.pix.per.grid.sq, y.pix.per.grid.sq) be
+$(
+   let lowest, highest, num.of.pixels  =  ?, ?, ?
+
+   lowest := muldiv (g.nm.s!m.nm.km.low.e, x.pix.per.grid.sq,
+                     g.context!m.resolution)
+   nm.round (@lowest, RESULT2, g.context!m.resolution)
+
+   highest := muldiv (g.nm.s!m.nm.km.top.e, x.pix.per.grid.sq,
+                      g.context!m.resolution)
+   nm.round (@highest, RESULT2, g.context!m.resolution)
+   num.of.pixels := g.nm.max (highest - lowest, 1)
+
+   g.nm.s!m.nm.x.min :=
+      ((m.nm.pixel.width - num.of.pixels) / 2) * m.nm.x.pixels.to.graphics
+   g.nm.s!m.nm.x.max :=
+      g.nm.s!m.nm.x.min + (num.of.pixels * m.nm.x.pixels.to.graphics) - 1
+
+   lowest := muldiv (g.nm.s!m.nm.km.low.n, y.pix.per.grid.sq,
+                     g.context!m.resolution)
+   nm.round (@lowest, RESULT2, g.context!m.resolution)
+
+   highest := muldiv (g.nm.s!m.nm.km.top.n, y.pix.per.grid.sq,
+                      g.context!m.resolution)
+   nm.round (@highest, RESULT2, g.context!m.resolution)
+
+   num.of.pixels := g.nm.max (highest - lowest, 1)
+
+   // add y adjustment to origin to centre map displays within the full
+   // display area available
+   g.nm.s!m.nm.y.min :=
+      ((m.nm.pixel.height - num.of.pixels) / 2 +
+                           m.nm.y.pixel.adjustment) *
+                                          m.nm.y.pixels.to.graphics
+   g.nm.s!m.nm.y.max :=
+      g.nm.s!m.nm.y.min + (num.of.pixels * m.nm.y.pixels.to.graphics) - 1
+$)
+
+
+/*
+      nm.round
+
+         performs true rounding of a number
+*/
+
+and nm.round (num.ptr, remainder, divisor) be
+$(
+   if ( (remainder * 2) >= divisor) then
+
+         !num.ptr := !num.ptr + 1
+$)
+.

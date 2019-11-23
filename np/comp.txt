@@ -1,0 +1,5 @@
+*| compile the PHOTO overlay
+co natinit
+co natpho1
+co natpho2
+co natpho3

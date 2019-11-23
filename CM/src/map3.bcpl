@@ -1,0 +1,281 @@
+//  UNI SOURCE  4.87
+
+section "map3"
+
+/**
+         CM.B.MAP3 - Medium Level Map Operations for Map
+         -----------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+         r.map
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         18.2.86  1        DNH         Initial version
+         12.5.86  2                    bugfix 'adjacent'
+         29.5.86  3                    Turn over handling
+         30.6.86  4                    Fix L4 zoom out bug
+          8.7.86  5                    Fix turnover message
+                                       'Showmap' moved to map6
+         21.7.86  6                    "Only sea..." msg gone
+         12.9.86  7                    Fix orkney wall move
+         18.9.86  8                    Fix recovery from failure
+                                       to move: don't always
+                                       call submapinfo g.cm.go
+         23.9.87  9                    Update to g.cm.go to return
+                                       true or false if the next map
+                                       frame is shown
+**/
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glCMhd"
+get ":4.ARC.H.dhhd"
+get ":4.ARC.H.grhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.cmhd"
+get ":4.ARC.H.cm2hd"
+get ":4.ARC.H.cm3hd"
+get ":4.ARC.H.kdhd"
+
+manifest
+$(  zs = L0.south+6
+    zn = L0.north+6
+    zh = L0.shet+6
+    zi = L0.ire+6
+    zm = L0.man+6
+    zc = L0.chan+6
+$)
+
+
+/**
+         function L1.adjacent(map number, direction) handles
+         sideways moves at level 1 only.  It returns the full map
+         number of the map to move to given the current map and
+         the direction as defined in h.cm2hdr.  If there is only
+         sea in the given direction then 0 is returned.  It uses
+         a hard-wired look-up table since the submap matrix in
+         the L0 record is used for highlighting the L0 map and is
+         thus in an unsuitable format.
+**/
+
+let L1.adjacent (map, dir) = valof
+$(
+    let maptable = table
+//  N   S       E  NE  SE       W  NW  SW          Current Map:
+   zn, zc,  0,  0,  0,  0,  0, zi, zm,  0,      // South
+   zh, zs,  0,  0, zh, zs,  0,  0,  0, zi,      // North
+    0, zn,  0,  0,  0,  0,  0,  0,  0, zn,      // Orkney & Shetland
+   zn,  0,  0, zm, zn, zs,  0,  0,  0,  0,      // N. Ireland
+   zn, zs,  0, zn, zn, zs,  0, zi,  0,  0,      // Isle of Man
+   zs,  0,  0,  0, zs,  0,  0,  0, zs,  0       // Channel Islands
+
+    g.cm.s!m.reason := 255           // default reason if fails
+    resultis maptable ! ( 10*(map-map.L1) + dir - 1 )
+$)
+
+
+/**
+         function adj.for.dir (direction) returns the value to
+         add to a submap index to compensate for a domesday wall
+         move that has an East or West component.
+**/
+
+and adj.for.dir (dir) = valof
+$(
+    if (dir & m.e) ~= 0 resultis  1      // add 1 to index
+    if (dir & m.w) ~= 0 resultis -1     // subtract 1 from index
+    resultis 0
+$)
+
+
+/**
+         function domesday.wall.move (map, parent, dir, i)
+         Returns the map number of the adjacent map across the
+         wall, taking wall height and length into account.  'i'
+         is the submap index of 'map' in 'parent'. Only for moves
+         at level 2.
+         CONTAINS NASTY SEMI-HARD-WIRED VALUES.
+**/
+
+and domesday.wall.move (map, parent, dir, i) = valof
+$(
+    let newparent, submap = ?,?
+    let L1.offset = map.L1 - map.L0
+    unless g.cm.s!m.grid.system = m.grid.is.GB resultis 0
+                            // no moves at L1 from below other than for GB grid
+
+    test (dir & m.n) ~= 0 then                          // going northish
+    $(  test parent = L0.south + L1.offset then   // from south mainland
+        $(  newparent := L0.north + L1.offset
+            i := i - 211 + adj.for.dir (dir)
+            unless 13 <= i <= 25 resultis 0
+        $)
+        else
+        test parent = L0.north + L1.offset then   // from north mainland
+        $(  newparent := L0.shet + L1.offset
+            i := i - 222 + adj.for.dir (dir)
+            unless 5 <= i <= 9 resultis 0
+        $)
+        else resultis 0
+    $)
+    else
+    test (dir & m.s) ~= 0 then                          // going southish
+    $(  test parent = L0.north + L1.offset then   // from north mainland
+        $(  newparent := L0.south + L1.offset
+            i := i + 209 + adj.for.dir (dir)
+            unless 210 <= i <= 222 resultis 0
+        $)
+        else
+        test parent = L0.shet + L1.offset then    // from shetland
+        $(  newparent := L0.north + L1.offset
+            i := i + 214 + adj.for.dir (dir)
+                        // always gets to North Britain
+        $)
+        else resultis 0
+    $)
+    else
+    test (dir = m.w) & (parent = L0.shet + L1.offset) & (i = 0) then
+    $(  newparent := L0.north + L1.offset
+        i := 226            // moving west off bottom left corner of shetland
+    $)
+    else resultis 0         // no more moves across Walls
+
+    g.cm.s!m.recptr := g.cm.findmaprec (newparent)
+    submap := g.cm.submap(g.cm.s!m.recptr, i)
+    unless submap = 0 do g.cm.s!m.sind := i         // new submap index
+    resultis submap                     // real map number (0 => failed)
+$)
+
+
+/**
+         function adjacent (map number, parent map number,
+         direction) handles sideways moves at levels 2, 3 and 4.
+         It is RECURSIVE, recursing up the map tree (towards L0)
+         to find the map adjacent to the given map in the given
+         direction.  It does this by finding the submap index of
+         the given map in the matrix for the map's parent.  This
+         gives the position of the map in the matrix.  The
+         adjacent map can then be found by incrementing or
+         decrementing the submap number according to the
+         direction specified.  0 is returned if there is no
+         adjacent map.  The static reason will also be set to
+         indicate why the map could not be found.
+**/
+
+and adjacent(map,parent,dir) = valof
+$(  let m,n,j,k,i,submap = ?,?,?,?,?,?
+    let d = 0  // d is the direction for the higher level map
+
+    g.cm.s!m.reason := 255          // default failure reason: map not recorded
+    g.cm.s!m.recptr := g.cm.findmaprec(parent)
+    m,n := g.cm.mof(g.cm.s!m.recptr), g.cm.nof(g.cm.s!m.recptr)
+    i := g.cm.subi(g.cm.s!m.recptr, map)
+    j := i/m
+    k := i rem m
+
+    if (dir & m.n) ~= 0 do j := j+1
+    if (dir & m.s) ~= 0 do j := j-1
+    if (dir & m.e) ~= 0 do k := k+1
+    if (dir & m.w) ~= 0 do k := k-1
+    if j = n do $( d := d+m.n; j := 0 $)     // beyond top of parent
+    if j < 0 do $( d := d+m.s; j := m-1 $)   // beyond bottom of parent
+    if k = m do $( d := d+m.e; k := 0 $)     // beyond right edge of parent
+    if k < 0 do $( d := d+m.w; k := n-1 $)   // beyond left edge of parent
+
+    if d ~= 0 do                             // need to move off parent
+    $(  test g.cm.s!m.recptr%10 > 1 then          // ok to recurse
+        $(  let newparent = adjacent(parent, g.cm.parentof(g.cm.s!m.recptr), d)
+            if newparent = 0 resultis 0                   // no adjacent parent
+            if g.cm.transmapno (newparent) = -1 resultis 0    // edge of L4's
+            g.cm.s!m.recptr := g.cm.findmaprec(newparent)
+        $)
+        else         // see if we are at domesday wall; if so move across
+            resultis domesday.wall.move (map, parent, dir, i)
+    $)
+    i := m*j+k                                  // new index
+    submap := g.cm.submap(g.cm.s!m.recptr, i)   // try to find the next along
+    unless submap = 0 do g.cm.s!m.sind := i     // set static to new index
+    resultis submap                             // (0 => failed to move)
+$)
+
+
+/**
+         procedure g.cm.go (direction) is directly called from
+         the action routines.  It controls sideways moves at all
+         levels (except 0 where the map regions are highlit by
+         g.cm.highlight.L0).
+         When the required map is found its information is read
+         in and the map displayed.  If the map cannot be obtained
+         then an appropriate error message is generated according
+         to the functional spec updates.
+**/
+
+and g.cm.go (dir, dispflags) = VALOF
+$(
+   unless g.cm.s!m.cmlevel = 0 do
+   $(  let m = ?
+       G.cm.s!m.measure!m.v.co.oldx, G.cm.s!m.measure!m.v.co.oldy := G.cm.s!m.old.xpoint, G.cm.s!m.old.ypoint
+       test g.cm.s!m.isolatedmap then
+       $(  g.cm.s!m.reason := 255
+           m := 0
+       $)
+       else
+       $(  test g.cm.s!m.cmlevel = 1 then
+           $(  m := L1.adjacent (g.cm.s!m.map, dir)
+               unless m = 0 do         // read the new map record
+               $(  g.cm.s!m.map := m
+                   g.cm.s!m.recptr := g.cm.findmaprec (m)
+                   g.cm.mapinfo ()
+               $)
+           $)
+           else
+           $(      // store initial sind in case of failure later
+               let sind = g.cm.s!m.sind
+               m := adjacent(g.cm.s!m.map, g.cm.s!m.parent, dir)
+               test m = 0 then             // restore old map details
+               $(  g.cm.s!m.recptr := g.cm.findmaprec(g.cm.s!m.parent)
+                   g.cm.s!m.sind := sind   // fix for L4 zoom out bug
+               $)
+               else
+               $(  g.cm.s!m.map := m               // read new submap info
+                   g.cm.submapinfo()
+               $)                         // FIXED 18.9.86 DNH
+           $)
+       $)
+
+       test m = 0 then                 // handle failure
+       $(
+           if g.cm.s!m.data.accessed do
+               g.cm.showmap (m.cm.frame.bit)    // restore video
+           g.sc.pointer (m.sd.on)               // restore pointer before ermess
+           switchon g.cm.s!m.reason into
+           $(  case 254:      // map on the other side of disc
+                   $(  let em = "Turn videodisc over for maps to the xoxth"
+                       let d = g.context!m.discid
+                               // construct 'South' or 'North' without waste
+                       em%37 := d = m.dh.south -> 'N', 'S'
+                       em%39 := d = m.dh.south -> 'r', 'u'
+                       g.sc.ermess (em)
+                       g.cm.turn.over.setup ()  // sets 'turn.over.pending' flag
+                       resultis false
+                       endcase
+                   $)
+               case 255:      // map not recorded
+                   g.sc.ermess ("No map in this direction")
+                   G.cm.s!m.old.xpoint, G.cm.s!m.old.ypoint := G.cm.s!m.measure!m.v.co.oldx, G.cm.s!m.measure!m.v.co.oldy
+                   resultis false
+           $)
+       $)
+       else
+       $( G.sc.clear(m.sd.display)
+          g.cm.showmap (dispflags, dir)      // all ok. show new map
+       $)
+   $)
+   resultis true
+$)
+.
+
+
+

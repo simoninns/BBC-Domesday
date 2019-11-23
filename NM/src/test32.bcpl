@@ -1,0 +1,122 @@
+section "test32"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.uthd"
+get ":0.h.dhhd"
+get ":0.h.nmhd"
+
+let start () be
+$(
+   let ok = ?
+   and str1 = vec 15
+   and str2 = vec 15
+   and a = vec 2
+   and b = vec 2
+   and res = vec 2
+
+   rdch()
+   writes ("*n a ? ")
+   rditem (str1, 15)
+   rdch()
+   writes ("*n b ? ")
+   rditem (str2, 15)
+
+   ok := g.nm.string.to.num (str1, 0, a)
+   ok := ok & nm.neg32 (a)
+   writes ("*n negate a=")
+   g.sc.opnum (a, 0, 15)
+   writef ("*n ok = %s*n", ok->"GOOD","BAD")
+
+   ok := g.nm.string.to.num (str1, 0, a)
+   ok := ok & g.nm.string.to.num (str2, 0, b)
+   ok := ok & nm.div32 (a, b, res)
+   writes ("*n a/b=")
+   g.sc.opnum (res, 0, 15)
+   writef ("*n ok = %s*n", ok->"GOOD","BAD")
+   writes ("*n a=")
+   g.sc.opnum (a, 0, 15)
+   writes ("*n b=")
+   g.sc.opnum (b, 0, 15)
+$)
+
+
+/*
+      nm.div32
+
+         32 bit division:  quot = ROUND (a / b)
+         returns FALSE if an error occurred, TRUE otherwise
+*/
+
+and nm.div32 (a.ptr, b.ptr, quot.ptr) = valof
+$(
+   let ok, neg =  ?, ?
+   and zero  = vec 2
+   and two   = vec 2
+   and dividend = vec 2
+   and round = vec 2
+   and remdr   = vec 2
+
+   // deal with positive numbers throughout, use unsigned ut routines and
+   // recover sign at the end
+
+   ok := TRUE
+
+   zero!m.lsw, zero!m.msw := 0, 0
+   neg := (g.ut.cmp32 (a.ptr, zero) = m.ut.lt)
+
+   if neg then
+      ok := ok & nm.neg32 (a.ptr)
+
+   if (g.ut.cmp32 (b.ptr, zero) = m.ut.lt) then
+      $(
+         neg := NOT neg
+         ok := ok & nm.neg32 (b.ptr)
+      $)
+
+   // add divisor / 2 to dividend to give proper rounding
+   MOVE (b.ptr, round, 2)
+   two!m.lsw, two!m.msw := 2, 0
+   ok := ok & g.ut.div32 (two, round, remdr)
+   MOVE (a.ptr, dividend, 2)
+   g.ut.add32 (round, dividend)
+   // if addition of two +ve numbers gives -ve result then its overflow
+   ok := ok & (NOT g.ut.cmp32 (dividend, zero) = m.ut.lt)
+
+   MOVE (dividend, quot.ptr, 2)
+   ok := ok & g.ut.div32 (b.ptr, quot.ptr, remdr)
+
+   if neg then
+      ok := ok & nm.neg32 (quot.ptr)
+
+   resultis ok
+$)
+
+
+/*
+      nm.neg32
+
+         32 bit negation
+         returns TRUE if ok,
+                 FALSE if number = max. neg. value (since max. pos.
+                     value = ABS (max. neg.) - 1)
+*/
+
+and nm.neg32 (vec.ptr) = valof
+$(
+   let temp32  =  vec 2
+
+   if (vec.ptr!m.msw = m.nm.max.negative.value) & (vec.ptr!m.lsw = 0) then
+         resultis FALSE
+
+   // negate signed 32-bit number by two's complement
+
+   vec.ptr!m.msw := vec.ptr!m.msw NEQV #Xffff
+   vec.ptr!m.lsw := vec.ptr!m.lsw NEQV #Xffff
+   temp32!m.lsw, temp32!m.msw := 1, 0
+   g.ut.add32 (temp32, vec.ptr)
+   resultis TRUE
+$)
+
+.
+.

@@ -1,0 +1,78 @@
+//  AES SOURCE  4.87
+
+section "word.asc"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.H.vhhd"
+
+/**
+         word.asc (word.value, dest.string)
+         ----------------------------------
+         Converts the unsigned 16 bit value 'word.value' as a
+         string of five ascii characters in 'dest.string' with
+         leading zeros.  No overflow is possible.  It is now
+         wordsize and byte order independent, though probably
+         non-optimal for a 32 bit implementation.
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         15.11.85 1        D.Hepper    Initial version
+         20.06.86  2       DNH         Optimisation
+         29.4.87     3     DNH      wordsize independent
+
+         g.vh.word.asc
+**/
+
+let g.vh.word.asc (a16, dest.s) be
+$(
+   let bs = "32768"                    // top bit's worth
+   let is.large = (a16 & #X8000) ~= 0  // test top bit
+   a16 := (a16 & #X7fff)               // nobble top bit
+   convert (a16, dest.s)
+   if is.large do
+      string.add (bs, dest.s)          // add bs to s
+$)
+
+
+/*
+      converts a 15 bit (unsigned) value to a string of 5 characters with
+      leading zeros.
+*/
+
+and convert (a15, s) be
+$(
+   let digit = ?
+
+   s%0 := 5                   // length byte
+   for j = 5 to 1 by -1
+   $( digit := a15 rem 10     // next digit
+      a15 := a15 / 10
+      s%j := digit + '0'         // set ASCII of digit in 's'
+   $)
+$)
+
+
+/*
+      string.add (s1, s2)
+      -------------------
+      Adds two strings: s1 is added to s2 in s2.
+      They must be same length.
+*/
+
+and string.add (s1, s2) be
+$(
+   let j, carry, sum = ?,?,?
+
+   carry := false
+   for j = s2%0 to 1 by -1
+   $(
+      sum := s1%j + s2%j - '0' - '0'   // sum this col
+      if carry then sum := sum + 1     // add in carry
+      carry := (sum >= 10)             // set new carry
+      if carry then sum := sum - 10    // take out overflow carry
+      s2%j := sum + '0'                // set digit
+   $)                               // final carry ignored, if any
+$)
+.

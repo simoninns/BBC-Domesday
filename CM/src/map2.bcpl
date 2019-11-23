@@ -1,0 +1,346 @@
+
+//  UNI SOURCE  4.87
+
+section "map2"
+
+/**
+         CM.B.MAP2 - Low Level Map Operations for Map
+         --------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+         r.map
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         18.2.86  1        DNH         Initial version
+         13.5.86  2        DNH         fudge mapinfo icon vec
+         29.5.86  3                    m.sceenwidth -> m.sd.disw;
+                                       isolatedmap unset in
+                                          otherpars;
+                                       other.side statics set for
+                                          turnover;
+          9.6.86  4                    globalise g.cm.pwidth
+*************************************************************
+         4.3.87   5        DNH         bugfix otherpars for GR
+         30.4.87  6        DNH      UNI version
+                                    use g.ut.unpack16 for
+                                      g.ut.intof
+
+         GLOBALS DEFINED:
+         g.cm.mwidth
+         g.cm.mheight
+         g.cm.pwidth
+         g.cm.a.of
+         g.cm.b.of
+         g.cm.parentof
+         g.cm.mof
+         g.cm.nof
+         g.cm.otherpars
+         g.cm.mapinfo
+         g.cm.submapinfo
+         g.cm.submap
+         g.cm.subi
+**/
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glCMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.cmhd"
+get ":4.ARC.H.cm2hd"
+
+/**
+         The following map operations concern hard-wired values
+         for sizes in hectometres, decametres and graphics units
+         of the maps in the Domesday system.  The values refer
+         not to the whole display area but to the submap grid on
+         the map.  Values for level 0 and level 1 may be tailored
+         in 'h.cmhdr'.
+
+         function g.cm.mwidth (cmlevel, map) returns the width at
+         the given level of the given map.  This is in
+         hectometres at all levels except L4 which is in
+         decametres.  Sizes of maps at level 5 are not known, but
+         a default size of 8dm by 6dm is given.
+**/
+
+let g.cm.mwidth (cmlevel,map) = valof
+$(  if cmlevel > 1 resultis cmlevel ! table 0,0,400,40,80,8,-1
+    if cmlevel = 1 resultis (map-map.L1) ! table
+               w.south, w.north, w.shet, w.ire, w.man, w.channel
+    resultis w.L0
+$)
+
+
+/**
+         function g.cm.mheight (cmlevel, map) returns the height
+         as for mwidth above.
+**/
+
+and g.cm.mheight (cmlevel,map) = valof
+$(  if cmlevel > 1 resultis cmlevel ! table 0,0,300,30,60,6,-1
+    if cmlevel = 1 resultis (map-map.L1) ! table
+               h.south, h.north, h.shet, h.ire, h.man, h.channel
+    resultis h.L0
+$)
+
+
+/**
+         function g.cm.pwidth (cmlevel, map) returns the BBC
+         graphics unit width of the given map at the given level.
+**/
+
+and g.cm.pwidth(cmlevel, map) = valof
+$(  if cmlevel > 1 resultis m.sd.disw
+    if cmlevel = 1 resultis (map-map.L1) ! table
+               p.south, p.north, p.shet, p.ire, p.man, p.channel
+    resultis p.L0
+$)
+
+
+/**
+         function east.offset (cmlevel, map) returns the distance
+         in hectometres from the left edge of the display area to
+         the left edge of the submap grid for the given map at
+         the given level.
+**/
+
+and east.offset (cmlevel, map) = valof
+$(  if cmlevel = 0  resultis eo.L0
+    if cmlevel = 1  resultis (map-map.L1) ! table
+               eo.south, eo.north, eo.shet, eo.ire, eo.man, eo.channel
+    resultis 0
+$)
+
+
+/**
+         function north.offset (cmlevel, map) is as east.offset
+         except from the bottom of the display area to the bottom
+         of the submap grid.
+**/
+
+and north.offset (cmlevel, map) = valof
+$(  if map-map.L1+map.L0 = L0.man resultis no.man       // only one
+    resultis 0
+$)
+
+
+/**
+         The next two functions convert easting and northing
+         residuals on the current map ONLY to BBC graphics units.
+         The aspect ration of the screen has already been taken
+         into account during the 'mapinfo' or 'submapinfo'
+         routines:
+
+         function a.of(x) converts the residual easting x to the
+         graphics unit position a. x+x0 gives the actual easting
+         (x0 being the easting for the left hand side of the
+         map), while a is just the horizontal GU position on the
+         screen.
+         Similarly for b.of(y)
+**/
+
+and g.cm.a.of(x) = g.cm.s!m.a0 +
+                   muldiv (g.cm.s!m.a1-g.cm.s!m.a0, x, g.cm.s!m.width)
+and g.cm.b.of(y) = g.cm.s!m.b0 +
+                   muldiv (g.cm.s!m.b1-g.cm.s!m.b0, y, g.cm.s!m.height)
+
+
+/**
+         MAP RECORD STRUCTURES
+         Following procedures and functions extract information
+         from the current map record in the cache for placing in the
+         various private statics where they are more readily
+         accessible.  The data does not have to be word aligned
+         and indeed is not given the data structure shown.
+         For an explanation of fields see Videodisc structure
+         spec.
+
+         map record structures:
+
+   length       - 2 bytes
+   mapno        - 2 bytes
+   gridref      - 4 bytes
+   parent       - 2 bytes
+   level        - 1 byte
+   flags        - 1 byte  (bottom bit set if texts,
+                           2nd set if photos,
+                           3rd set in type b) icon vector)
+   #A           - 2 bytes (frame of texts/photos)
+   N, M         - 2 bytes
+   #M           - 2 bytes
+   i1 ... i(MN) - MN bytes (submap s(i,j) is the Nj+i th
+                           item along this vec)
+   #a1 ... #a(MN) - 2MN bytes (#ai is the frame for
+                              text/photos of submap i)
+   l text bitmap  - (l = no of bytes to hold MN bits).
+                     ith bit set if submap i has associated text
+   l photo bitmap
+   l icon vec
+   L i icon vec j icon vec ...
+
+
+         function g.cm.parentof (p) returns the parent map number
+         of the map record at p.
+**/
+
+and g.cm.parentof(p) = g.ut.unpack16(p,8)
+
+
+/**
+         functions g.cm.mof(p) and g.cm.nof(p) return the matrix
+         dimensions of the submap matrix for the map at p,
+         easting and northing dimensions respectively.
+**/
+
+and g.cm.mof(p) = p%14  and g.cm.nof(p) = p%15
+
+
+/**
+         procedure g.cm.otherpars () fills in the width and
+         height, and the graphics unit values for bottom left and
+         top right of the submap grid.
+**/
+
+and g.cm.otherpars() be
+$(  let cmlevel = g.cm.s!m.cmlevel
+    let map = g.cm.s!m.map
+    g.cm.s!m.isolatedmap := false
+    g.cm.s!m.width := g.cm.mwidth(cmlevel,map)
+    g.cm.s!m.height := g.cm.mheight(cmlevel,map)
+    $(  let pw = g.cm.pwidth (cmlevel, map)
+        let ph = muldiv (muldiv (pw, g.cm.s!m.height, g.cm.s!m.width), 12, 13)
+
+// new code to round up graphics units to pixels for gotogridref's benefit.
+// In particular it rounds up the 886 of L1 south to 888.
+
+        let res = ph REM 4
+        unless res = 0 do
+            ph := ph + 4 - res
+
+        g.cm.s!m.a0 := muldiv (east.offset(cmlevel, map), pw, g.cm.s!m.width)
+        g.cm.s!m.b0 := muldiv (north.offset(cmlevel, map), ph, g.cm.s!m.height)
+        g.cm.s!m.a1 := g.cm.s!m.a0 + pw
+        g.cm.s!m.b1 := g.cm.s!m.b0 + ph
+    $)
+$)
+
+
+/**
+         procedure mapinfo() gets the map data for the main map
+         in the map vector at p.
+**/
+
+and g.cm.mapinfo() be
+$(  let p = g.cm.s!m.recptr
+    let x = g.ut.unpack16(p,4)
+    let y = g.ut.unpack16(p,6)
+    g.cm.s!m.cmlevel := p%10
+    g.cm.otherpars()
+    g.cm.s!m.grid.system := g.cm.grid.system (x ,y)
+    g.cm.s!m.x0 := g.ut.grid.trim (x)
+    g.cm.s!m.y0 := g.ut.grid.trim (y)
+    g.cm.s!m.parent := g.cm.parentof (p)
+    g.cm.s!m.texts := (p%11 & 1) ~= 0
+    g.cm.s!m.photos := (p%11 & 2) ~= 0
+    g.cm.s!m.ptaddress := g.ut.unpack16(p,12)
+    $(  let d = 18 + 3*g.cm.mof(p)*g.cm.nof(p)
+        d := d + 2*p%d
+
+/*  THIS NEXT BIT IS A FUDGE FOR NOT HAVING BUILT THE L3 'OWN' ICON VEC     */
+/*  CORRECTLY.  THERE SHOULD REALLY BE 2 SINGLE BYTE LENGTHS FOR A REAL     */
+/*  FULL COVERAGE ICON VEC, BUT AT 13.5.86 THERE IS ONLY ONE. IT BETTER     */
+/*  WORK.  SEE COMMENTED BIT FOR OLD VERSION:                               */
+/*      g.cm.s!m.istart := d+1                                              */
+/*      g.cm.s!m.iend := d+p%d                                              */
+
+        test p%d = 1 then
+        $(  g.cm.s!m.istart := 0        // really null !!
+            g.cm.s!m.iend   := 0
+        $)
+        else
+        $(  g.cm.s!m.istart := d
+            g.cm.s!m.iend   := d+p%d
+        $)
+    $)
+$)
+
+
+/**
+         procedure submapinfo() gets the map data for the sind'th
+         submap in the map vector at p.
+**/
+
+and g.cm.submapinfo() be
+$(  let p = g.cm.s!m.recptr
+    let m, n = g.cm.mof(p), g.cm.nof(p)
+    let w, h, sind = ?,?,?
+    let x = g.ut.unpack16(p,4)     // GR of parent map
+    let y = g.ut.unpack16(p,6)
+    g.cm.s!m.cmlevel := p%10+1
+    g.cm.otherpars()
+    w := g.cm.s!m.width
+    h := g.cm.s!m.height
+    if g.cm.s!m.cmlevel >= 4 do
+    $(  w := w/10; h := h/10            // frig for L4 in decametres
+    $)                                  // when reading from an L3 record
+    sind := g.cm.s!m.sind
+    g.cm.s!m.grid.system := g.cm.grid.system (x ,y)
+    g.cm.s!m.x0 := g.ut.grid.trim (x) + sind rem m * w      // GR of submap
+    g.cm.s!m.y0 := g.ut.grid.trim (y) + sind / m * h
+    g.cm.s!m.parent := g.ut.unpack16(p,2)
+    g.cm.s!m.ptaddress := g.ut.unpack16(p, 18 + m*n + 2*sind)
+    $(  let d = 18 + 3*m*n
+        g.cm.s!m.texts := g.cm.testbit(p,d+1,sind)
+        d := d + p%d
+        g.cm.s!m.photos := g.cm.testbit(p,d+1,sind)
+        d := d + p%d
+        d := d + p%d
+        $(  let lim = d + g.ut.unpack16(p,d)
+            d := d+2
+            $(  if d = lim do $( g.cm.s!m.istart := 0; break $)
+                if d > lim do g.cm.collapse("Malformed icon vec list")
+                if p%d = g.cm.s!m.map - g.ut.unpack16(p,16) do
+                $(  g.cm.s!m.istart := d+2; g.cm.s!m.iend := d+1+p%(d+1)
+                    break
+                $)
+                d := d+1+p%(d+1)
+            $) repeat
+        $)
+    $)
+$)
+
+
+/**
+         function submap(p,sind) gets the value of 'map' for the
+         sind'th submap in map record p.  The global reason for
+         failure is set to indicate to the calling procedure why
+         whether the map was not there because it had not been
+         recorded or was on the other side of the disc.  The
+         caller takes appropriate action.
+**/
+
+and g.cm.submap(p,sind) = valof
+$(  let map = p%(18+sind)
+    if map >= 254 do
+    $(  g.cm.s!m.reason := map       // set global reason for failure.
+        g.cm.s!m.other.side.parent := g.ut.unpack16(p,2)   // for turn over
+        g.cm.s!m.other.side.sind := sind
+        resultis 0
+    $)
+    resultis map + g.ut.unpack16(p,16)
+$)
+
+
+/**
+         function subi(p,map) is the converse of submap(p,sind)
+         but sind must be present or we collapse.
+**/
+
+and g.cm.subi(p,map) = valof
+$(  let mapbase = g.ut.unpack16(p,16)
+    for sind = 0 to p%14*p%15-1 if map = mapbase+p%(18+sind) resultis sind
+    g.cm.collapse("Map %N not found",map)
+$)
+.

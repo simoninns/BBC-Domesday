@@ -1,0 +1,20 @@
+*| link ADS NN 'children' to L.nn; then link mapproc
+*dir C
+*|
+Join area auto1 auto2 auto3 auto4 class32 context correl1 correl2     -to X1
+Join detail1 detail2 display1 display2 fpwrite link manual1 manual2   -to X2
+Join mpadd mpconv mpdisp mpdiv name plot rank write                   -to X3
+Join retr1 retr2 retr3 retr4 sortrank tiefactor treesort valid window -to X4
+Join rankop1 rankop2 rankop4 -to X5
+*| write
+*|
+Join X1 X2 X3 X4 X5 -to  $.ARC.L.nn
+*rem. X1
+*rem. X2
+*rem. X3
+*rem. X4
+*rem. X5
+*|
+Join $.ARC.L.nm $.ARC.L.nn  -to  $.ARC.L.mapproc
+*|
+*dir ^

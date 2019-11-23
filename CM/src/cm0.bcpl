@@ -1,0 +1,257 @@
+
+//  UNI SOURCE  4.87
+
+section "cm0"
+
+/**
+         CM.B.CM0 - Initialisation Routines for Map Overlay
+         --------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+         r.map
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         18.4.86  1        DNH         Initial version
+                                       created from cm1
+          9.5.86  3                    $$vfs flag to cmhdr
+                                       fix context map.no
+         29.5.86  4                    g.cm.clear.cache
+          1.7.86  5                    use bit 1 of cmos 31
+          8.7.86  6                    read ALL L1 records
+                                       init m.turn.over.pending
+         30.7.86  7                    Fix GR top bit setting
+         17.9.86  8                    Loop for L1 record reads
+         21.10.86   9      DNH         L5 GR fix
+         6.5.87      10    DNH      CHANGED FOR UNI
+                                    g.dy.init -> g.cm.dy.init etc
+
+         GLOBALS DEFINED:
+         (g.cm.sel.fs)
+         g.cm.update.globals
+         g.cm.clear.cache
+         g.dy.init
+         g.dy.free
+**/
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.gldyhd"
+get ":4.ARC.GH.glCMhd"
+get ":4.ARC.H.dhhd"
+get ":4.ARC.H.grhd"
+get ":4.ARC.H.iohd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.vhhd"
+get ":4.ARC.H.cmhd"
+get ":4.ARC.H.cm2hd"
+get ":4.ARC.H.cm3hd"
+
+
+$<DEBUG
+
+static $( initial.fs = ? $)
+
+let g.cm.sel.fs (fs) be          // select the requested FS if permitted
+$(                               // bit 0 of cmos 31 => vfs ok
+   let str = 0                   // bit 1 of cmos 31 => adfs ok
+   if g.dh.fstype () ~= fs do          // do nothing if in it already
+   $(
+      let rc = ?                //  These three lines 
+      Osbyte(#Xa1, 31)          //  modified for AES
+      rc := Result2             //  system PAC 29.5.87
+      test fs = m.dh.vfs & (rc & #X01) = #X01 then
+         str := "VFS*C"
+      else
+      if fs = m.dh.adfs & (rc & #X02) = #X02 do
+         str := "ADFS*C"
+      unless str = 0 do
+         g.vh.call.oscli (str)
+   $)
+$)
+
+$>DEBUG
+
+/**
+         procedure g.cm.update.globals () takes various Map
+         overlay statics from g.cm.s and dumps them in various
+         locations in g.context, the global system context
+         vector.  They are used for the interface between Map and
+         the other communicant operations Photo, Text and Find.
+         See interface spec.
+**/
+
+let g.cm.update.globals () be
+$(
+   let w = g.cm.s!m.width
+   let h = g.cm.s!m.height
+   let sys = g.cm.s!m.grid.system
+   let ble = g.cm.s!m.x0
+   let bln = g.cm.s!m.y0
+   let tre = g.cm.s!m.x0
+   let trn = g.cm.s!m.y0
+
+   if g.cm.s!m.cmlevel = 4 do       // dm -> hm
+   $( w := w / 10
+      h := h / 10
+   $)
+
+   unless g.cm.s!m.cmlevel = 5 do   // L5 maps are of indeterminate size
+   $( tre := tre + w                // so leave top right as bottom left
+      trn := trn + h                // DNH  21.10.86
+   $)
+
+   if sys = m.grid.is.NI | sys = m.grid.is.channel do
+   $( ble := ble | #X8000
+      tre := tre | #X8000
+      if sys = m.grid.is.channel do
+      $( bln := bln | #X8000
+         trn := trn | #X8000
+      $)
+   $)
+   g.context!m.grbleast := ble
+   g.context!m.grblnorth := bln
+   g.context!m.grtreast := tre
+   g.context!m.grtrnorth := trn
+   g.context!m.leveltype := g.cm.s!m.cmlevel
+   g.context!m.page.no := 1               // for text
+   g.context!m.picture.no := 1            // for photo
+   g.context!m.maprecord := g.ut.unpack16 (g.cm.s!m.recptr, 2)
+   test g.cm.s!m.cmlevel = 0 then         // set to L0 map without highlights
+      g.context!m.map.no := L0.no.highlight
+   else                                   // set to current map frame
+      g.context!m.map.no := g.cm.s!m.map
+   g.context!m.itemaddress := g.cm.s!m.ptaddress      // for photo and text
+   g.context!m.flags := 0                 // ... then OR in bits:
+   if g.cm.s!m.texts do g.context!m.flags := #X01
+   if g.cm.s!m.photos do g.context!m.flags := g.context!m.flags | #X02
+$)
+
+
+/**
+         procedure g.cm.clear.cache () reinitialises the
+         freespace map record cache.  It is called on cold and
+         warm boot and after a successful turn disc over
+         operation.
+**/
+
+let g.cm.clear.cache () be
+$(
+   g.cm.s!m.uptr := g.cm.s!m.base
+   g.cm.s!m.top := g.cm.s!m.base + m.cm.cache.size;
+   g.cm.s!m.now := 1
+$)
+
+
+/**
+         procedure g.cm.dy.init () gets vectors for the map
+         static area, the cache (freespace) store of map records
+         and the private data store that allows rapid mapwalking
+         and zoom at levels 4 and 5.
+         Note that the address of the cache base is frigged to
+         put in a header of 5 words.  This has to be compensated
+         for in g.dy.free.
+         The mapdata file and the printer debug output are
+         opened.  Their handles are assigned to Map statics.
+**/
+
+let g.cm.dy.init() be
+$(
+   let rc = ?                  // values for these vectors are in cmhdr
+
+   $<DEBUG
+   initial.fs := g.dh.fstype ()
+   g.cm.debugmess ("initial FS: %N", initial.fs)
+   $>DEBUG
+
+   g.cm.s := getvec (m.cm.statics.size)
+   rc := g.ut.restore (g.cm.s, m.cm.statics.size, m.io.cm.statics)
+
+   g.cm.s!m.base := getvec (m.cm.cache.size) + headsize  // (Porterism)
+   if rc do rc := g.ut.restore (g.cm.s!m.base - headsize, m.cm.cache.size,
+                                                                 m.io.cm.cache)
+   g.cm.s!m.keep := getvec (m.cm.keep.size)
+   if rc do rc := g.ut.restore (g.cm.s!m.keep, m.cm.keep.size, m.io.cm.keep)
+
+   g.cm.s!m.measure := getvec (m.cm.measure.size)
+   if rc do rc := g.ut.restore (g.cm.s!m.measure, m.cm.measure.size,
+                                                               m.io.cm.measure)
+
+   $<DEBUG
+   test rc then
+   $( g.cm.debugmess ("Restored map = %N; frame = %N", g.cm.s!m.map,
+                                                              g.cm.s!m.frame)
+      g.cm.debugmess ("Global frame.no = %N", g.context!m.frame.no)
+   $)
+   else
+      g.cm.debugmess ("RESTORE(S) FAILED; Reinitialising")
+
+           // set up to open mapdata file on ADFS if 2nd bit is set
+   g.cm.sel.fs (m.dh.adfs)
+   $>DEBUG
+
+   g.cm.s!m.fhandle := g.dh.open ("MAPDATA1")
+
+   $<DEBUG
+   g.cm.sel.fs (m.dh.vfs)
+   $>DEBUG
+   g.vh.video (m.vh.superimpose)    // set video mode (=hard key) and
+   g.cm.s!m.data.accessed := true   // ensure video will be switched on
+                                    // when first map is shown.
+
+         // If restores failed then we are reinitialising. Clear out the
+         // cache and read in a few records to avoid wasting time later.
+         // Reverse order, since last in is least likely to be thrown out
+   if ~rc do
+   $( g.cm.clear.cache ()
+      g.cm.s!m.turn.over.pending := false
+      g.cm.s!m.measure!m.v.units := m.metric    // default units
+      for offset = 5 to 0 by -1 do
+         g.cm.findmaprec (map.L1 + offset)
+      g.cm.findmaprec (map.L0)      // whole Domesday area
+   $)
+
+   $<DEBUG
+   g.cm.sel.fs (initial.fs)         // get back to original
+   $>DEBUG
+$)
+
+
+/**
+         procedure g.cm.dy.free () is the opposite of g.dy.init.
+         It closes the printer and the mapdata file and then
+         frees the vectors allocated in g.dy.init in the correct
+         order.
+         The map overlay may not be reentered after this without
+         a call to g.dy.init.
+**/
+
+let g.cm.dy.free() be
+$(
+   g.cm.update.globals ()
+
+   $<DEBUG
+   g.cm.debugmess ("In g.dy.free of Map")
+   g.cm.debugmess ("Caching map %N; frame %N; level %N", g.cm.s!m.map,
+                                             g.cm.s!m.frame, g.cm.s!m.cmlevel)
+   g.cm.debugmess ("Globals on exit: frame.no %N; level %N", g.context!m.frame.no,
+                                                      g.context!m.leveltype)
+   g.cm.sel.fs (m.dh.adfs)       // for closing file
+   $>DEBUG
+
+   g.dh.close (g.cm.s!m.fhandle)   // close the mapdata file
+   g.ut.cache (g.cm.s!m.measure, m.cm.measure.size, m.io.cm.measure)
+   g.ut.cache (g.cm.s!m.keep, m.cm.keep.size, m.io.cm.keep)
+   g.ut.cache (g.cm.s!m.base - headsize, m.cm.cache.size, m.io.cm.cache)
+   g.ut.cache (g.cm.s, m.cm.statics.size, m.io.cm.statics)
+   freevec (g.cm.s!m.measure)
+   freevec (g.cm.s!m.keep)
+   freevec (g.cm.s!m.base - headsize)
+   freevec (g.cm.s)
+
+   $<DEBUG
+   g.cm.sel.fs (initial.fs)
+   $>DEBUG
+$)
+.

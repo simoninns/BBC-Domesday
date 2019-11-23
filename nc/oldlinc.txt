@@ -1,0 +1,4 @@
+*| link the CHART overlay
+*dir c
+Join chart0 chart chart2 chart3 chart4 chart5 chart6 chart7 chart8 -to $.ARC.l.chart
+*back

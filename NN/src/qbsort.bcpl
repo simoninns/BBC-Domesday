@@ -1,0 +1,95 @@
+/**
+         NM.QBSORT - SORT UTILITY FOR 32-BIT VALUES
+         ------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmAUTO
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         07/04/86  1       S.Young      Initial version
+         25/06/86  2       SRY          Offset fix
+**/
+
+section "nmqbsort"
+GET "libhdr"
+GET ":0.h.glhd"
+GET ":0.h.gl2hd"
+GET ":0.h.uthd"
+GET ":0.h.dhhd"
+GET ":0.h.nmhd"
+
+
+/**
+         G.NM.SORT - SORT 32-BIT VALUES INTO ASCENDING ORDER
+         ---------------------------------------------------
+
+         Sorts an array of 32-bit values into ascending order,
+         using CURDS modified bubble sort.
+
+         INPUTS:
+
+         Base address of vector
+         Number of entries in vector
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         .......
+**/
+
+
+LET G.nm.sort (address, number) BE
+$( LET temp, second = ?,?
+   LET maxtest = address + (number << 1) - 2
+   LET increment = number & #XFFFE    // Make it even
+
+   UNTIL increment < 4 DO
+   $( FOR first = address TO maxtest - increment BY 2 DO
+      $( second := first + increment
+         IF g.ut.cmp32 (first, second) = m.ut.gt THEN
+         $( temp := !first
+            !first := !second
+            !second := temp
+            temp := first!1
+            first!1 := second!1
+            second!1 := temp
+         $)
+      $)
+      increment := ((increment * 3) >> 2) & #XFFFE  // Multiply by 3/4 and make sure it's even
+   $)
+
+   maxtest := address + (number << 1) - 4
+
+   UNTIL maxtest < address - 1 DO
+   $( temp := address
+      FOR first = address TO maxtest BY 2 DO
+         IF g.ut.cmp32 (first, first + 2) = m.ut.gt THEN
+         $( temp := !first
+            !first := first!2
+            first!2 := temp
+            temp := first!1
+            first!1 := first!3
+            first!3 := temp
+            temp := first
+         $)
+      maxtest := temp - 2
+   $)
+$)
+.
+
+

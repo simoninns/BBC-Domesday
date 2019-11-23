@@ -1,0 +1,428 @@
+//  PUK SOURCE  6.87
+
+/**
+         CHART GRAPHICS 2
+         ----------------
+
+         This section contains:
+            G.nc.varkey
+            G.nc.chartkey
+            G.nc.vertical
+            G.nc.which.box
+            G.nc.clear
+            G.nc.move
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.chart
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+        3.11.86   10       SRY         Scaling fact. not exp
+       21.11.86   11       SRY         Only display cat if not regroup
+*******************************************************************************
+        3.06.87   12       SRY         Changes for UNI
+       16.06.87   13       PAC         ARM compiler bug
+       13.08.87   14       SRY         Modified for DataMerge
+       14.08.87   15       SRY         Added background plot
+                                       and narrow char. set
+       26.08.87   16       SRY         Y-axis space bug
+       21.09.87   17       SRY         Floating point + new socratic
+**/
+
+section "chart8"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNChd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.nchd"
+
+static $( vals=? $)
+
+/**
+         g.nc.chartkey
+         -------------
+
+         Draw the chart key
+**/
+
+let g.nc.chartkey() be
+$( g.sc.pointer(m.sd.off)
+   clear(m.sd.clear, m.nc.ckeyx,m.nc.ckeyy,m.nc.ckeyw,m.nc.ckeyd)
+   g.sc.selcol(m.sd.blue)
+   box(m.nc.ckeyx,m.nc.ckeyy,m.nc.ckeyw,m.nc.ckeyd)
+   tab(m.nc.ckeyx+8,m.nc.ckeyy-8+m.nc.ckeyd)
+   G.sc.oprop("Chart Type:")
+   new.line(m.nc.ckeyx+8)
+   g.sc.selcol(m.sd.cyan)
+   g.sc.oprop(valof switchon g.nc.area!m.nc.cc into
+      $( case m.nc.bar:     resultis " Bar chart"
+         case m.nc.btob:    resultis " Back-back"
+         case m.nc.looping: resultis " Loop bar"
+         case m.nc.pie:     resultis " Pie chart"
+         case m.nc.stslg:   resultis " Sing.line"
+         case m.nc.mtslg:   resultis " Mult.line"
+      $) )
+   new.line(m.nc.ckeyx+8)
+   G.nc.area!m.nc.h := m.nc.unknown
+   G.sc.pointer(m.sd.on)
+$)
+
+/**
+         G.nc.varkey
+         -----------
+
+         Draw the variable key
+**/
+
+and g.nc.varkey() be
+$( let bv = g.nc.area!m.nc.bv
+   let cv = g.nc.area!m.nc.cv
+   let sv = g.nc.area!m.nc.sv
+   let num.var = g.nc.area%m.nc.vars
+   let tv = bv + 5 <= num.var -> bv+5, num.var
+   g.sc.pointer(m.sd.off)
+   clear(m.sd.clear, m.nc.vkeyx,m.nc.vkeyy,m.nc.vkeyw,m.nc.vkeyd)
+   box(m.nc.vkeyx,m.nc.vkeyy,m.nc.vkeyw,m.nc.vkeyd)
+   tab(m.nc.vkeyx+8,m.nc.vkeyy-8+m.nc.vkeyd)
+   for n = bv to tv
+   $( let buff = G.nc.area!m.nc.name.buff
+      let vp = G.ut.align(G.nc.area, vptr(n), buff, m.nc.lsize.b)
+      test n=cv | n=sv
+      then $( g.sc.selcol(m.sd.blue)
+              g.nc.pr(vp,18) // 14.8
+              new.line(m.nc.vkeyx+8) // blank line
+           $)
+      else $( g.sc.selcol(m.sd.cyan)
+              g.nc.pr(vp,18) // 14.8
+              new.line(m.nc.vkeyx + 32)
+              unless g.nc.area!m.nc.l.s = m.nc.s.v
+              $( // following two lines contain a workaround
+                 // for suspected ARM compiler bug 16.6.87
+                 let vpr = G.nc.area+m.nc.gcats+(n*m.nc.gpwords)
+                 let gnameb = gptr(n, !vpr)
+                 let s = G.ut.align(G.nc.area, gnameb, buff, m.nc.lsize.b)
+                 g.sc.selcol(m.sd.blue)
+                 g.nc.pr(s,16) // 14.8
+              $)
+           $)
+      new.line(m.nc.vkeyx+8)
+   $)
+   if num.var > 7
+   $( g.nc.move(m.nc.more)
+      G.sc.oprop("More...")
+   $)
+   if data.sum(cv, sv)
+   $( tab(0,m.nc.vkeyy+116)
+      new.line(m.nc.vkeyx+8)
+      G.sc.oprop("Data sum")
+      new.line(m.nc.vkeyx+8)
+      G.nc.fpout(g.nc.area+m.nc.sampsiz, 9)
+   $)
+   G.nc.area!m.nc.h := m.nc.unknown
+   G.sc.pointer(m.sd.on)
+$)
+
+and data.sum(cv, sv) = valof
+$( if g.nc.area%m.nc.add = 2 resultis false
+   resultis valof switchon g.nc.area!m.nc.cc into
+   $( case m.nc.MTSLG: resultis false
+      case m.nc.BtoB: if g.nc.area%sv > 24 resultis false
+      default: resultis g.nc.area%cv <= 24
+   $)
+$)
+
+
+/**
+         G.nc.move
+         ---------
+
+         Move to an area of the screen
+**/
+
+and g.nc.move(box) be
+$( let b=init.box()
+   tab(b!(box-1), (b!(box+17)+b!(box+53)))
+$)
+
+/**
+         G.nc.clear
+         ----------
+
+         Clear an area of the screen
+**/
+
+and g.nc.clear(plot.type, box) be
+$( let b=init.box()
+   if box=m.nc.chart
+   $( clear(plot.type, 0, 0, m.nc.ckeyx, m.nc.xay)
+      clear(plot.type, m.nc.ckeyx, 0, m.nc.ckeyw, m.nc.abkeyd)
+      clear(plot.type, 0, m.nc.ty, 1276, m.nc.td+4)
+   $)
+   clear(plot.type, b!(box-1),b!(box+17),b!(box+35),b!(box+53))
+$)
+
+/**
+         G.nc.which.box
+         --------------
+
+         Return area of the screen
+**/
+
+and g.nc.which.box()=valof
+$( let ans, b = m.nc.unknown, init.box() // default is unknown
+   let x, y = g.xpoint, g.ypoint
+   let bn = 0
+   unless g.screen=m.sd.display resultis m.nc.unknown
+   for box = 0 to 17
+   $( let x1, y1=b!box, b!(box+18)
+      if x1 <= x <= x1 + b!(box+36) & y1 <= y <= y1+b!(box+54)
+      $( ans := box + 1
+         break
+      $)
+   $)
+   test ans=m.nc.chart
+   then $( let bw=g.nc.area!m.nc.bw
+           x := x - 4 // fix for edge of bars
+           if g.nc.area!m.nc.cc=m.nc.btob  // shrink x for gaps
+           $( let gsv=(g.nc.area+m.nc.gcats+(g.nc.area!m.nc.sv*26))!m.nc.incg
+              let hbw=bw >> 1
+              x := x - hbw * ( (x-m.nc.cx)/(gsv*bw + hbw) )
+           $)
+           bn := (x-m.nc.cx)/bw + 1
+        $)
+   else if (g.nc.area!m.nc.cc=m.nc.pie) & (ans=m.nc.colkey)
+        $( y := ((y-m.nc.xay) << 2)/(m.nc.xad-44)
+           x := (3*x)/m.nc.xaw+1
+           bn := ((x-1) << 2) + 4-y
+           if y > 3 ans := m.nc.unknown
+        $)
+   unless (bn=0) | (1 <= bn <= g.nc.area!m.nc.nb) ans := m.nc.unknown
+   g.nc.area!m.nc.bn := bn
+   resultis (ans = m.nc.ab.key) & ~(g.nc.area!m.nc.abbrevs) ->
+      m.nc.unknown, ans
+$)
+
+and init.box()=valof // initialise table used in move, clear, which
+$( let b=table m.nc.vkeyx+8, m.nc.vkeyx+8, m.nc.vkeyx+8,
+                    m.nc.vkeyx+8, m.nc.vkeyx+8, m.nc.vkeyx+8,
+   m.nc.vkeyx+32, m.nc.vkeyx+32, m.nc.vkeyx+32,
+      m.nc.vkeyx+32, m.nc.vkeyx+32, m.nc.vkeyx+32,
+   0, m.nc.ckeyx+32, 0,
+      0, m.nc.vkeyx+8, 0,
+
+   m.nc.vkeyy + m.nc.vkeyd - 44, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0,
+   m.nc.yay, m.nc.ckeyy+4, 0,
+      m.nc.xay, m.nc.vkeyy+m.nc.vkeyd-524, m.nc.xay,
+
+   m.nc.vkeyw-12, m.nc.vkeyw-12, m.nc.vkeyw-12,
+      m.nc.vkeyw-12, m.nc.vkeyw-12, m.nc.vkeyw-12,
+   m.nc.vkeyw-36, m.nc.vkeyw-36, m.nc.vkeyw-36,
+      m.nc.vkeyw-36, m.nc.vkeyw-36, m.nc.vkeyw-36,
+   m.nc.yaw, m.nc.ckeyw-36, m.nc.abkeyw,
+      m.nc.xaw + 4, m.nc.vkeyw-12, m.nc.xaw + 4,
+
+   36, 36, 36, 36, 36, 36,
+   36, 36, 36, 36, 36, 36,
+   m.nc.yad, m.nc.ckeyd-52, m.nc.abkeyd,
+      m.nc.xad+4, 36, m.nc.cd+m.nc.xad+8
+
+   if b!19=0
+   $( for i=19 to 23 b!i := b!(i-1) - 80
+      for i=24 to 29 b!i := b!(i-6) - 40
+   $)
+   resultis b
+$)
+
+/**
+         G.nc.vertical
+         -------------
+
+         Draw Y-axis
+**/
+
+and g.nc.vertical(valptr) be
+$( let exp=?
+   let vb=vptr(1)
+   let l=G.nc.area%vb
+   let s = vec 35/bytesperword
+   g.ut.mov32(g.nc.area+m.nc.norm/bytesperword, s)
+   exp := !s
+   vals := valptr
+   if l > 28 l := 28 // was 14
+   for i=l + 1 to 35 s%i := ' '
+   G.ut.movebytes(g.nc.area, vb+1, s, 1, l)
+   test exp=0
+   then s%0 := l
+   else $( let e=l+3
+           s%(l+2) := exp > 0 -> '/', 'x'
+           exp := abs(exp)
+           test g.nc.area%m.nc.sfe='E' // exponent
+           then test exp <= 3
+                then $( s%e := '1'
+                        for i=1 to exp s%(e+i) := '0'
+                        s%0 := e+exp
+                     $)
+                else $( let n=vec 3
+                        s%e := 'E'
+                        g.vh.word.asc(exp, n)
+                        g.ut.movebytes(n, n%0-1, s, e+1, 2)
+                        s%0 := e+2
+                     $)
+           else $( let i=e+4 // real value : assume <= 9999
+                   if exp < 1000 i := i - 1
+                   if exp < 100  i := i - 1
+                   if exp < 10   i := i - 1
+                   $( i := i - 1
+                      s%i := '0' + (exp - (exp/10)*10)
+                      exp := exp/10
+                   $) repeatwhile exp > 0
+                   s%0 := i
+                $)
+        $)
+   g.sc.selcol(m.sd.cyan)
+   l := 586 - ((s%0) << 3)  // 14.8 was << 4
+   for n=1 to s%0
+   $( tab(0,l)
+      g.sc.char90(s%n) // uses narrow chars
+      l := l + m.sd.charwidth/2  // 14.8
+   $)
+   line(m.nc.origx,m.nc.origy,m.nc.origx,m.nc.origy+m.nc.cd-12)
+   socratic()
+$)
+
+AND socratic() BE
+$( let int, neg, imax, soc, s = ?, ?, ?, ?, ?
+   let i, exp = 0, 0
+   let s1 = g.nc.area+m.nc.soc
+   let max = vec FP.LEN
+   let ten = vec FP.LEN
+   let fp = vec FP.LEN
+   let maxes = table 14, 19, 24, 29, 39, 49, 59, 74, 99
+
+   // Find max abs. value
+   FFLOAT(10, ten)
+   maxima(max, @neg)
+
+   // Do socratic scaling
+   FFLOAT(4, fp)
+   if FCOMP(max, fp) = -1 FFLOAT(4, max)
+   if FCOMP(max, ten) = -1
+   $( FMULT(max, ten, max)
+      exp := exp - 1
+   $)
+
+   FFLOAT(99, fp)
+   while FCOMP(max, fp) = 1
+   $( exp := exp + 1
+      FDIV(max, ten, max)
+   $)
+   imax := FFIX(max)
+
+   $( if imax <= maxes!i break
+      i := i + 1
+   $) repeat
+
+   int := i rem 3 + 3
+   g.nc.area!m.nc.int := int
+   soc := valof switchon i/3 into
+          $( case 1: resultis 10
+             case 2: resultis 20
+             case 0: resultis 5
+          $)
+
+   FFLOAT(soc, s1)
+
+   // Get true value of soc (scale by power of ten)
+   test exp < 0
+   then FDIV(s1, ten, s1)
+   else for i = 1 to exp FMULT(s1, ten, s1)
+
+   // Now scale Y-axis
+   s := m.nc.cy + m.nc.cd - m.nc.origy
+   test neg
+   then $( s := s/2
+           G.nc.area!m.nc.sy := s
+           dotop(-int,0,s,soc,exp)
+        $)
+   else g.nc.area!m.nc.sy := 0
+   dotop(0,int,s,soc,exp)
+   g.ut.set32(s, 0, g.nc.area+m.nc.sf)
+$)
+
+and maxima(max, neg.ptr) be
+$( let fp1 = vec FP.LEN
+   let end = (g.nc.area!m.nc.cc = m.nc.mtslg) ->
+             vals + 3*m.nc.values.words, vals
+   FFLOAT(0, max)
+   !neg.ptr := false
+   for start = vals to end by m.nc.values.words
+      for n = start to start+(g.nc.area!m.nc.nb-1) * 3 by 3
+      $( g.nm.int48.to.fp(n, fp1)
+         if FSGN(fp1) = -1
+         $( !neg.ptr := true
+            FABS(fp1, fp1)
+         $)
+         if FCOMP(fp1, max) = 1 move(fp1, max, FP.LEN)
+      $)
+$)
+
+and dotop(s,e,d,soc,exp) be
+$( let nvec = vec 1
+   for n = s to e
+   $( let y1 = muldiv(n, d, g.nc.area!m.nc.int) +
+               m.nc.origy + g.nc.area!m.nc.sy
+      tab(28, y1 + (n = 0 -> 12, (n < 0 -> 24, 0)))
+      g.ut.set32(n*soc, (n < 0 -> #xffff, 0), nvec)
+      g.sc.opnum(nvec, exp, 4)
+      line(m.nc.origx-8, y1, m.nc.origx, y1)
+   $)
+$)
+
+and clear(plot.type, x, y, width, depth) be // clear area of screen
+$( tab(x,y)
+   g.sc.rect(plot.type,width,depth)
+   tab(x,y+depth) // home cursor to top left
+$)
+
+and tab(x,y) be g.sc.movea(m.sd.display,x,y)
+
+and box(x,y,width,depth) be
+$( let xmax=x + width
+   let ymax=y + depth
+   g.sc.selcol(m.sd.blue) // all boxes are blue
+   line(x,y+4,x,ymax-4)
+   line(x+4,ymax,xmax-4,ymax)
+   line(xmax,ymax,xmax,y+4)
+   line(xmax-4,y,x+4,y)
+$)
+
+and line(startx,starty,endx,endy) be
+$( tab(startx,starty)
+   g.sc.linea(m.sd.plot,m.sd.display,endx,endy)
+$)
+
+and new.line(tab) be
+$( g.sc.ofstr("%c",13)
+   g.sc.mover(tab,-m.sd.linW)
+$)
+
+and vptr(v) = valof   // pointer to name of variable
+$( let l = 1
+   for i = 1 to v-1 l := l + g.nc.cats(i) + 1
+   resultis m.nc.labels.b + l*m.nc.lsize.b
+$)
+
+and gptr(v, g) = valof   // name of group of variable
+$( let vp = g.nc.area + m.nc.gcats + v * m.nc.gpwords
+   unless (g & #xff00) = 0
+      resultis m.nc.gname*bytesperword + (g >> 8)*m.nc.olsize.b
+   for i = 1 to g.nc.cats(v)
+      if vp!i = g
+         resultis vptr(v) + i*m.nc.lsize.b
+$)
+.

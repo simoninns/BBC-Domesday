@@ -1,0 +1,36 @@
+*B.
+VDU2
+*ty. h.sihdr
+VDU12
+*ty. h.sthdr
+VDU12
+*ty. h.st2hdr
+VDU12
+*ty. h.stphdr
+VDU12
+*ty. b.stinit
+VDU12
+*ty. b.rcom
+VDU12
+*ty. b.rexam
+VDU12
+*ty. b.rgalwal
+VDU12
+*ty. b.rhe
+VDU12
+*ty. b.rnm
+VDU12
+*ty. b.rsear
+VDU12
+*ty. b.scom
+VDU12
+*ty. b.sexam
+VDU12
+*ty. b.sgalwal
+VDU12
+*ty. b.she
+VDU12
+*ty. b.snm
+VDU12
+*ty. b.ssear
+VDU12,3

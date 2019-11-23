@@ -1,0 +1,150 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.CONTEXT - LIBRARY SAVE/RESTORE CONTEXT ROUTINES
+         --------------------------------------------------
+
+         NAME OF FILES CONTAINING RUNNABLE CODE:
+
+         cnmLINK
+         cnmCORR
+         cnmWIND
+         cnmRANK
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         16.06.86 1        D.R.Freed   Initial version
+         ********************************
+         7.7.87      2     DNH      CHANGES FOR UNI
+         12.08.87 3        SRY      Modified for DataMerge
+
+         g.nm.save.context
+         g.nm.restore.context
+**/
+
+section "nmcontext"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.iohd"
+get ":4.ARC.H.nmhd"
+
+get ":4.ARC.H.nmcphd"
+
+/**
+         G.NM.SAVE.CONTEXT - SAVE A VARIABLE'S CONTEXT
+         ---------------------------------------------
+
+         Saves the complete context for the current variable
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED: none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.save.context []
+         -----------------
+
+         take a copy of the item record from G.context
+            (this is the only variable in G.context
+             that can change during the calling operations)
+
+         cache following in I/O processor:
+            areal vector
+            class upbs
+            class colours
+            statics
+**/
+
+let g.nm.save.context () be
+$(
+   g.ut.movebytes (g.context + m.itemrecord,  0,
+                   g.nm.s + m.old.itemrecord, 0, m.itemrecord.length)
+
+   g.ut.cache (g.nm.areal,
+               m.nm.areal.cache.size,
+               m.io.wa.nm.areal)
+
+   g.ut.cache (g.nm.class.upb,
+               (m.nm.num.of.class.intervals + 1) * m.nm.max.data.size,
+               m.io.wa.nm.class.upb)
+
+   g.ut.cache (g.nm.class.colour,
+               m.nm.num.of.class.intervals,
+               m.io.wa.nm.class.colour)
+
+   g.ut.cache (g.nm.s,
+               m.nm.global.statics.size,
+               m.io.wa.nm.statics)
+$)
+
+
+/**
+         G.NM.RESTORE.CONTEXT - RESTORE A VARIABLE'S CONTEXT
+         ---------------------------------------------------
+
+         Restores the complete context for the current variable
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         G.context
+         G.nm.areal
+         G.nm.class.upb
+         G.nm.class.colour
+         G.nm.s
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.restore.context []
+         --------------------
+
+         restore following from I/O processor:
+            class upbs
+            class colours
+            statics
+
+         restore areal vector
+
+         restore item record in G.context using private copy
+
+         reload coarse index from sub-dataset
+         initialise values buffer
+**/
+
+and g.nm.restore.context () = valof
+$(
+   g.ut.restore (g.nm.class.upb,
+                 (m.nm.num.of.class.intervals + 1) * m.nm.max.data.size,
+                 m.io.wa.nm.class.upb)
+
+   g.ut.restore (g.nm.class.colour,
+                 m.nm.num.of.class.intervals,
+                 m.io.wa.nm.class.colour)
+
+   g.ut.restore (g.nm.s,
+                 m.nm.global.statics.size,
+                 m.io.wa.nm.statics)
+
+   g.nm.restore.areal.vector ()
+
+   g.ut.movebytes (g.nm.s + m.old.itemrecord, 0,
+                   g.context + m.itemrecord,  0, m.itemrecord.length)
+
+   // reload coarse index, since it is too big to be cached
+   unless g.nm.load.coarse.index () resultis false
+
+   // initialise values buffer since we are now dealing with a different set
+   // of record numbers and offsets
+   g.nm.init.values.buffer ()
+   resultis true
+$)
+.
+

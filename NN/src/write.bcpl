@@ -1,0 +1,492 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.WRITE - WRITE OPERATION IN RETRIEVE
+         --------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmWRIT
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         16.06.86 1        D.R.Freed   Initial version
+         27.10.86 2        DRF      Always use primary units
+                                       string
+                                    Optimised & running status
+         ********************************
+         7.7.87      3     DNH      CHANGES FOR UNI
+
+         13.7.87     4     DNH      set32 for widen
+         12.08.87 5        SRY      Modified for DataMerge
+         30.09.87 6        SRY      Fix area numbers + values bug
+
+
+         g.nm.write.data
+**/
+
+section "nmwrite"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.uthd"
+get ":4.ARC.H.grhd"
+get ":4.ARC.H.nmhd"
+
+get ":4.ARC.H.nmrehd"
+
+/**
+         G.NM.WRITE.DATA - WRITE DATA TO DISC
+         ------------------------------------
+
+         Downloads the data within the current area of interest
+         to the ADFS file selected.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine should really be included in the child
+         overlay cnmRETR, but there was not enough room. It
+         is invoked within the retrieve kernel state and
+         accessed via a routine in the parent overlay which
+         temporarily swaps child overlays.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.write.data []
+         ---------------
+
+         open output file
+         IF opened ok THEN
+            write header section
+            IF no write errors THEN
+               IF data is areal-mappable THEN
+                  FOR each area that is within AOI
+                      write area code and value
+                  ENDFOR
+               ELSE
+                  process variable with write drivers
+               ENDIF
+            ENDIF
+            IF no write errors THEN
+               clear message area
+               close file
+            ENDIF
+         ENDIF
+**/
+
+let g.nm.write.data () be
+$( let aflag = g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data
+   g.nm.s!m.write.ok := TRUE
+   write.header(aflag)
+   if g.nm.s!m.write.ok then
+   $( g.sc.mess ("Writing values...")
+      g.nm.s!m.area.no := 0
+      test aflag
+      then $( write.string("A=")
+              write.areas ()
+           $)
+      else g.nm.process.variable (write.uniform.block, write.fine.block)
+   $)
+   if g.nm.s!m.write.ok then g.sc.mess ("")
+$)
+
+and write.header(aflag) be
+$( let norm.factor = ?
+   let x = -(4/bytesperword)
+   let datatype = G.nm.s!m.nm.value.data.type
+   let missing = vec 1
+   let space = vec 20/bytesperword
+   let string = vec 80/bytesperword
+
+   g.ut.set32(0, m.nm.max.neg.high, missing)
+   write.string(aflag -> "A", "G")
+   string%0 := 39
+   g.ut.movebytes(g.nm.s+m.nm.primary.units.string, 2, string, 1, 39)
+   write.string(string)
+   if datatype = m.nm.ratio.and.numerator.type datatype := 2
+   if datatype = m.nm.percentage.and.numerator.type datatype := 3
+   num.to.str(datatype, string)  // data type (0-7)
+   write.string(string)
+
+   TEST aflag
+   THEN num.to.str(G.context!m.areal.unit, string)  // Boundary code
+   ELSE $( num.to.str(G.context!m.resolution, string) // raster size
+           write.string(string)
+
+           g.ut.grid.eight.digits(g.context!m.grbleast, g.context!m.grblnorth,
+                                  string)
+           concat(string, " ")
+           g.ut.grid.eight.digits(g.context!m.grtreast, g.context!m.grtrnorth,
+                                  space)
+           concat(string, space)
+           concat(concat(string, " "),
+              g.nm.s!m.nm.grid.system = m.grid.is.GB -> "GB",
+                 g.nm.s!m.nm.grid.system = m.grid.is.NI -> "NI", "CI")
+        $)
+   write.string(string)
+
+   norm.factor :=
+      g.nm.dual.data.type (g.nm.s!m.nm.value.data.type) ->
+         g.nm.s!m.nm.secondary.norm.factor,
+            g.nm.s!m.nm.primary.norm.factor
+   num.to.str(norm.factor, string)
+   write.string (string)
+
+   g.ut.movebytes("=", 0, string, 0, 2)
+   TEST aflag
+   THEN $( num.to.str(G.nm.s!m.nm.areal.data.size, space)
+           concat(string, space)
+           write.string(string)
+           num.to.str(G.nm.s!m.nm.nat.num.areas, string)
+        $)
+   ELSE $( num.to.str(G.nm.s!m.nm.data.size, space)
+           concat(string, space)
+        $)
+   write.string(string)
+
+   for i = 1 to m.nm.num.of.class.intervals - 1
+   $( let valptr = G.nm.class.upb + i * m.nm.max.data.size
+      unless i = 1 if G.ut.cmp32(valptr, space + x) = m.eq loop
+      if g.ut.cmp32(valptr, missing) = m.eq break
+      x := x + m.nm.max.data.size
+      g.ut.mov32(valptr, space + x)
+   $)
+   G.ud.write(space * bytesperword,
+              (x + m.nm.max.data.size) * bytesperword, m.ut.dump32bit)
+$)
+
+/*
+      concat
+
+         concatonates two strings
+         s2 is concatonated onto s1
+         the address of s1 is returned to facilitate nested calls
+*/
+
+and concat (s1, s2) = valof
+$(
+   g.ut.movebytes (s2, 1, s1, s1%0 + 1, s2%0)
+   s1%0 := s1%0 + s2%0
+   resultis s1
+$)
+
+
+/*
+      num.to.str
+
+         converts a 16-bit signed binary number into
+         a LEFT justified string of decimal digits.
+         A minus sign is shown for negative.
+         The address of the result string is returned
+*/
+
+and num.to.str (n, s) = valof
+$(
+   let backwards = vec 7 / BYTESPERWORD
+   and pos, neg  =  ?, ?
+
+   neg := n < 0
+   if neg then
+      n := - n
+
+   pos := 1
+
+   $(
+//      n := MULDIV (n, 1, 10)                                                 
+//      backwards%pos := RESULT2 + '0'  // remainder
+      backwards%pos := (n rem 10) + '0' // remainder
+      n := n / 10
+      pos := pos + 1
+   $) repeatuntil n = 0
+
+   if neg then
+      $(
+         backwards%pos := '-'
+         pos := pos + 1
+      $)
+
+   // reverse the backwards string into the result string
+   for i = 1 to pos - 1 do
+      s%i := backwards%(pos - i)
+   s%0 := pos - 1                // length of string
+   resultis s
+$)
+
+  
+
+/*
+      write.string
+
+         writes an ASCII string to disc, provided no errors have
+         occurred; updates the error indicator
+*/
+
+and write.string (s) be
+$(
+   if g.nm.s!m.write.ok then
+      g.nm.s!m.write.ok :=
+         g.ud.write (s * BYTESPERWORD + 1, s%0, m.ut.text) = m.ut.success
+$)
+
+
+/*
+      write.integers
+
+         writes 16-bit or 32-bit integers to disc, provided no errors have
+         occurred; updates the error indicator
+*/
+
+and write.integers (num.values, address, type) be
+$(
+   if g.nm.s!m.write.ok then
+   $(
+      let rc = g.ud.write (address * BYTESPERWORD,
+                           type = m.ut.dump16bit -> num.values * 2,
+                                                    num.values * 4,
+                           type)
+      g.nm.s!m.write.ok := (rc = m.ut.success)
+   $)
+$)
+
+
+/*
+      write.areas
+
+         Writes the data section of the file for areal-mappable
+         data;
+         Writes the name and value of each area within the area
+         of interest;
+         Uses the frame buffer as workspace to minimise the
+         number of calls to the write primitives, since these
+         cause the filing system to read the directory each time
+         thereby sending the disc heads back and forth.
+
+         Outputs a running status every time a buffer is written
+         to disc.
+*/
+
+and write.areas () be
+$(
+   let ptr = 0
+
+   // make frame buffer dirty; it can be used as workspace since the values
+   // are all in memory and the names area read from the Gazetteer using
+   // g.dh.read (which is not frame-based)
+
+   g.nm.init.frame.buffer ()
+
+   for i = 1 to g.nm.s!m.nm.nat.num.areas do
+      if g.nm.map.hit (i) then
+         $( let nums = vec 3 // two 32-bit numbers
+            let valptr = g.nm.areal + (i * m.nm.max.data.size)
+            G.ut.set32(i, 0, nums)
+            g.ut.mov32(valptr, nums + m.nm.max.data.size)
+            check.room.in.buffer (@ptr, m.ut.chars.per.line)
+            g.ud.do.32.line (g.nm.frame + (ptr / BYTESPERWORD), nums, 2)
+            ptr := ptr + m.ut.chars.per.line
+            g.nm.s!m.area.no := g.nm.s!m.area.no + 1
+         $)
+
+   // flush buffer if not empty
+   if ptr > 0 then
+      flush.buffer (ptr)
+$)
+
+
+and check.room.in.buffer (ptr.addr, bytes) be
+$(
+   if (!ptr.addr + bytes) > m.dh.bytes.per.frame then
+      $(
+         flush.buffer (!ptr.addr)
+         !ptr.addr := 0
+      $)
+$)
+
+
+and flush.buffer (ptr) be
+$(
+   if g.nm.s!m.write.ok then
+      $(
+         g.nm.s!m.write.ok :=
+            g.ud.write (g.nm.frame * BYTESPERWORD, ptr + 1, m.ut.text) =
+                                                                  m.ut.success
+
+         g.nm.running.status (g.nm.s!m.area.no, g.nm.s!m.sum.total)
+      $)
+$)
+
+
+/*    Write routines to be used by g.nm.process.variable follow    */
+
+
+/*
+      write.uniform.block
+
+         writes a block of values which are all the same, due to
+         index level compression
+
+         to satisfy the output format requirements, a uniform block
+         must be converted to fine block(s) and output a fine
+         block at a time, each with a header specifying its bottom
+         left grid reference
+*/
+
+and write.uniform.block (record.number, offset, east, north, block.size) be
+$(
+   if record.number = m.nm.uniform.missing return
+
+   test g.nm.dual.data.type (g.nm.s!m.nm.raster.data.type)
+   then g.ut.set32 (offset, 0, g.nm.values)
+   else g.ut.set32 ( - record.number, 0, g.nm.values)
+
+   g.nm.init.frame.buffer ()
+   MOVE (g.nm.values, g.nm.values + m.nm.max.data.size,
+         m.nm.fine.blocksize * m.nm.fine.blocksize * m.nm.max.data.size)
+
+   // Break a coarse uniform block down into 16 fine ones; a
+   // fine block will cause just one iteration
+   // NB: Order changed for download to mimic order of non-uniform block
+   for e = 0 to (block.size - m.nm.fine.blocksize) by m.nm.fine.blocksize do
+      if ((east + e) < g.nm.s!m.nm.grid.sq.top.e) &
+         ((east + e + m.nm.fine.blocksize) > g.nm.s!m.nm.grid.sq.low.e)
+         for n = 0 to (block.size - m.nm.fine.blocksize) by m.nm.fine.blocksize
+         $( let n2 = ((e >> 1) + (n >> 3))!(table  0,  8, 16, 24,
+                                                  24, 16,  8,  0,
+                                                   0,  8, 16, 24,
+                                                  24, 16,  8,  0)
+            if ((north + n2) < g.nm.s!m.nm.grid.sq.top.n) &
+                ((north + n2 + m.nm.fine.blocksize) > g.nm.s!m.nm.grid.sq.low.n)
+               write.fine.block (east + e, north + n2)
+         $)
+$)
+
+
+/*
+      write.fine.block
+
+         writes the specified fine block of  with a header that
+         gives the grid reference of the bottom left corner and a row
+         count if the block is not wholly contained within the area of
+         interest
+
+         outputs a running status after every fine block is output
+
+         assumes the following order for an n*n matrix of
+         1 -> n*n, where n is m.nm.fine.blocksize :
+
+               .
+               .
+               .
+         n+1   n+2   n+3   ...   ...   2n
+          1     2     3    ...   ...    n
+*/
+
+and write.fine.block (start.east, start.north) be
+$(
+   let wholly.within, km.start.e, km.start.n  =  ?, ?, ?
+   and curr.e, curr.n, index, res  =  ?, ?, ?, ?
+   and grid.ref = vec 10 / BYTESPERWORD
+   and string = vec 20 / BYTESPERWORD
+   and row.count = vec 4
+
+   // see if whole fine block is within area of interest - if it is
+   // then a) the row count (number of  per row) defaults to 8
+   //         and need not be output
+   // and  b) processing of the block can be performed more quickly,
+   //         with the whole block of  being output in one go
+
+   wholly.within :=
+      (start.east >= g.nm.s!m.nm.grid.sq.low.e) &
+      (start.east + m.nm.fine.blocksize <= g.nm.s!m.nm.grid.sq.top.e) &
+      (start.north >= g.nm.s!m.nm.grid.sq.low.n) &
+      (start.north + m.nm.fine.blocksize <= g.nm.s!m.nm.grid.sq.top.n)
+
+   // output the header for the block
+
+   g.ut.movebytes ("G=", 0, string, 0, 3)
+
+   // bottom left of block is the grid reference of the first square
+   // in the block that falls within the area of interest;
+   // references are output in km, ie. 4 digits per value
+
+   res := g.context!m.resolution
+   km.start.e := start.east * res
+   km.start.n := start.north * res
+
+   g.ut.grid.to.string (
+               g.nm.max (km.start.e, g.nm.s!m.nm.grid.sq.low.e * res),
+               grid.ref, 4)
+
+   concat (concat (string, grid.ref), " ")
+
+   g.ut.grid.to.string (
+               g.nm.max (km.start.n, g.nm.s!m.nm.grid.sq.low.n * res),
+               grid.ref, 4)
+
+   concat (string, grid.ref)
+
+   if NOT wholly.within then  // add row count
+      $(
+         // calculate number of  per row
+         num.to.str (
+            m.nm.fine.blocksize -
+               (g.nm.max (0, g.nm.s!m.nm.km.low.e - km.start.e) +
+                  g.nm.max (0, km.start.e +
+                                 m.nm.fine.blocksize * res -
+                                     g.nm.s!m.nm.km.top.e) ) / res,
+            row.count)
+
+            concat (concat (string, "R"), row.count)
+      $)
+
+   write.string (string)
+
+   // now output the data for the block
+
+   test wholly.within then
+      $(
+         // write entire contents of  buffer out in one go;
+         // element 0 is not used, so start at 1
+         write.integers (m.nm.fine.blocksize * m.nm.fine.blocksize,
+                         g.nm.values + m.nm.max.data.size,
+                         m.ut.dump32bit)
+         g.nm.s!m.area.no :=
+            g.nm.s!m.area.no + m.nm.fine.blocksize * m.nm.fine.blocksize
+      $)
+
+   else
+      for north = 1 to m.nm.fine.blocksize do
+         for east = 1 to m.nm.fine.blocksize do
+            $(square
+               curr.e := start.east + east - 1
+               curr.n := start.north + north - 1
+
+               // see if this square is within area of interest
+               if ( (curr.e >= g.nm.s!m.nm.grid.sq.low.e) &
+                     (curr.e < g.nm.s!m.nm.grid.sq.top.e) &
+                      (curr.n >= g.nm.s!m.nm.grid.sq.low.n) &
+                       (curr.n < g.nm.s!m.nm.grid.sq.top.n) )   then
+                  $(inside
+                     index := ((north-1) * m.nm.fine.blocksize + east) *
+                                                         m.nm.max.data.size
+                     write.integers (1, g.nm.values + index, m.ut.dump32bit)
+                     g.nm.s!m.area.no := g.nm.s!m.area.no + 1
+                  $)inside
+            $)square
+
+   g.nm.running.status (g.nm.s!m.area.no, g.nm.s!m.sum.total)
+$)
+.

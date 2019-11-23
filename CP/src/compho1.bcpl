@@ -1,0 +1,538 @@
+//  AES SOURCE  4.87
+
+/**
+         COMPHO1 - COMMUNITY PHOTO
+         -------------------------
+
+         This section contains :
+
+         G.cp.phoini
+         G.cp.pho2ini
+         G.cp.pho3ini
+         G.cp.photo
+         G.cp.check.menu
+         G.cp.interpret.tab
+         G.cp.clearcapt
+         G.cp.shortcapt
+         G.cp.page
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.phtx
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         20.10.86    13    PAC      Make trap 2 soft.
+         21.10.86    14    PAC      Make it fatal again.
+         *****************************
+         6.5.87      15    DNH      CHANGES FOR UNI
+**/
+
+SECTION "compho1"
+
+GET"LIBHDR"
+GET":4.ARC.GH.glhd"
+GET":4.ARC.GH.glCPhd"
+GET":4.ARC.H.sdhd"
+GET":4.ARC.H.sihd" // for menu bar words
+GET":4.ARC.H.kdhd"
+GET":4.ARC.H.cphd"
+GET":4.ARC.H.vhhd"
+
+
+/**
+         G.CP.PHOINI - INITIALISE FOR PHOTO
+         ----------------------------------
+
+         Loads the photo/text data frame, and initialise data
+         areas for the photo operation.
+
+         INPUTS:
+
+         See Community Disc Operations Interface Spec
+
+         G.context!m.itemaddress
+         G.context!m.picture.no
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine expects that G.context!m.itemaddress is
+         pointing to the frame containing the current
+         photo/captions data, and G.context!m.picture.no holds
+         the number of the picture to display ( = 1 if in from
+         MAP, = 1..npics if in from FIND )
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Read in data frame
+         Initialise private data buffer
+         Initialise the system globals
+         Clear screen
+         Display picture (number = G.context!m.picture.no)
+         Display short caption
+         Initialise the menu bar held in private data buffer
+**/
+
+LET G.cp.phoini() BE
+$(
+   LET success = ?
+
+   G.sc.pointer( m.sd.off )
+
+   G.cp.find.data ()          // load data frame if not just restored
+   TEST init.data.buffer() THEN
+   $(
+   G.ut.trap("CP",2,true,3,G.context!m.picture.no,1,G.cp.context!m.cp.npics)
+   G.sc.clear ( m.sd.display )
+   G.sc.clear ( m.sd.message )
+   G.vh.video ( m.vh.superimpose )  // set up mode, video is muted
+   display.picture ( G.context!m.picture.no )   // map/find supplies pic.no.
+   G.cp.shortcapt()
+   G.cp.context!m.cp.box4 := m.wClear
+   G.cp.context!m.cp.box5 := G.cp.context!m.cp.textbox
+   G.cp.context!m.cp.phosub := m.cp.capt
+   $)
+   ELSE G.cp.context!m.cp.phosub := m.cp.data.error // bounce back to map
+$)
+
+
+/**
+         G.CP.P2OINI - INITIALISE FROM TEXT
+         ----------------------------------
+
+         This routine is called on a transition from TEXT to
+         PHOTO. The data buffer may be present in memory, so an
+         unnecessary disc access is avoided.
+
+         GLOBALS MODIFIED:
+
+         G.context!m.picture.no
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Read data if not restored
+         Initialise private data buffer
+         Clear screen
+         Display picture number 1
+         Display short caption
+         Update private menu bar store
+**/
+
+AND G.cp.p2oini() BE
+$(
+   G.sc.pointer( m.sd.off )
+
+   G.cp.find.data ()          // load data frame if not just restored
+   TEST init.data.buffer() THEN
+   $(
+   G.sc.clear ( m.sd.display )
+   G.sc.clear ( m.sd.message )
+   G.vh.video ( m.vh.superimpose )  // set up mode, video is muted
+   display.picture( 1 )             // always first picture
+   G.cp.shortcapt()
+   G.cp.context!m.cp.box4 := m.wClear
+   G.cp.context!m.cp.box5 := G.cp.context!m.cp.textbox
+   G.cp.context!m.cp.phosub := m.cp.capt
+   $)
+   ELSE G.cp.context!m.cp.phosub := m.cp.data.error // bounce back to map
+$)
+
+
+/**
+         G.CP.P3OINI - INITIALISE FROM PICOPT
+         ------------------------------------
+
+         This routine is called on a transition from PHOTO
+         OPTIONS to PHOTO.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Display short caption
+         Update private menu bar store
+**/
+
+AND G.cp.p3oini() BE
+$(
+   G.sc.pointer( m.sd.off )
+   G.sc.clear( m.sd.message )
+   IF G.cp.context!m.cp.box4 ~= m.wClear
+      THEN G.cp.shortcapt()
+   G.cp.context!m.cp.box3 := m.sd.act  // check if box 3 had "clear"
+   G.cp.context!m.cp.box4 := m.wClear
+   G.cp.context!m.cp.box5 := G.cp.context!m.cp.textbox
+   G.cp.context!m.cp.box6 := G.cp.context!m.cp.level = 5 ->
+      m.wBlank, m.sd.act         // blank Find at level 5  DNH
+   G.cp.context!m.cp.phosub := m.cp.capt
+$)
+
+
+/**
+         G.CP.PHOTO - EXAMINE PHOTO SET
+         ------------------------------
+
+         Specific action routine for photo
+
+         GLOBALS MODIFIED:
+
+         (the vector pointed to by G.menubar may change as a
+         result of the call to G.sc.menu )
+         contents of G.cp.context
+
+         On exit to MAP :
+         G.context!m.leveltype
+         G.context!m.grbleast
+         G.context!m.grblnorth
+         G.context!m.itemaddress
+         G.context!m.maprecord
+
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.cp.photo []
+         ----------
+
+         IF routine was entered from FIND
+            THEN call initialise 1
+
+         local key := G.key
+
+         IF local key = change AND G.screen = display
+          THEN IF G.Xpoint < display width/3
+                THEN local key = Function 7
+                ELSE IF G.xpoint > 2/3 * display width
+                      THEN local key = Function 8
+                      ELSE beep
+                     ENDIF
+               ENDIF
+         ENDIF
+
+         CASE OF local key
+            Function 4 : IF short caption displayed
+                           THEN clear short caption
+                                put "Caption" in menu box 4
+                           ELSE display caption
+                                put "Clear" in menu box 4
+                         ENDIF
+            Function 7 : page backwards
+                         IF short caption displayed
+                         THEN display (new) short caption
+            Function 8 : page forwards
+                         IF short caption displayed
+                         THEN display (new) short caption
+         ENDCASE
+
+         IF menu bar needs redrawing
+            THEN redraw menu bar
+
+**/
+
+AND G.cp.photo() BE
+$( LET local.key = G.key
+
+   IF local.key ~= m.kd.noact THEN G.sc.pointer( m.sd.off )
+
+   IF G.context!m.justselected THEN
+   $( G.context!m.justselected := FALSE
+      G.cp.phoini()
+   $)
+
+      // check for an invalid data set
+   IF G.cp.context!m.cp.phosub = m.cp.data.error THEN
+   $( G.key := m.kd.Fkey3      // fake a keypress to MAP
+      local.key := m.kd.noact  // do nothing else
+      G.cp.context!m.cp.turn.on := FALSE // video is not needed
+   $)
+
+      // restore video if returned from Help
+   IF G.cp.context!m.cp.turn.on THEN
+   $( G.vh.video( m.vh.video.on )
+      G.cp.context!m.cp.turn.on := FALSE
+   $)
+
+   IF local.key = m.kd.change & G.screen = m.sd.display DO
+      local.key := G.cp.interpret.tab (local.key)     // convert to f7/f8
+
+   SWITCHON local.key INTO
+   $( CASE m.kd.fkey3 :       // map is just about to be entered
+         G.cp.init.globals()  // so set up the globals for it
+      ENDCASE
+
+      CASE m.kd.Fkey4 :   // caption on/off
+         $( TEST G.cp.context!m.cp.phosub = m.cp.capt
+               THEN $( G.cp.clearcapt(1)          // clear short caption
+                       G.cp.context!m.cp.box4   := m.wCaption
+                       G.cp.context!m.cp.phosub := m.cp.none
+                    $)
+               ELSE $( G.cp.shortcapt()      // Display short caption
+                       G.cp.context!m.cp.box4   := m.wClear
+                       G.cp.context!m.cp.phosub := m.cp.capt
+                    $)
+         $)
+      ENDCASE
+
+      CASE m.kd.Fkey7 :   // page backwards
+         $( IF G.cp.page(m.cp.back) &
+              (G.cp.context!m.cp.phosub = m.cp.capt)
+            THEN G.cp.shortcapt()
+         $)
+      ENDCASE
+
+      CASE m.kd.Fkey8 :   // page forwards
+         $( IF G.cp.page(m.cp.forwards) &
+              (G.cp.context!m.cp.phosub = m.cp.capt)
+            THEN G.cp.shortcapt()
+         $)
+      ENDCASE
+   $)
+
+   IF G.redraw | G.cp.check.menu ( G.cp.context+m.cp.box1 )
+      THEN G.sc.menu( G.cp.context+m.cp.box1 )
+
+   G.sc.pointer( m.sd.on )
+$)
+
+
+/**
+         Utility routines used by PHOTO
+         ------------------------------
+
+         G.cp.check.menu (boxes)
+         returns TRUE if menu needs to be redrawn (i.e. 'boxes'
+         vector differs from G.menubar.
+**/
+
+AND G.cp.check.menu ( boxes ) = VALOF
+$( FOR i = 0 TO 5
+   UNLESS boxes!i = G.menubar!i RESULTIS TRUE
+   RESULTIS FALSE
+$)
+
+
+AND g.cp.interpret.tab (key) = VALOF
+$(
+   test (g.xpoint < m.cp.LHS) then
+      key := m.kd.Fkey7
+   else
+      test (g.xpoint > m.cp.RHS) then
+         key := m.kd.Fkey8
+      else
+         g.sc.beep()
+   RESULTIS key
+$)
+
+
+
+/**
+         init.data.buffer()
+         ------------------
+         unpack info for the current data bundle into CP statics
+
+         if photos are present in current data bundle
+         then
+
+         set up private data buffer:
+           - private menu bar - all active
+           - text present flag = m.wBlank if no text
+           - picture data offset into buffer
+           - number of pictures
+           - 8 line 'long captions' present
+           - start addr. of short captions
+           - start addr. of long captions
+
+         returns TRUE if initialised OK, FALSE otherwise
+
+         N.B. this routine modified to return result 19.9.86 PAC
+**/
+
+AND init.data.buffer () = VALOF
+$( LET npics = ?
+
+   // set up the header in G.cp.context
+   G.cp.context!m.cp.level     := G.cp.buffA%0
+   G.cp.context!m.cp.type      := G.cp.buffA%1
+   G.cp.context!m.cp.picoff    := G.ut.unpack16 (G.cp.buffA, 2)
+   G.cp.context!m.cp.textoff   := G.ut.unpack16 (G.cp.buffA, 4)
+   G.cp.context!m.cp.map.no    := G.ut.unpack16 (G.cp.buffA, 6)
+   G.cp.context!m.cp.maprec.no := G.ut.unpack16 (G.cp.buffA, 8)
+   G.cp.context!m.cp.grbleast  := G.ut.unpack16 (G.cp.buffA, 10)
+   G.cp.context!m.cp.grblnorth := G.ut.unpack16 (G.cp.buffA, 12)
+
+   // check that photo data is present...
+   IF G.cp.context!m.cp.picoff = 0
+   THEN $( G.sc.ermess("Data error: no pictures for this map")
+           RESULTIS FALSE
+        $)
+
+   // set up the menu bar to all active
+   G.cp.context!m.cp.box1 := m.sd.act
+   MOVE (G.cp.context+m.cp.box1, G.cp.context+m.cp.box1+1, m.cp.box6-m.cp.box1)
+
+   // if on level 5, then suppress Find from the menu bar
+   IF G.cp.context!m.cp.level = 5
+   THEN G.cp.context!m.cp.box6 := m.wBlank
+
+   // check for text present
+   G.cp.context!m.cp.textbox := (G.cp.context!m.cp.textoff = 0) ->
+                                                      m.wBlank, m.sd.act
+   // find the number of pictures
+   npics := G.ut.unpack16 (G.cp.buffA, G.cp.context!m.cp.picoff)
+
+   TEST (npics & #x80) ~= 0   // top bit of low byte indicates 8 line captions
+      THEN $( npics := (npics & #x7F) // clear top bit
+              G.cp.context!m.cp.descr.siz := 8
+           $)
+      ELSE G.cp.context!m.cp.descr.siz := 4
+
+   G.cp.context!m.cp.npics        := npics     // store number of pictures
+   G.cp.context!m.cp.short.start  := G.cp.context!m.cp.picoff+2+(2*npics)
+   G.cp.context!m.cp.long.start   := G.cp.context!m.cp.short.start+(30*npics)
+   RESULTIS TRUE           // we've initialise OK
+$)
+
+
+/**
+         G.cp.clearcapt(lines)
+         clears the specified number of lines from the bottom of
+         the display.
+**/
+
+AND G.cp.clearcapt (lines) BE
+$( G.sc.movea ( m.sd.display,0,0 )
+   G.sc.rect  ( m.sd.clear, m.sd.disw, m.sd.linw*lines )
+$)
+
+
+/**
+         G.CP.SHORTCAPT - DISPLAY A SHORT CAPTION
+         ----------------------------------------
+
+         Displays a short caption for the currently displayed
+         picture. Uses the information in G.context and
+         G.cp.buffA to discover which this is.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Calculate start address of short caption string
+         Clear largest possible long caption
+         Move string to temporary buffer
+         Set length byte
+         Move cursor so that caption will be centred
+         Output short caption in drop shadow
+**/
+
+AND G.cp.shortcapt() BE
+$(
+   LET start = g.cp.find.sc.start ()         // finds start & sets length
+   G.ut.movebytes (G.cp.buffA, start,
+                     G.cp.context+m.cp.txtbuff, 1, m.cp.sclength)
+   G.cp.clearcapt( G.cp.context!m.cp.descr.siz )    // clear maximum caption size
+   G.sc.movea ( m.sd.display, centreit(), m.cp.scYpos ) // move to start
+   G.sc.odrop ( G.cp.context+m.cp.txtbuff )
+$)
+
+
+AND centreit() = VALOF
+$( LET length = m.cp.sclength
+   LET tba = G.cp.context+m.cp.txtbuff    // text buffer address
+   WHILE ( tba%length = 0 | tba%length = ' ' ) & ( length > 1 ) DO
+      length := length - 1
+   (G.cp.context+m.cp.txtbuff)%0 := length    // set new (smaller) length
+   length := G.sc.width( tba )            // get string length
+   RESULTIS (m.sd.disW-length)/2          // offset is half the remainder of
+                                          // the screen width
+$)
+
+
+/**
+         G.CP.PAGE - PAGE PHOTOS FORWARD AND BACKWARDS
+         ---------------------------------------------
+
+         This has a global because PICOPT uses it
+
+         INPUTS: operation type (forwards OR back)
+
+         OUTPUTS:
+         Flag set TRUE if operation was successful
+         i.e. we're not at either end of the set.
+
+         GLOBALS MODIFIED:
+
+         G.context!m.picture.no
+
+         PROGRAM DESIGN LANGUAGE:
+
+         IF the operation is pageback()
+         THEN IF the current picture number is greater than 1
+              THEN display previous picture; return TRUE
+              ELSE make a beep; return FALSE
+
+         ELSE IF the current picture number is less than npics
+              THEN display next picture; return TRUE
+              ELSE make a beep; return FALSE
+**/
+
+AND G.cp.page (operation) = VALOF
+$(
+   LET current.pic = G.context!m.picture.no
+
+   TEST operation = m.cp.back THEN
+      IF current.pic > 1 DO
+      $( display.picture ( current.pic-1 )
+         RESULTIS TRUE
+      $)
+   ELSE
+      IF current.pic < G.cp.context!m.cp.npics DO
+      $( display.picture ( current.pic+1 )
+         RESULTIS TRUE
+      $)
+
+   G.sc.beep()
+   RESULTIS FALSE
+$)
+
+
+/**
+         display.picture ( number )
+         Calculate frame number for picture 'number'
+         Update G.context!m.picture.no
+         Display picture
+         If video needs turning on do
+            turn on video
+            unset turn-on flag
+         Update 'last item examined' with short caption
+**/
+
+AND display.picture( number ) BE
+$(
+   LET frame = G.ut.unpack16 (G.cp.buffA, G.cp.context!m.cp.picoff + number*2)
+   G.context!m.picture.no := number
+
+   G.vh.frame ( frame )
+
+   IF G.cp.context!m.cp.turn.on DO
+   $( G.vh.video ( m.vh.video.on )        // display the picture
+      G.cp.context!m.cp.turn.on := FALSE  // video is now on
+   $)
+
+   $(    // update last item examined
+      LET st = G.cp.find.sc.start ()      // find caption
+      LET dest = G.context+m.itemrecord
+      dest%0 := m.cp.sclength             // set string length & copy string
+      G.ut.movebytes (G.cp.buffA, st, dest, 1, m.cp.sclength)
+   $)
+
+$<DEBUG
+         // ********** DEBUG code ***********
+   IF G.ut.diag () DO
+   $(
+      G.sc.selcol( m.sd.cyan )
+      G.sc.movea ( m.sd.display, m.sd.disX0, m.sd.disYtex )
+      G.sc.rect  ( m.sd.clear, m.sd.disW, -m.sd.linW )
+      G.sc.movea ( m.sd.display, m.sd.disXtex, m.sd.disYtex )
+      G.sc.ofstr ("Picture no. %n, frame %x4 displayed",number,frame )
+   $)
+$>DEBUG
+
+$)
+.

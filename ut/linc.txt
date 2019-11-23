@@ -1,0 +1,11 @@
+*|  join UT for AES
+copy o.VFSlib  $.Alib.Lib.xVFSlib ~C~VF
+copy o.graflib $.Alib.Lib.xGraf  ~C~VF
+copy c.RCPlib  $.Alib.Lib.xRCP   ~C~VF
+copy c.FPlib   $.Alib.Lib.xFPlib ~C~VF   
+copy c.Debug   $.Alib.Lib.xDebug ~C~VF  
+*dir c
+Join utils1 utils2 utils3 utils4 calc32b errtext -to k1
+Join k1 print write grid1 grid2 bookmark helplnk download -to kernel  
+*delete k1
+*back

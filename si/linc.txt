@@ -1,0 +1,9 @@
+*| link and run the state table init - does not need packing
+*dir c
+*remove $.ARC.r.stinit
+Join stinit rcom rexam rgalwal rhe rnm rsear -to t1
+Join $.Alib.Lib t1 scom sexam sgalwal she snm ssear -to $.ARC.r.stinit
+*delete t1
+*dir ^ 
+*| run it !!
+*run $.ARC.r.stinit

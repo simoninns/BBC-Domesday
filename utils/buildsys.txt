@@ -1,0 +1,8 @@
+*| BUILDSYS AES Version 1 10.6.87
+*|
+*| do everything
+*time
+*dir $.ARC.utils
+c compsys
+c linksys
+*time

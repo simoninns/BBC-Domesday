@@ -1,0 +1,313 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.KEY1 - KEY INITIALISATION FOR NATIONAL MAPPABLE
+         --------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         MAPPROC
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         11.02.86 1        D.R.Freed   Initial dummy version
+         17.02.86 2        DRF         First non-dummy version
+                                       Yellow replaces magenta
+         17.06.86 3        DRF         CR60 - colour change in
+                                          incidence key
+                                       Don't shuffle incidence
+                                          key
+                                       g.nm.check.class.intervals
+                                          doesn't shuffle
+                                       g.nm.shuffle.key shuffles
+                                          numbers and colours
+         ********************************
+         30.6.87     4     DNH      CHANGES FOR UNI
+
+         g.nm.init.classes
+         g.nm.init.class.colours
+         g.nm.check.class.intervals
+         g.nm.shuffle.key
+**/
+
+section "nmkey1"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.uthd"
+get ":4.ARC.H.nmhd"
+
+
+/**
+         G.NM.INIT.CLASSES - INITIALISE CLASS INTERVALS
+         ----------------------------------------------
+
+         Initialises a class interval vector
+
+         INPUTS:
+
+         Number of class intervals
+         Address of vector
+
+         OUTPUTS:
+
+         Vector elements
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         The vector is assumed to have bounds
+               [0:Number of class intervals]
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.init.classes [num.of.classes, ->vector]
+         -----------------
+
+         element 0 = max. negative value (matches missing data)
+         remaining elements = max. positive value
+**/
+
+let g.nm.init.classes (num.of.classes, vector.ptr) be
+$(
+   g.ut.set32 (0, m.nm.max.neg.high, vector.ptr)
+
+   for j = 1 to num.of.classes do
+      g.ut.set32 (m.nm.max.pos.low, m.nm.max.pos.high,
+                                       vector.ptr + j * m.nm.max.data.size)
+$)
+
+
+/**
+         G.NM.INIT.CLASS.COLOURS - SET UP INITIAL CLASS COLOURS
+         ------------------------------------------------------
+
+         Sets colour vector up with logical colours and assigns
+         initial actual colours to them, depending on dataset
+         type
+
+         INPUTS:
+
+         Address of vector
+
+         OUTPUTS:
+
+         Vector elements
+
+         GLOBALS MODIFIED: none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         The colour vector is assumed to have bounds
+            [0:5]
+
+         The dataset header must have been loaded prior to
+         calling this routine
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.init.class.colours [->vector]
+         -----------------------
+
+         assign logical colours to vector elements, using
+           black for zeroth logical colour (for "NA")
+         IF value data type = incidence THEN
+            assign actual colours for incidence key to logical
+               colours
+         ELSE
+            assign default actual colours to logical colours
+         ENDIF
+**/
+
+and g.nm.init.class.colours (vector.ptr) be
+$(
+   vector.ptr!0 := m.sd.black2
+
+   for i = 1 to m.nm.num.of.class.intervals do
+      vector.ptr!i := m.nm.bg.col.base + i - 1
+
+   test (g.nm.s!m.nm.value.data.type = m.nm.incidence.type) then
+
+      $(
+         g.sc.palette (vector.ptr!1, m.sd.blue2)
+         g.sc.palette (vector.ptr!2, m.sd.red2)
+      $)
+
+   else
+
+      $(
+         g.sc.palette (vector.ptr!1, m.sd.blue2)
+         g.sc.palette (vector.ptr!2, m.sd.cyan2)
+         g.sc.palette (vector.ptr!3, m.sd.green2)
+         g.sc.palette (vector.ptr!4, m.sd.yellow2)
+      $)
+
+   // always set this red for safety, even though incidence data should
+   // never use it
+   g.sc.palette (vector.ptr!5, m.sd.red2)
+$)
+
+
+/**
+         G.NM.CHECK.CLASS.INTERVALS - CHECK CLASS CONSISTENCY
+         ----------------------------------------------------
+
+         Checks the class interval vector for consistent upper
+         bound values
+
+         INPUTS: none
+
+         OUTPUTS:
+
+         Returns TRUE if values are consistent,
+                 FALSE otherwise
+
+         GLOBALS MODIFIED: none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.check.class.intervals [] RETURNS boolean value
+         --------------------------
+
+         IF any element is greater than its successor
+
+            THEN RETURN FALSE
+
+         ELSE RETURN TRUE
+         ENDIF
+**/
+
+and g.nm.check.class.intervals () = valof
+$(
+   for i = 0 to (m.nm.num.of.class.intervals - 1) do
+
+      if (g.ut.cmp32 (g.nm.class.upb + (i * m.nm.max.data.size),
+                      g.nm.class.upb + ((i+1) * m.nm.max.data.size) ) =
+                                                      m.gt) then
+         resultis FALSE
+
+   // all elements were <= to their successors
+   resultis TRUE
+$)
+
+
+/**
+         G.NM.SHUFFLE.KEY - SHUFFLE KEY BOXES FOR BEST FIT
+         -------------------------------------------------
+
+         Shuffles a non-full class interval vector to get optimum
+         key display
+
+         Incidence values are NOT shuffled
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         g.nm.class.upb
+         g.nm.class.colour
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.shuffle.key
+         ----------------
+
+         IF data is not incidence THEN
+            find number of "empty boxes" (ie. max. pos. value)
+               and position of last non-empty box
+
+            IF empty boxes exist THEN
+               move the last non-empty right by an appropriate
+                  amount
+               scan left to right, duplicating values and colours
+                  into empty boxes to their right
+            ENDIF
+         ENDIF
+**/
+
+and g.nm.shuffle.key () be
+$(
+   let   last, count, dest =  ?, ?, ?
+
+   if g.nm.s!m.nm.value.data.type ~= m.nm.incidence.type then
+
+      $(
+         // get best layout in non-full key by duplicating values
+         // and colours into  empty boxes ;
+         // attempt to get balanced key, ie. widened ones in the middle,
+         // where possible ; an empty box is one with maximum positive value
+
+         // find no. of empty boxes and position of last non-empty one
+         last := m.nm.num.of.class.intervals - 1
+         count := 0
+
+         $(repeat
+
+            if nm.empty (last) then
+               count := count + 1
+
+            last := last - 1
+
+         $)repeat    repeatuntil (NOT nm.empty (last) ) | (last = 1)
+
+         // if some empty then rearrange for best-looking key
+
+         if (count > 0) then
+
+            $(shuffle
+            // move the last number to the right, unless it is in the
+            // first box
+            if (last ~= 1) then
+               $(
+                  // dest is a funny sort of average between just beyond where
+                  // we are (last + 1) and the last class interval that we can
+                  // put a value into - the one before the '>'
+
+                  dest := (last + 1 + m.nm.num.of.class.intervals - 1) / 2
+                  g.ut.mov32 (g.nm.class.upb + last * m.nm.max.data.size,
+                              g.nm.class.upb + dest * m.nm.max.data.size)
+
+                  g.ut.set32 (m.nm.max.pos.low, m.nm.max.pos.high,
+                                    g.nm.class.upb + last * m.nm.max.data.size)
+               $)
+
+            // scan left to right, duplicating into empty boxes
+            for i = 1 to (m.nm.num.of.class.intervals - 2) do
+
+               if (nm.empty (i+1) ) then
+                  $(
+                     g.ut.mov32 (g.nm.class.upb +  i * m.nm.max.data.size,
+                                 g.nm.class.upb + (i+1) * m.nm.max.data.size)
+
+                     g.sc.palette (g.nm.class.colour!(i+1),
+                                   g.sc.physical.colour (g.nm.class.colour!i) )
+                  $)
+            $)shuffle
+      $)
+$)
+
+
+/*
+      nm.empty
+
+            returns TRUE if the specified entry in the upb vector is "empty",
+            ie. max pos value
+*/
+
+and nm.empty (index) = valof
+$(
+   let max.pos32 = vec 1
+   g.ut.set32 (m.nm.max.pos.low, m.nm.max.pos.high, max.pos32)
+
+   RESULTIS g.ut.cmp32 ( g.nm.class.upb + index * m.nm.max.data.size,
+                         max.pos32 ) = m.eq
+$)
+
+.

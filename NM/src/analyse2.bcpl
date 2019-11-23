@@ -1,0 +1,168 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.ANALYSE2 - NATIONAL MAPPABLE ANALYSE OPERATION
+         -------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         MAPPROC
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         14.04.86 1        D.R.Freed   Initial version
+         17.10.86 2        DRF         g.nm.to.detail always
+                                          offers Areas option
+                                          for areal data
+         ********************************
+         30.06.87 3        DNH         CHANGES FOR UNI
+         14.07.87 4        DNH         fix g.dy.action setting
+          1.10.87 5        SRY         Suppress Rank if grid
+
+         g.nm.to.detail
+         g.nm.anal.to.ret
+**/
+
+section "nmanalyse2"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.sihd"
+get ":4.ARC.H.nmhd"
+
+get ":4.ARC.H.nmrehd"
+
+
+/**
+         G.NM.TO.DETAIL - TRANSITION TO TOP LEVEL OF DETAIL
+         --------------------------------------------------
+
+         Initialisation for entering top level of detail
+         from analyse or a detail sub-operation.
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         g.nm.s
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.to.detail []
+         --------------
+
+         temporarily assign red to logical colour flashing white
+         IF areal mappable dataset THEN
+            display menu bar with Areas option
+         ELSE
+            display menu bar with Areas option suppressed
+         ENDIF
+         load child overlay "cnmDETL"
+         reposition videodisc for underlay
+**/
+
+let g.nm.to.detail () be
+$(
+   // borrow the logical colour intended for flashing white for
+   // displaying items in red, whilst in detail operation
+   g.sc.palette (m.nm.flash.white, m.sd.red2)
+
+   for i = m.box1 to m.box6 do
+      g.nm.s!(m.nm.menu + i) := m.sd.act
+
+   g.nm.s!(m.nm.menu + m.box4) :=
+      (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data) ->
+                                                      m.sd.act, m.wblank
+   g.sc.menu (g.nm.s + m.nm.menu)
+
+   g.nm.load.child ("cnmDETL")
+   g.nm.position.videodisc ()
+$)
+
+
+/**
+         G.NM.ANAL.TO.RET - ANALYSE TO RETRIEVE TRANSITION
+         -------------------------------------------------
+
+         Initialisation for entering retrieve sub-operation
+         from analyse.
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         g.dy.action
+         g.nm.s
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.anal.to.ret []
+         ----------------
+
+         initialise local state machine
+         initialise sum total
+         initialise flashing square to 'none'
+         initialise screen saved and restore flags
+         set up palette for white and flashing white colours
+         display appropriate menu bar for data type
+         load child overlay "cnmRETR"
+         set up g.dy.action
+         reposition videodisc for underlay
+**/
+
+and g.nm.anal.to.ret () be
+$( let menu = g.nm.s + m.nm.menu
+   g.nm.s!m.local.state := m.wretrieve
+
+   g.ut.set48 (0, 0, 0, g.nm.s + m.sum.total)
+
+   // initialise flashing square to 'none'
+   g.nm.s!m.flash.colour := m.nm.flash.white
+
+   g.nm.s!m.saved := FALSE
+   g.nm.s!m.restore := FALSE
+
+   // set up white and flashing white colours
+   g.sc.palette (m.nm.white, m.sd.white2)
+   g.sc.palette (m.nm.flash.white, m.sd.flash.white2)
+
+   for i = m.box1 to m.box6 menu!i := m.sd.act
+
+   test (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data) then
+
+      $(
+         menu!m.box5 := m.wunit
+         menu!m.box3 := m.wvalues
+      $)
+
+   else
+
+      $(
+         menu!m.box4 := m.wblank // no Rank
+         menu!m.box5 := m.wgridref
+
+         // offer Sum function if data is additive, otherwise offer Values
+         menu!m.box3 := (g.nm.s!m.nm.value.data.type = m.nm.absolute.type) ->
+                        m.wsum, m.wvalues
+      $)
+
+   // always suppress Values function for incidence data
+   if g.nm.s!m.nm.value.data.type = m.nm.incidence.type then
+      menu!m.box3 := m.wblank
+
+   g.sc.menu (menu)
+
+   g.nm.load.child ("cnmRETR")
+
+   // set up action routine now that overlay is loaded
+   G.dy.action := !( G.stactr!(g.Context!m.state) + @g.dummy )
+
+   g.nm.position.videodisc ()
+$)
+.

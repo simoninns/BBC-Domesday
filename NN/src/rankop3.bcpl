@@ -1,0 +1,128 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.RANKOP3 - ONE-PAGE RANK OPERATION
+         ------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmRANK
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+        5.08.87   1        SRY         Initial version
+**/
+
+section "nmrankop3"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glNMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.uthd"
+get ":4.ARC.H.nmhd"
+
+/*
+      g.nm.rankop.data
+*/
+
+let g.nm.rankop.data (num.data.values) be
+$( let index = ?
+   let vec.i = ?
+   let m.vec.i = ?
+   let lowhalf = ?
+   let hihalf = ?
+   let exp = g.nm.dual.data.type(g.nm.s!m.nm.value.data.type) ->
+             G.nm.s!m.nm.secondary.norm.factor,
+             G.nm.s!m.nm.primary.norm.factor // exponent for data values
+   let m.val = vec 1
+   let max.neg = vec 1
+   let max.pos = vec 1
+   let area.name = vec 40/bytesperword
+
+   lowhalf := num.data.values/2
+   test lowhalf >= 10
+   then $( lowhalf := 10
+           hihalf := 10
+        $)
+   else hihalf := num.data.values - lowhalf
+
+   g.ut.set32(0, m.nm.max.neg.high, max.neg)
+   g.ut.set32(m.nm.max.pos.low, m.nm.max.pos.high, max.pos)
+
+   g.sc.pointer(m.sd.off)
+   g.sc.selcol(m.sd.cyan)
+
+   for pass = 1 to hihalf // Find '10' max values
+   $( g.ut.mov32 (max.neg, m.val)
+      vec.i := g.nm.areal
+
+      for i = 0 to num.data.values - 1
+      $( if g.ut.cmp32(vec.i, m.val) = m.gt
+         $( g.ut.mov32(vec.i, m.val)
+            index := i+1
+            m.vec.i := vec.i
+         $)
+         vec.i := vec.i + m.nm.max.data.size
+      $)
+
+      g.nm.get.area.name(f(index), area.name)
+
+      // Output areal name and value for index
+      // starting at top of screen and working down
+      g.sc.movea(m.sd.display, m.sd.disXtex, m.sd.disH - (pass-1)*m.sd.linW)
+      g.sc.ofstr("%s", area.name)
+      g.sc.movea(m.sd.display, m.sd.disXtex + 31*m.sd.charwidth,
+                 m.sd.disYtex - (pass-1)*m.sd.linW)
+      g.sc.opnum(g.nm.areal + (index-1)*m.nm.max.data.size, exp, 8)
+
+      g.ut.mov32(max.neg, m.vec.i)
+   $)
+
+   for pass = 1 to lowhalf // Find '10' min values
+   $( g.ut.mov32(max.pos, m.val)
+      vec.i := g.nm.areal
+
+      for i = 0 to num.data.values - 1
+      $( if (g.ut.cmp32(vec.i, m.val) = m.lt) &
+            (g.ut.cmp32(max.neg, vec.i) ~= m.eq)
+         $( g.ut.mov32(vec.i, m.val)
+            index := i+1
+            m.vec.i := vec.i
+         $)
+         vec.i := vec.i + m.nm.max.data.size
+      $)
+
+      g.nm.get.area.name(f(index), area.name)
+
+      // Output areal name and value for index
+      // starting at bottom of screen and working up
+      g.sc.movea(m.sd.display, m.sd.disXtex, pass*m.sd.linW)
+      g.sc.ofstr("%s", area.name)
+      g.sc.movea(m.sd.display, m.sd.disXtex+31*m.sd.charwidth, pass*m.sd.linW)
+      g.sc.opnum(g.nm.areal + (index-1)*m.nm.max.data.size, exp, 8) // check ***
+
+      g.ut.mov32(max.neg, m.vec.i)
+   $)
+
+   // Draw yellow line halfway across screen
+   G.sc.movea(m.sd.display, m.sd.disXtex, m.sd.disH/2)
+   G.sc.selcol(m.sd.yellow)
+   G.sc.liner(m.sd.plot, m.sd.disW - m.sd.charwidth, 0)
+   g.sc.pointer(m.sd.on)
+$)
+
+// Turn relative item into absolute one using areal map
+and f(index) = valof
+$( let areas = 0
+
+   // First get absolute area number by going through areal map
+   for i = 1 to g.nm.s!m.nm.nat.num.areas
+   $( if g.nm.map.hit(i) areas := areas + 1
+      if areas = index resultis i
+   $)
+$)
+.
+
+

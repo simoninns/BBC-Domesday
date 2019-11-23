@@ -1,0 +1,89 @@
+get "libhdr"
+get "$.arc.gh.glhd"
+get "$.arc.h.sdhd"
+get "$.arc.h.sdphd"  
+get "$.arc.h.uthd"  
+
+
+Let start() be
+$(
+   let fptr = vec 1
+   let tmp = vec 1
+   let count = 0
+   let buff = VEC 896 / bytesperword
+   let str = VEC 40 / bytesperword
+   let h = ? 
+
+   G.context := GETVEC(100)
+   setup.screen()
+   G.key := 0
+   h := G.dh.open(":0.pagedata")
+   
+   while capch(G.key) ~= 'Q' do
+   $(
+      if G.key = '*n' then
+      $(
+         G.sc.clear(m.sd.display)
+         G.ut.set32(896, 0, fptr)
+         G.ut.set32(count, 0, tmp)
+         G.ut.mul32(tmp, fptr)
+         G.dh.read(h, fptr, buff, 896)
+         str%0 := 30
+         G.ut.movebytes(buff, 0, str, 1, 30)
+         G.sc.mess(str)
+         str%0 := 39
+         for i = 0 to 21 do
+         $(
+            G.ut.movebytes(buff, 30 + (i * 39), str, 1, 39)
+            G.sc.movea(m.sd.display, m.sd.disXtex, m.sd.linw * (22 -i))
+            G.sc.ofstr(str)
+         $)
+         count := count + 1
+      $)
+      G.key := rdch() 
+   $) 
+   G.dh.close(h)
+$)
+   
+
+AND setup.screen() BE
+$(
+   LET pb = VEC 7
+
+   // N.B. these two lines must occur before Mode change
+   OSByte(144,0,0)   // Set display position and interlace - mod for A500 PAC
+   OSByte(114,1,0)   // Set non shadow modes at next mode change
+
+   G.sc.mode(1)                  // mode 1, join cursors, default palette
+   G.sc.initialise.mouse()       // new mouse init
+
+// shd do something about this !!!
+// RUNPROG("**TMAX 1280, %n",m.sd.disY0) // Set Icon switchover point
+
+   // get user sprite space from the system heap
+   //
+   G.sc.sprite.area := GETVEC( m.sd.sprite.ws.size/bytesperword )
+
+   IF G.sc.sprite.area = 0 THEN G.ut.abort( m.ut.init.abort+1 )
+
+   //
+   // N.B. the values used below are obtained by trial and error
+   // using a BASIC program. The Acorn documentation is insufficient.
+   // The really dodgy value is the 100, which is the offset to first
+   // sprite. See the reference manual for details of control block
+   //
+
+   G.sc.sprite.area!0 := m.sd.sprite.ws.size  // set up header info
+   G.sc.sprite.area!1 := 1                    // so that the SNEW
+   G.sc.sprite.area!2 := 100                  // command will initialise
+   G.sc.sprite.area   := G.sc.sprite.area * bytesperword // m/c address
+
+   pb!0 := G.sc.sprite.area        // R1 = sprite workspace 
+
+   UNLESS OsSprite( m.sd.clear.sprite.area, pb ) // initialise sprite area
+   DO G.ut.abort( m.ut.init.abort+2 )
+
+   // earliest point for messages - screen has been initialised now
+   G.sc.mess(" Logica Turbo Domesday starting; please wait")
+$)
+   

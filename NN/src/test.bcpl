@@ -1,0 +1,160 @@
+section "test"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glNMhd"
+get ":4.ARC.h.sdhd"
+get ":4.ARC.H.uthd"
+get ":4.ARC.H.nmhd"
+
+let start () be
+$( let num.data.values = ?
+
+   let i = input()
+   g.sc.mode(1)
+
+   selectinput(findinput("/C"))
+   home()
+   writes("Number of values ? ")
+   num.data.values := readn()
+   selectinput(i)
+
+   g.nm.areal := getvec(200)
+   g.nm.frame := getvec(100)
+
+   for i = 0 to num.data.values-1 G.nm.frame!i := i
+   g.sc.mess("Unsorted values")
+   show(num.data.values)
+   sort(g.nm.areal, G.nm.frame, num.data.values)
+   g.sc.mess("Sorted values")
+   show(num.data.values)
+$)
+
+and show(n) be
+$( home()
+   for i = 0 to 2*n-1 by 2
+   $( g.sc.opnum(G.nm.areal+i, 0, 8)
+      wrch(' ')
+      if (i & 7) = 6 wrch('*N')
+   $)
+   for i = 0 to n-1
+   $( writen(g.nm.frame!i)
+      wrch(' ')
+      if (i & 3) = 3 wrch('*N')
+   $)
+$)
+
+and home() be
+$( g.sc.clear(m.sd.display)
+   g.sc.selcol(m.sd.cyan)
+   g.sc.movea(m.sd.display, m.sd.disXtex, m.sd.disYtex)
+$)
+
+
+/*
+      sort
+
+         Sorts an array of 32-bit values based on 'first' into
+         ascending order using Treesort 3;
+         A corresponding array of 16-bit positions
+         pointed to by 'pos.base' is rearranged in parallel with the
+         values.  This latter must have been set up before Sort is
+         called.
+
+         NB: this routine is closely based on NN.B.TREESORT (S.Young);
+             any modifications should be checked in both files
+*/
+
+and sort (first, pos.base, number) BE
+$(
+   let child   = ?
+   let current = ?
+   let next    = ?
+   let topofarray = first + ((number-1) * m.nm.max.data.size)
+   let second = first + m.nm.max.data.size
+   let f1 = first - m.nm.max.data.size
+   let halfway = f1 + (number/2)*m.nm.max.data.size
+   let saved.pos = ?
+   let index = ?
+
+   let savedroot = vec 1
+   let t = vec 1
+
+// Two big FOR loops follow with the same algorithm (siftup) in the
+// inner WHILE loop of both, to save procedure calls.
+
+   FOR s = halfway TO second BY -m.nm.max.data.size DO
+   $(
+      current := s
+      g.ut.mov32 (current, savedroot)
+
+      child := f1 + 2 * (current - f1)
+      next := child + m.nm.max.data.size
+      index := (current - first)/m.nm.max.data.size
+      saved.pos := pos.base!index
+
+      $(
+         UNLESS child = topofarray
+            UNLESS (g.ut.cmp32 (child, next) = m.gt)
+               child := next
+
+         UNLESS (g.ut.cmp32 (child, savedroot) = m.gt) break
+
+         g.ut.mov32 (child, current)
+         pos.base!index := pos.base!((child - first)/m.nm.max.data.size)
+         current := child
+
+         index := (current - first)/m.nm.max.data.size
+         child := f1 + 2 * (current - f1)
+         next := child + m.nm.max.data.size
+
+      $) REPEATUNTIL child > topofarray
+
+      g.ut.mov32(savedroot, current)
+
+      pos.base!index := saved.pos
+   $)
+
+   FOR temptop = topofarray TO second BY -m.nm.max.data.size DO
+   $(
+      current := first
+      g.ut.mov32 (current, savedroot)
+      child := second
+      next := child + m.nm.max.data.size
+      index := (current - first)/m.nm.max.data.size
+      saved.pos := pos.base!index
+
+      $( UNLESS child = temptop
+            UNLESS g.ut.cmp32 (child, next) = m.gt
+               child := next
+
+         UNLESS g.ut.cmp32 (child, savedroot) = m.gt break
+
+         g.ut.mov32 (child, current)
+         pos.base!index := pos.base!((child - first)/m.nm.max.data.size)
+         current := child
+
+         index := (current - first)/m.nm.max.data.size
+         child := f1 + 2 * (current - f1)
+         next := child + m.nm.max.data.size
+
+      $) REPEATUNTIL child > temptop
+
+      g.ut.mov32 (savedroot, current)
+      pos.base!index := saved.pos
+
+      // Swap elements 1 & temptop
+
+      g.ut.mov32 (first, t)
+      g.ut.mov32 (temptop, first)
+      g.ut.mov32 (t, temptop)
+
+      !t := !pos.base
+      index := (temptop - first)/m.nm.max.data.size
+      !pos.base := pos.base!index
+      pos.base!index := !t
+   $)
+$)
+.
+
+

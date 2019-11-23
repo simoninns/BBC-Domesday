@@ -1,0 +1,408 @@
+compare olb.chart b.old
+couldn't open b.chart
+compare b.chart oldb.chart1 oldb.chart
+change b.chart1 , line 1 to 1
+line    1 : //  PUK SOURCE  6.87
+to oldb.chart, line 1 to 1
+line    1 : //  AES SOURCE  6.87
+change b.chart1 , line 9 to 9
+line    9 :             G.nc.chart and its utility routines
+to oldb.chart, line 9 to 10
+line    9 :             G.nc.chart and its utility routines and
+line   10 :             G.nc.next.group
+remove b.chart1 line   22 :          12.08.87 16       SRY         Modified for DataMerge
+remove b.chart1 line   23 :          14.08.87 17       SRY         Added background plot
+remove b.chart1 line   24 :                                        and narrow chars
+change b.chart1 , line 31 to 31
+line   31 : get ":4.ARC.gH.glNChd"
+to oldb.chart, line 29 to 29
+line   29 : get ":4.ARC.GH.glNChd"
+change b.chart1 , line 37 to 39
+line   37 : static $( sv=? s.a=? bv=? cv=? c.r=? cc=? n.v=? o.nm=? buff=?
+line   38 :           u.s=? u.s1=?
+line   39 :        $)
+to oldb.chart, line 35 to 35
+line   35 : static $( sv=? s.a=? bv=? cv=? c.r=? cc=? n.v=? o.nm=? buff=? $)
+change b.chart1 , line 68 to 68
+line   68 :          See Domesday Retrieval software
+to oldb.chart, line 64 to 128
+line   64 :          IF just selected or just back from text
+line   65 :          THEN initialise
+line   66 :          ENDIF
+line   67 :          IF just back from Regroup
+line   68 :          THEN set all vars to current group default
+line   69 :          ENDIF
+line   70 :          IF local state is looping and ten seconds elapsed since last plot
+line   71 :          THEN Get next group of sec. var.
+line   72 :               Replot
+line   73 :          ENDIF
+line   74 :          IF write pending
+line   75 :          THEN IF key noact return
+line   76 :               Display key or Q if not R
+line   77 :               IF r or R
+line   78 :               THEN do write
+line   79 :               ELSE wait 1 second
+line   80 :               Clear message
+line   81 :               state=main
+line   82 :          ENDIF
+line   83 :          Find area of screen
+line   84 :          IF different from last area
+line   85 :          THEN dehighlight old area
+line   86 :               highlight this area
+line   87 :          ENDIF
+line   88 :          CASE OF G.key
+line   89 :             Fkey2: Set palette default
+line   90 :                    Set item addresses to current dataset
+line   91 :             Fkey3: Replot chart
+line   92 :                    IF successful
+line   93 :                    THEN blank menu box 3
+line   94 :                         Put in menu box 5
+line   95 :                    ENDIF
+line   96 :                    RETURN
+line   97 :             Fkey5: Message for write pending
+line   98 :                    state=write
+line   99 :                    RETURN
+line  100 :             Fkey4: Set local state to main
+line  101 :                    RETURN
+line  102 :             Fkey6: Set palette to default
+line  103 :                    Set G.key for Text
+line  104 :                    Set local state to Text
+line  105 :                    RETURN
+line  106 :             Action: CASE OF screen area
+line  107 :                        More: next page of vars
+line  108 :                        Variable: display name
+line  109 :                        Group: display name
+line  110 :                        Chart: IF not pie and in plot area get value
+line  111 :                        Colour.key: IF pie get value
+line  112 :                     ENDCASE
+line  113 :             Change: CASE OF screen area
+line  114 :                        Chartkey: get next chart type
+line  115 :                        Y-axis: rescale chart
+line  116 :                        Ab. key: get next abb.
+line  117 :                        Variable: change the variable
+line  118 :                        Group: change the group
+line  119 :                     ENDCASE
+line  120 :          ENDCASE
+line  121 :          IF chart has been changed
+line  122 :          THEN Put Replot in menu bar
+line  123 :               Remove Write from menu bar
+line  124 :               IF looping chart
+line  125 :               THEN Set local state to main
+line  126 :                    Clear up
+line  127 :               ENDIF
+line  128 :          ENDIF
+change b.chart1 , line 72 to 75
+line   72 : $( LET o.b,l.st=?,?
+line   73 : 
+line   74 :    IF G.context!m.justselected & (g.nc.area!m.nc.l.s ~= m.nc.error)
+line   75 :       G.nc.chartini()
+to oldb.chart, line 132 to 134
+line  132 : $( LET o.b, l.st = ?, ?
+line  133 : 
+line  134 :    IF G.context!m.justselected G.nc.chartini()
+change b.chart1 , line 83 to 83
+line   83 :    c.r := false
+to oldb.chart, line 142 to 142
+line  142 :    c.r := FALSE
+change b.chart1 , line 104 to 138
+line  104 :          unless g.key=m.kd.noact
+line  105 :             g.sc.input(u.s,m.sd.blue,m.sd.cyan,32)
+line  106 :          if g.key=m.kd.return | g.key=m.kd.fkey1
+line  107 :          $( if g.key=m.kd.return
+line  108 :             $( g.key := m.kd.noact
+line  109 :                unless u.s%0=0
+line  110 :                   unless do.write() return
+line  111 :             $)
+line  112 :             g.menubar!m.box5 := m.sd.act
+line  113 :             g.sc.menu(g.menubar)
+line  114 :             g.sc.clear(m.sd.message)
+line  115 :             lst(cc=m.nc.looping -> m.nc.looping,m.nc.main)
+line  116 :          $)
+line  117 :          unless m.kd.fkey2 <= g.key <= m.kd.fkey6 return
+line  118 :       endcase
+line  119 :       case m.nc.overwrite:
+line  120 :          unless g.key=m.kd.noact
+line  121 :             g.sc.input(u.s1,m.sd.blue,m.sd.cyan,1)
+line  122 :          if g.key=m.kd.return | g.key=m.kd.fkey1
+line  123 :          $( if g.key=m.kd.return & capch(u.s1%1)='Y'
+line  124 :                if g.dh.delete.file(u.s)
+line  125 :                $( g.key := m.kd.noact
+line  126 :                   unless do.write() return
+line  127 :                $)
+line  128 :             g.menubar!m.box5 := m.sd.act
+line  129 :             g.sc.menu(g.menubar)
+line  130 :             g.sc.clear(m.sd.message)
+line  131 :             lst(cc=m.nc.looping -> m.nc.looping,m.nc.main)
+line  132 :          $)
+line  133 :          unless m.kd.fkey2 <= g.key <= m.kd.fkey6 return
+line  134 :       endcase
+line  135 :       case m.nc.error:
+line  136 :          g.key := m.kd.fkey2 // simulate Main
+line  137 :       endcase
+line  138 :       default:
+to oldb.chart, line 163 to 175
+line  163 :       $( let ch=g.ut.printingchar(g.key) -> capch(g.key),'Q'
+line  164 :          if g.key=m.kd.noact return
+line  165 :          g.sc.selcol(m.sd.blue)
+line  166 :          g.sc.movea(m.sd.message,1216,m.sd.mesytex)
+line  167 :          g.sc.ofstr("%c",ch)
+line  168 :          test ch='R'
+line  169 :          then g.nc.write()
+line  170 :          else $( g.ut.wait(100)
+line  171 :                  g.sc.clear(m.sd.message)
+line  172 :               $)
+line  173 :          lst(cc=m.nc.looping -> m.nc.looping,m.nc.main)
+line  174 :          g.sc.keyboard.flush()
+line  175 :       $)
+change b.chart1 , line 144 to 145
+line  144 :    unless s.a=o.b
+line  145 :    $( let s=s.a
+to oldb.chart, line 181 to 182
+line  181 :    unless s.a = o.b
+line  182 :    $( let s = s.a
+change b.chart1 , line 157 to 157
+line  157 :          reset.()
+to oldb.chart, line 194 to 196
+line  194 :          g.sc.clear(m.sd.display)
+line  195 :          g.sc.clear(m.sd.message)
+line  196 :          g.sc.setpal(m.sd.defpal)
+change b.chart1 , line 170 to 182
+line  170 :          g.sc.mess("File:")
+line  171 :          g.sc.movea(m.sd.message,m.sd.mesXtex+4*m.sd.charwidth,m.sd.mesYtex)
+line  172 :          u.s :=
+line  173 :          "*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S*S"
+line  174 :          u.s1 := table 0,0
+line  175 :          u.s%0 := 0
+line  176 :          u.s1%0 := 0
+line  177 :          g.key := m.kd.noact
+line  178 :          g.sc.input(u.s,m.sd.blue,m.sd.cyan,32)
+line  179 :          if g.screen=m.sd.menu
+line  180 :             g.sc.moveptr(g.xpoint,g.sc.dtob(m.sd.display,4))
+line  181 :          g.menubar!m.box5 := m.sd.wBlank
+line  182 :          g.sc.menu(g.menubar)
+to oldb.chart, line 209 to 209
+line  209 :          g.sc.mess("Insert floppy disc; type R (ready) or Q (quit): ")
+change b.chart1 , line 186 to 186
+line  186 :          reset.()
+to oldb.chart, line 213 to 215
+line  213 :          g.sc.clear(m.sd.display)
+line  214 :          g.sc.clear(m.sd.message)
+line  215 :          g.sc.setpal(m.sd.defpal)
+after b.chart1 line  189 :          return
+add oldb.chart line  219 : /*
+add oldb.chart line  220 : // debug code for changing palette
+add oldb.chart line  221 :       case m.kd.fkey7:
+add oldb.chart line  222 :       $( let i=input()
+add oldb.chart line  223 :          g.sc.selcol(m.sd.cyan)
+add oldb.chart line  224 :          g.nc.clear(m.nc.chart)
+add oldb.chart line  225 :          g.nc.move(m.nc.chart)
+add oldb.chart line  226 :          selectinput(findinput("/c"))
+add oldb.chart line  227 :          for i=0 to 3
+add oldb.chart line  228 :          $( g.sc.ofstr("*NLogical colour %N: ",i)
+add oldb.chart line  229 :             g.sc.palette(i,readn())
+add oldb.chart line  230 :          $)
+add oldb.chart line  231 :          endread()
+add oldb.chart line  232 :          selectinput(i)
+add oldb.chart line  233 :          g.nc.area!m.nc.lc := m.nc.unknown
+add oldb.chart line  234 :          r.p()
+add oldb.chart line  235 :          return
+add oldb.chart line  236 :       $)
+add oldb.chart line  237 : */
+change b.chart1 , line 199 to 199
+line  199 :                g.sc.mess("%s",G.ut.align(G.nc.area,o,buff,m.nc.lsize.b))
+to oldb.chart, line 247 to 247
+line  247 :                g.sc.mess("%s", G.ut.align(G.nc.area,o,buff,m.nc.lsize.b))
+change b.chart1 , line 206 to 206
+line  206 :                G.sc.mess("%s",G.ut.align(G.nc.area,o,buff,m.nc.lsize.b))
+to oldb.chart, line 254 to 254
+line  254 :                G.sc.mess("%s", G.ut.align(G.nc.area,o,buff,m.nc.lsize.b))
+after b.chart1 line  248 : 
+add oldb.chart line  297 : /**
+add oldb.chart line  298 :          G.NC.NEXT.GROUP
+add oldb.chart line  299 :          ---------------
+add oldb.chart line  300 : 
+add oldb.chart line  301 :          Get next group of a variable
+add oldb.chart line  302 : 
+add oldb.chart line  303 :          INPUTS:
+add oldb.chart line  304 : 
+add oldb.chart line  305 :          v: Variable number
+add oldb.chart line  306 : 
+add oldb.chart line  307 :          OUTPUTS:
+add oldb.chart line  308 : 
+add oldb.chart line  309 :          Group word for new group:
+add oldb.chart line  310 :              - Low byte is group number
+add oldb.chart line  311 :              - High byte is 0 or record number if has own name
+add oldb.chart line  312 :              - Top bit is set if group is omitted
+add oldb.chart line  313 : 
+add oldb.chart line  314 :          GLOBALS MODIFIED:
+add oldb.chart line  315 : 
+add oldb.chart line  316 :          None
+add oldb.chart line  317 : 
+add oldb.chart line  318 :          SPECIAL NOTES FOR CALLERS:
+add oldb.chart line  319 : 
+add oldb.chart line  320 :          None
+add oldb.chart line  321 : 
+add oldb.chart line  322 :          PROGRAM DESIGN LANGUAGE:
+add oldb.chart line  323 : 
+add oldb.chart line  324 :          G.nc.next.group [v -> group no.]
+add oldb.chart line  325 :          --------------------------------
+add oldb.chart line  326 : 
+add oldb.chart line  327 :          FOR each category in the variable
+add oldb.chart line  328 :             IF group of category not omitted
+add oldb.chart line  329 :             THEN IF group of category is next highest after current so far
+add oldb.chart line  330 :                  THEN remember it as best
+add oldb.chart line  331 :                  ENDIF
+add oldb.chart line  332 :                  IF group of category is smallest so far
+add oldb.chart line  333 :                  THEN remember it as smallest
+add oldb.chart line  334 :                  ENDIF
+add oldb.chart line  335 :             ENDIF
+add oldb.chart line  336 :          ENDFOR
+add oldb.chart line  337 :          IF no bigger group number found
+add oldb.chart line  338 :          THEN IF current group is 'all' OR dataset not additive
+add oldb.chart line  339 :               THEN best is smallest
+add oldb.chart line  340 :               ELSE best is 'all'
+add oldb.chart line  341 :               ENDIF
+add oldb.chart line  342 :          ENDIF
+add oldb.chart line  343 :          update current group with best
+add oldb.chart line  344 :          RETURN best
+add oldb.chart line  345 : **/
+add oldb.chart line  346 : 
+add oldb.chart line  347 : and g.nc.next.group(v)=valof
+add oldb.chart line  348 : $( let vp=vpr(v)
+add oldb.chart line  349 :    let c.gr,s,b=(!vp) & #xff,#xff,#xff
+add oldb.chart line  350 :    for i=1 to g.nc.area%v
+add oldb.chart line  351 :    $( let g=(vp!i) & #xff
+add oldb.chart line  352 :       unless ((vp!i) & #x8000)=0 loop
+add oldb.chart line  353 :       if (g > c.gr) & (g < (b & #xff)) b := vp!i
+add oldb.chart line  354 :       if g < (s & #xff) s := vp!i
+add oldb.chart line  355 :    $)
+add oldb.chart line  356 :    if b=#xff
+add oldb.chart line  357 :       b := ((!vp=m.nc.all) | (g.nc.area%m.nc.add ~= 0)) -> s,m.nc.all
+add oldb.chart line  358 :    !vp := b
+add oldb.chart line  359 :    resultis b
+add oldb.chart line  360 : $)
+add oldb.chart line  361 : 
+add oldb.chart line  362 : 
+remove b.chart1 line  255 : and reset.() be
+remove b.chart1 line  256 : $( g.sc.clear(m.sd.display)
+remove b.chart1 line  257 :    g.sc.clear(m.sd.message)
+remove b.chart1 line  258 :    g.sc.setpal(m.sd.defpal)
+remove b.chart1 line  259 : $)
+remove b.chart1 line  260 : 
+remove b.chart1 line  261 : and do.write()=valof
+remove b.chart1 line  262 : $( let h=g.ud.open.file(u.s)
+remove b.chart1 line  263 :    test 0 < h < #x80 // strictly m.ut.min.error but no room!
+remove b.chart1 line  264 :    then $( u.s1%0 := 0
+remove b.chart1 line  265 :            g.key := m.kd.noact
+remove b.chart1 line  266 :            g.sc.input(u.s1,m.sd.blue,m.sd.cyan,1)
+remove b.chart1 line  267 :            lst(m.nc.overwrite)
+remove b.chart1 line  268 :            resultis false
+remove b.chart1 line  269 :         $)
+remove b.chart1 line  270 :    else $( test h = 0 // strictly m.ut.success but no room!
+remove b.chart1 line  271 :            then $( g.nc.write()
+remove b.chart1 line  272 :                    g.ud.close.file()
+remove b.chart1 line  273 :                 $)
+remove b.chart1 line  274 :            else $( g.sc.input(0,m.sd.blue,m.sd.cyan,32)
+remove b.chart1 line  275 :                    resultis false
+remove b.chart1 line  276 :                 $)
+remove b.chart1 line  277 :            g.sc.keyboard.flush()
+remove b.chart1 line  278 :            resultis g.nc.area!m.nc.l.s ~= m.nc.error
+remove b.chart1 line  279 :         $)
+remove b.chart1 line  280 : $)
+change b.chart1 , line 284 to 286
+line  284 :    then $( if v=sv return
+line  285 :            test sv=m.nc.unknown
+line  286 :            then if v=cv return
+to oldb.chart, line 372 to 374
+line  372 :    then $( if v = sv return
+line  373 :            test sv = m.nc.unknown
+line  374 :            then if v = cv return
+change b.chart1 , line 291 to 291
+line  291 :    else $( if v=cv return
+to oldb.chart, line 379 to 379
+line  379 :    else $( if v = cv return
+change b.chart1 , line 350 to 350
+line  350 : $( switchon s.a into
+to oldb.chart, line 438 to 442
+line  438 : $( unless s.a = m.nc.unknown
+line  439 :    $( g.sc.selcol(on.off = m.sd.on -> m.sd.yellow, m.sd.cyan)
+line  440 :       g.nc.move(s.a)
+line  441 :    $)
+line  442 :    switchon s.a into
+remove b.chart1 line  352 :          do.sa(s.a, on.off)
+change b.chart1 , line 355 to 357
+line  355 :       case m.nc.ckey:
+line  356 :          do.sa(s.a, on.off)
+line  357 :          g.sc.oprop(valof switchon cc into
+to oldb.chart, line 446 to 446
+line  446 :       case m.nc.ckey: g.sc.oprop(valof switchon cc into
+change b.chart1 , line 367 to 370
+line  367 :       $( let o=gptr(cv,G.nc.area!m.nc.ca)
+line  368 :          let s="  = "
+line  369 :          if g.menubar!m.box3=m.sd.act return
+line  370 :          do.sa(s.a, on.off)
+to oldb.chart, line 456 to 458
+line  456 :       $( let o = gptr(cv,G.nc.area!m.nc.ca)
+line  457 :          let s = "  = "
+line  458 :          if g.menubar!m.box3 = m.sd.act return
+change b.chart1 , line 380 to 382
+line  380 :          $( do.sa(s.a, on.off)
+line  381 :             if (on.off=m.sd.off) & ((v=cv) | (v=sv)) g.sc.selcol(m.sd.blue)
+line  382 :             g.nc.pr(G.ut.align(G.nc.area,vptr(v),buff,m.nc.lsize.b),18)
+to oldb.chart, line 468 to 469
+line  468 :          $( if (on.off=m.sd.off) & ((v=cv) | (v=sv)) g.sc.selcol(m.sd.blue)
+line  469 :             pr(G.ut.align(G.nc.area,vptr(v),buff,m.nc.lsize.b), 10)
+remove b.chart1 line  391 :             do.sa(s.a, on.off)
+change b.chart1 , line 393 to 393
+line  393 :             g.nc.pr(G.ut.align(G.nc.area,o,buff,m.nc.lsize.b),16)
+to oldb.chart, line 479 to 479
+line  479 :             pr(G.ut.align(G.nc.area,o,buff,m.nc.lsize.b), 9)
+remove b.chart1 line  402 : $)
+remove b.chart1 line  403 : 
+remove b.chart1 line  404 : and do.sa(s.a, on.off) be
+remove b.chart1 line  405 : $( test on.off=m.sd.on
+remove b.chart1 line  406 :    then $( g.sc.selcol(m.sd.blue)
+remove b.chart1 line  407 :            g.nc.clear(m.sd.plot,s.a)
+remove b.chart1 line  408 :            g.sc.selcol(m.sd.yellow)
+remove b.chart1 line  409 :         $)
+remove b.chart1 line  410 :    else $( g.nc.clear(m.sd.clear, s.a)
+remove b.chart1 line  411 :            g.sc.selcol(m.sd.cyan)
+remove b.chart1 line  412 :         $)
+remove b.chart1 line  413 :    g.nc.move(s.a)
+change b.chart1 , line 432 to 432
+line  432 : $( g.nc.clear(m.sd.clear,s.a)
+to oldb.chart, line 506 to 506
+line  506 : $( g.nc.clear(s.a)
+after b.chart1 line  433 :    h(on.off)
+add oldb.chart line  508 : $)
+add oldb.chart line  509 : 
+add oldb.chart line  510 : and pr(s,chars) be // print truncated string
+add oldb.chart line  511 : $( let t=s%0
+add oldb.chart line  512 :    if t > chars s%0 := chars
+add oldb.chart line  513 :    g.sc.oprop(s)
+add oldb.chart line  514 :    s%0 := t
+change b.chart1 , line 438 to 439
+line  438 :    for i=1 to v-1
+line  439 :       l := l+g.nc.cats(i)+1
+to oldb.chart, line 519 to 519
+line  519 :    for i=1 to v-1 l := l+g.nc.area%i+1
+change b.chart1 , line 446 to 446
+line  446 :       resultis m.nc.gname*bytesperword+(g >> 8)*m.nc.olsize.b
+to oldb.chart, line 526 to 526
+line  526 :       resultis m.nc.gname*bytesperword + (g >> 8)*m.nc.olsize.b
+change b.chart1 , line 449 to 451
+line  449 :    for i=1 to g.nc.cats(v)
+line  450 :       if (vpr(v))!i=g
+line  451 :          resultis vptr(v)+i*m.nc.lsize.b
+to oldb.chart, line 529 to 529
+line  529 :    for i=1 to g.nc.area%v if (vpr(v))!i=g resultis vptr(v)+i*m.nc.lsize.b
+change b.chart1 , line 495 to 496
+line  495 :    if g.nc.area%m.nc.add = 2 | g.nc.area%v > 24
+line  496 :       g.nc.next.group(v)
+to oldb.chart, line 573 to 573
+line  573 :    unless g.nc.area%m.nc.add=0 g.nc.next.group(v)
+remove b.chart1 line  507 : 
+time
+Thu,24 Dec 1987.15:51:33
+bye
+

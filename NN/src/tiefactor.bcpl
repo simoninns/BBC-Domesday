@@ -1,0 +1,70 @@
+//  PUK SOURCE  6.87
+
+
+/**
+         NM.TIEFACTOR - LIBRARY ROUTINE TO ADJUST TIE FACTOR
+         ---------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmCORR
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         31.07.86 1        D.R.Freed   Initial version
+
+         g.nm.calc.tie.correction
+**/
+
+section "nmtiefactor"
+
+$<RCP
+needs "FLAR1"
+needs "FLCONV"
+$>RCP
+
+get "libhdr"
+$<RCP
+get "fphdr"
+$>RCP
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.nmhd"
+
+
+/*
+      g.nm.calc.tie.correction
+
+         used to correct the sum of squares of differences in Spearman's
+         rank correlation;
+
+         adjusts the given FP tie correction factor by the given number
+         of ties,t, as follows:
+            tie factor = tie factor + (t*t*t - t)/12
+*/
+
+let g.nm.calc.tie.correction (num.ties, tie.factor.ptr) be
+$(
+   let fp.adjust = vec FP.LEN
+   and fp.num.ties = vec FP.LEN
+   and fp.twelve = vec FP.LEN
+
+   FFLOAT (num.ties, fp.num.ties)
+
+   FDIV (
+         FMINUS (
+                 FMULT (
+                        FMULT (fp.num.ties, fp.num.ties, fp.adjust),
+                        fp.num.ties,
+                        fp.adjust),
+                 fp.num.ties,
+                 fp.adjust),
+         FFLOAT (12, fp.twelve),
+         fp.adjust)
+
+   FPLUS (tie.factor.ptr, fp.adjust, tie.factor.ptr)
+$)
+
+.
+

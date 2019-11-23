@@ -1,0 +1,354 @@
+/**
+         VIRTUAL KEYBOARD
+         ----------------
+
+         This file contains:
+
+         G.sc.setup.vk
+         G.sc.virtual.key
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         l.virt
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         18/2/87  1        MH          Initial version
+         25.8.87  2        MH/SRY      Changed m.sd. -> m.vk.
+         10.12.87 3        MH          Updated for Arcimedes version
+**/
+
+Section "virtual keyboard"
+
+get "libhdr"
+get ":4.ARC.gh.glhd"
+get ":4.ARC.h.sdhd"
+get ":4.ARC.h.sdphd"
+get ":4.ARC.h.kdhd"
+
+manifest $(
+   m.vk.inactive = -1
+
+   m.vk.action = 0            //boolean variable
+   m.vk.col = 1               //column pointer to current key
+   m.vk.row = 2               //row pointer to current key
+   m.vk.cold = 3              //column pointer to previous key
+   m.vk.rold = 4              //row pointer to previous key
+
+//
+//character values for modes 1 and 2
+//
+   m.vk.copy1 = 135             //mode 1 copy value
+   m.vk.bs1 = 136               //mode 1 backspace value
+   m.vk.escape1 = 151           //mode 1 escape value
+
+   m.vk.copy2 = 149             //mode 2 copy value
+   m.vk.bs2 = 150               //mode 2 backspace value
+   m.vk.escape2 = 152           //mode 2 escape value
+
+   m.vk.column = 36             //number of characters in a column
+   m.vk.no.row = 2                 //number of characters in a row
+   m.vk.xorigin = m.sd.menx0 + ( 3 * m.sd.charwidth)  //x origin of keyboard
+   m.vk.yorigin = m.sd.bary0    //y origin of keyboard
+   m.vk.ybottom = m.sd.meny0    //bottom y pixel of keyboard and menu bar
+   m.vk.pixel = 4               //one pixel block
+$)
+
+static $( top.1 = ?; bottom.1 = ?; bottom.1a = ? $)
+
+/**
+          G.sc.setup.vk - DRAWS THE VIRTUAL KEYBOARD
+          ---------------------------------------
+
+         Draws the virtual keyboard in the menu bar area and initialises
+         variables associated with the virtual keyboard.
+
+
+           INPUTS:
+
+           None.
+
+           OUTPUTS:
+
+           None.
+
+           GLOBALS MODIFIED:
+
+           G.sc.vk.area
+
+           SPECIAL NOTES FOR CALLERS:
+
+           None.
+
+           PROGRAM DESIGN LANGUAGE
+           -----------------------
+
+           G.sc.setup.vk []
+
+           initialise associated variables
+           assign virtual keyboard character set to G.sc.vkey.board
+           draw virtual keyboard in the menu bar area
+
+
+**/
+
+let G.sc.setup.vk() be
+$(
+   let cursor = vec 3
+
+       //mode 1 chars
+   let bottom.2 = vec 1
+
+        //mode 2 chars
+   let bottom.3 = vec 1
+   top.1 := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+   bottom.1 := "!*"#$%%&'()**+,-./*s:;<=>?@[\]^_`{|}~"
+   bottom.1a := "!*"#$%&'()**+,-./*s:;<=>?@[\]^_`{|}~"
+   G.sc.savcur(cursor)
+      //set up bottom.2 as string containing the mode 1 characters:
+     //copy, backspace and escape.
+   bottom.2%0, bottom.2%1 := 3, m.vk.copy1
+   bottom.2%2, bottom.2%3 := m.vk.bs1, m.vk.escape1
+     //set up bottom.3 as string containing the mode 2 characters:
+     //copy, backspace and escape.
+   bottom.3%0, bottom.3%1 := 3, m.vk.copy2
+   bottom.3%2, bottom.3%3 := m.vk.bs2, m.vk.escape2
+   G.sc.pointer(m.sd.off) //switch pointer off
+   G.sc.vk.area!m.vk.col := m.vk.INACTIVE
+   G.sc.vk.area!m.vk.row := m.vk.INACTIVE //set to start of key board
+   G.sc.vk.area!m.vk.cold := G.sc.vk.area!m.vk.col
+   G.sc.vk.area!m.vk.rold := G.sc.vk.area!m.vk.row //initialise old pointers
+   G.sc.vk.area!m.vk.action := false  //initialise action
+   G.sc.movea(m.sd.menu, m.vk.xorigin, m.vk.yorigin)
+   G.sc.selcol(m.sd.cyan)
+   G.sc.rect(m.sd.plot, (m.vk.column*m.sd.charwidth)-m.vk.pixel,
+              m.vk.no.row*m.sd.charwidth+m.vk.pixel) //plot keyboard background
+
+   //draw keys
+   G.sc.selcol(m.sd.blue)
+   G.sc.movea(m.sd.menu, m.vk.xorigin, m.vk.yorigin+m.sd.charwidth-m.vk.pixel)
+   G.sc.ofstr(bottom.1)
+   test G.sc.findmode() = 1 | G.sc.findmode() = 9 then
+       G.sc.ofstr(bottom.2)
+   else
+       G.sc.ofstr(bottom.3)
+   G.sc.movea(m.sd.menu, m.vk.xorigin,
+                m.vk.yorigin+(m.vk.no.row*m.sd.charwidth))
+   G.sc.ofstr(top.1)
+
+   G.sc.pointer(m.sd.on) //switch pointer on
+   G.sc.rescur(cursor)
+$)
+
+
+
+
+
+/**
+
+          G.sc.virtual.key - GET INPUT FROM THE VIRTUAL KEYBOARD
+          ------------------------------------------------
+
+
+          Get input from the virtual keyboard and modify G.key accordingly
+
+          INPUTS:
+
+          None.
+
+          OUTPUTS:
+
+          None.
+
+
+          GLOBALS MODIFIED:
+
+          G.sc.vk.area
+
+          SPECIAL NOTES FOR CALLERS:
+
+          None.
+
+          PROGRAM DESIGN LANGUAGE:
+
+
+          G.sc.virtual.key[]
+
+          IF pointer in keyboard area THEN
+              highlight key that pointer is over
+          call to MOVEMENT to see if pointer has selected another key
+          IF another key has been selected THEN
+              de-highlight previous key
+          IF pointer is not outside the keyboard area THEN
+              IF G.key = <ACTION> THEN
+                  G.key = highlighted key
+          RETRUN
+
+
+**/
+
+and G.sc.virtual.key() = VALOF
+$(
+   let cursor = vec 3
+   let new.key = G.key
+
+       //mode 1 chars
+   let bottom.2 = vec 1
+
+        //mode 2 chars
+   let bottom.3 = vec 1
+
+
+      //set up bottom.2 as string containing the mode 1 characters:
+     //copy, backspace and escape.
+   bottom.2%0, bottom.2%1 := 3, m.vk.copy1
+   bottom.2%2, bottom.2%3 := m.vk.bs1, m.vk.escape1
+     //set up bottom.3 as string containing the mode 2 characters:
+     //copy, backspace and escape.
+   bottom.3%0, bottom.3%1 := 3, m.vk.copy2
+   bottom.3%2, bottom.3%3 := m.vk.bs2, m.vk.escape2
+
+   G.sc.savcur(cursor)
+   if G.sc.vk.area!m.vk.action then
+       draw.key(G.sc.vk.area!m.vk.col, G.sc.vk.area!m.vk.row,
+                 m.sd.yellow)  //highlight key
+   movement() //check for any pointer movement
+   if G.sc.vk.area!m.vk.action then
+       draw.key(G.sc.vk.area!m.vk.cold, G.sc.vk.area!m.vk.rold,
+                   m.sd.cyan) //deselect key
+   if (G.sc.vk.area!m.vk.col ~= m.vk.INACTIVE) &
+             (G.sc.vk.area!m.vk.row ~= m.vk.INACTIVE) then
+   $(
+       if G.key = m.kd.action then
+       $(
+           test G.sc.vk.area!m.vk.row = 0 then
+              test G.sc.vk.area!m.vk.col > 32 then
+                 new.key := bottom.2%(G.sc.vk.area!m.vk.col - 32)
+              else
+                 new.key := bottom.1a%(G.sc.vk.area!m.vk.col+1)
+           else
+              new.key := top.1%(G.sc.vk.area!m.vk.col+1)
+           switchon new.key into
+           $(
+               case m.vk.bs2:
+               case m.vk.bs1: new.key := 127    //delete char
+                         endcase
+               case m.vk.escape2:
+               case m.vk.escape1: new.key := 27     //escape char
+                         endcase
+               case m.vk.copy1:
+               case m.vk.copy2: new.key := m.kd.copy   //copy char
+                         endcase
+           $)
+           g.ut.wait(m.sd.cursor.time*4)  // wait to stop double bounce from VK
+       $)
+   $)
+   G.sc.rescur(cursor)
+   resultis new.key
+$)
+
+
+/*
+         draw key in current pointer position
+*/
+
+and draw.key(x, y, colour) be
+$(
+   let x.pos, y.pos = ?, ?
+   let char = ?
+
+       //mode 1 chars
+   let bottom.2 = vec 1
+
+        //mode 2 chars
+   let bottom.3 = vec 1
+
+
+      //set up bottom.2 as string containing the mode 1 characters:
+     //copy, backspace and escape.
+   bottom.2%0, bottom.2%1 := 3, m.vk.copy1
+   bottom.2%2, bottom.2%3 := m.vk.bs1, m.vk.escape1
+     //set up bottom.3 as string containing the mode 2 characters:
+     //copy, backspace and escape.
+   bottom.3%0, bottom.3%1 := 3, m.vk.copy2
+   bottom.3%2, bottom.3%3 := m.vk.bs2, m.vk.escape2
+
+   if (x ~= m.vk.INACTIVE) & (Y ~= m.vk.INACTIVE) then
+   $(  let box.pos = ?
+//       G.sc.pointer(m.sd.off) //switch pointer off
+       x.pos := m.vk.xorigin + (x * m.sd.charwidth)
+       y.pos := m.vk.yorigin + (y * m.sd.charwidth)
+       box.pos := y = 0 -> y.pos, y.pos + m.vk.pixel
+       G.sc.movea(m.sd.menu, x.pos, box.pos)
+       G.sc.selcol(colour)
+       G.sc.rect(m.sd.plot, m.sd.charwidth-m.vk.pixel,
+                   m.sd.charwidth) //draw key shape
+       G.sc.movea(m.sd.menu, x.pos, box.pos+m.sd.charwidth-m.vk.pixel)
+       G.sc.selcol(m.sd.blue)
+       test y = 0 then
+          test x > 32 then
+             char := bottom.2%(x - 32)
+          else
+             char := bottom.1a%(x + 1)
+       else
+          char := top.1%(x + 1)
+       if (char=m.vk.copy1|char=m.vk.bs1|char=m.vk.escape1) &
+            (G.sc.findmode()=2) then
+       $(
+           switchon char into
+           $(
+                case m.vk.copy1: char := m.vk.copy2 //mode 2 copy char
+                         endcase
+               case m.vk.bs1: char := m.vk.bs2 //mode 2 delete char
+                         endcase
+               case m.vk.escape1: char := m.vk.escape2 //mode 2 escape char
+                         endcase
+           $)
+        $)
+       G.sc.ofstr("%c", char) //print char in key box
+//       G.sc.pointer(m.sd.on) //switch pointer on
+   $)
+$)
+
+/*
+        if a new key has been selected then indicate this
+*/
+
+
+and movement() be
+$(
+   let x, y = m.vk.xorigin, m.vk.ybottom
+   let c, r = m.vk.INACTIVE, m.vk.INACTIVE //invalid values
+
+   G.sc.vk.area!m.vk.action := false
+   for i = 0 to 1 do
+   $(
+       if y <= G.ypoint < (y + m.sd.charwidth + m.vk.pixel) &
+            G.screen = m.sd.menu then
+           r := i
+       y := y + m.sd.charwidth + m.vk.pixel
+   $)
+
+   for j = 0 to 35 do
+   $(
+       if x <= G.xpoint < (x + m.sd.charwidth) & G.screen = m.sd.menu then
+           c := j
+       x := x + m.sd.charwidth
+   $)
+
+       if (r ~= G.sc.vk.area!m.vk.row) | (c ~= G.sc.vk.area!m.vk.col) then
+       $(
+           G.sc.vk.area!m.vk.action := true
+           G.sc.vk.area!m.vk.cold := G.sc.vk.area!m.vk.col
+           G.sc.vk.area!m.vk.rold := G.sc.vk.area!m.vk.row
+           G.sc.vk.area!m.vk.col := c
+           G.sc.vk.area!m.vk.row := r
+       $)
+$)
+.
+
+
+
+
+

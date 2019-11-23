@@ -1,0 +1,9 @@
+*|  compile CM options
+co mapopt1
+co mapopt2
+co mapopt3
+co mapopt4
+co mapopt5
+co mapopt6
+co mapopt7
+co mapopt8

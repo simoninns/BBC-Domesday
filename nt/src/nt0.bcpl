@@ -1,0 +1,141 @@
+//  PUK SOURCE  7.87
+
+/**
+         NT.NT0
+         ------
+
+         Global state initialisation and free routines for
+         National Contents.
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+         R.contents
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         21.1.86  1        H.B.     Initial version
+         23.5.86  2        EAJ      Add check for cmos
+         27.5.86  3        EAJ      Fix Find to Contents bug
+         28.5.86  4        PAC      ditto
+         25.6.86  5        EAJ      Add video calls & remove
+                                     debug from trap call
+          6.8.86  6        PAC      Remove unused dh manifests
+         ********************************
+         1.6.87      7     DNH      CHANGES FOR UNI
+         3.7.87      8     DNH      Move display clear to conini
+         ********************************
+         24.7.87     9     MH       CHANGES FOR PUK
+
+         GLOBALS DEFINED:
+
+         g.nt.dy.init
+         g.nt.dy.free
+**/
+
+section "nt0"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.gldyhd"
+get ":4.ARC.GH.glNThd"
+get ":4.ARC.H.iohd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.vhhd"
+get ":4.ARC.H.nthd"
+
+
+/**
+         proc G.NT.DY.INIT ()
+              ------------
+
+         Overlay Initialisation.
+         For National contents operations, grab space for vectors
+         and restore cached values into these vectors.
+
+         The following are all initialised -
+         g.nt.s
+         g.nt.thes.data
+         g.nt.item.data
+         g.nt.menubar
+         g.nt.names.handle
+         g.nt.thes.handle
+**/
+
+let g.nt.dy.init() be
+$(
+   let ds = data.space ()        // calculate size of data getvec
+
+   // get vector space and restore cached values
+
+   g.nt.s         := getvec (m.nt.statics.size.words)
+   g.nt.thes.data := getvec (ds)
+   g.nt.item.data := getvec (m.nt.item.area.size/BYTESPERWORD)
+   g.nt.menubar   := getvec (m.menubarsize)
+
+   // NT statics
+   g.ut.restore (g.nt.s, m.nt.statics.size.words, m.io.NT.statics)
+
+   // hierarchy data
+   g.ut.restore (g.nt.thes.data, ds, m.io.NT.thesdata)
+
+   // current item list
+   g.ut.restore (g.nt.item.data, m.nt.item.area.size/BYTESPERWORD,
+                                                      m.io.NT.itemdata)
+
+   // open hierarchy file
+   g.nt.thes.handle := g.dh.open ("HIERARCHY")
+
+   // open names file
+   g.nt.names.handle := g.dh.open ("NAMES")
+
+   // make video call ready for display of Contents list
+   g.vh.video (m.vh.micro.only)
+   g.sc.pointer (m.sd.off)       // avoid flicker on entry
+   g.sc.clear (m.sd.message)
+$)
+
+
+/**
+         proc G.NT.DY.FREE ()
+              ------------
+
+         Releases the Overlay.  This routine caches global
+         vectors used in national contents and frees the vector
+         space used by them.  Closes both files.  The antagonist
+         to g.nt.dy.init.
+**/
+
+AND g.nt.dy.free() be
+$(
+   let ds = data.space ()
+
+   // close files
+   g.dh.close(g.nt.names.handle)
+   g.dh.close(g.nt.thes.handle)
+
+   // save item records, free vector space
+   g.ut.cache (g.nt.item.data, m.nt.item.area.size/BYTESPERWORD,
+                                                            m.io.NT.itemdata)
+
+   // save hierarchy record, free vector space
+   g.ut.cache (g.nt.thes.data, ds, m.io.NT.thesdata)
+
+   // save NT statics
+   g.ut.cache (g.nt.s, m.nt.statics.size.words, m.io.NT.statics)
+
+   freevec (g.nt.menubar)
+   freevec (g.nt.item.data)
+   freevec (g.nt.thes.data)
+   freevec (g.nt.s)
+$)
+
+
+and data.space () = valof
+$(
+   let bytes.needed = max. (m.nt.thes.area.size,
+                            m.nt.thes.rec.size + m.nt.xref.area.size)
+   RESULTIS bytes.needed/BYTESPERWORD
+$)
+
+and max. (a, b) = a > b -> a, b
+.

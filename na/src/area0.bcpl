@@ -1,0 +1,141 @@
+//  PUK SOURCE  6.87
+
+/**
+         AREA - NATIONAL AREA OVERLAY
+         ----------------------------
+
+         This module contains only DY.INIT and DY.FREE
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.area
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         19.3.86  1        SRY         Initial version
+         24.6.86  2        SRY         Video mode
+         30.6.86  3        SRY         More video
+*******************************************************************************
+          8.6.87  4        SRY         Changes for UNI
+         12.6.87  5        PAC         Fixed dy.init/free
+**/
+
+SECTION "Area0"
+
+GET "libhdr"
+GET "syshdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.GH.gldyhd"
+GET ":4.ARC.GH.glNAhd"
+GET ":4.ARC.H.sdhd"
+GET ":4.ARC.H.iohd"
+GET ":4.ARC.H.nahd"
+
+/**
+         G.NA.DY.INIT - OVERLAY INITIALISATION
+         -------------------------------------
+
+         General overlay initialisation routine
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         G.na.buff contents
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Get heap space for data buffer (G.na.buff)
+         Restore buffer from I/O processor memory
+         Set flag saying switch video mode to 'on'
+**/
+
+
+LET G.NA.dy.init() BE
+$( $<debug
+   LET instream = ?
+   let command = "**dir :4"
+   $>debug
+   G.na.buff := GETVEC(m.na.buffsize)
+   G.ut.restore(G.na.buff+m.na.frame, m.na.cachesize, m.io.NAcache)
+   G.na.buff!m.na.vid.req := TRUE
+   G.na.buff!m.na.restore.bar := TRUE
+   $<debug
+   UNLESS G.ut.diag() RETURN
+   instream := INPUT()
+   SELECTINPUT(FINDINPUT ("/C") )
+
+   // set up desired filing system for reading data
+
+   G.sc.clear(m.sd.display)
+   G.sc.selcol(m.sd.yellow)
+   G.sc.movea(m.sd.display, 0, m.sd.disYtex)
+   writes ("*n*nADFS or VFS ?")
+   TEST capch(rdch()) = 'A'
+   THEN $( runprog("**adfs")
+           WRITES ("*nDrive ? ")
+           command%7 := '0' + readn()
+           runprog(command)
+        $)
+   ELSE IF RUNPROG ("**vfs")
+   writes("*NPrevious area :")
+   writes("*N  B. left : East :")
+   G.context!m.grbleast := readn()
+   writes("  B. left : North:")
+   G.context!m.grblnorth := readn()
+   writes("  T. right: East :")
+   G.context!m.grtreast := readn()
+   writes("  T. right: North:")
+   G.context!m.grtrnorth := readn()
+   writef("*N'Justselected' <%S>", G.context!m.justselected -> "TRUE","FALSE")
+   writes("*N (1:T, 0:F): ")
+   G.context!m.justselected := readn()
+   ENDREAD()
+   SELECTINPUT (instream)
+   $>debug
+$)
+
+
+/**
+         G.NA.DY.FREE - FREE OVERLAY
+         ---------------------------
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none (frees vector pointed to by G.na.buff)
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Cache current data buffer in I/O processor
+         Free the data buffer vector
+**/
+
+
+and g.NA.dy.free() be
+$( G.ut.cache (G.na.buff+m.na.frame, m.na.cachesize, m.io.NAcache)
+   freevec (g.na.buff)
+$)
+.

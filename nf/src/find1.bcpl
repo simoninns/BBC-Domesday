@@ -1,0 +1,180 @@
+/**
+         NF.FIND1 - TEXT INPUT ROUTINES
+         ------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         R.FIND
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         13.5.86  1        M.F.Porter  Initial working version
+         23.5.86  2        PAC         Fix TRAP bug
+         19.6.86  3        MFP         "gl4hd" - fgcol, bgcol
+         18.7.86  4        MFP         $<debug removed
+         ****************************************
+         9.6.87   5        MFP         RELEASED FOR UNI
+         ****************************************
+         24.7.87  6        MH          RELEASED FOR PUK
+**/
+
+
+section "find1"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glNFhd"
+get ":4.ARC.H.kdhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.nfhd"
+
+/**
+         See CF.FIND1 for comments
+**/
+
+static $(  i = 0  // offset down string
+           imax = 0 // max val taken by i
+           len = 0 // length of string (in chars)
+           xlen = 0 // length of box in x-direction (in chars)
+           x0 = 0; y0 = 0; // top left corner of box
+           s = 0 // the string
+           fgcol = 0; bgcol = 0  // foreground & background colours
+       $)
+
+let trap.(n,val,low,high) be g.ut.trap("NF",10+n,true,3,val,low,high)
+
+/* move.() positions the graphics cursor at the i-th character in the display
+   area. wrline(colour) writes a line (which the user will interpret as a text
+   cursor) under the i-th character. If colour=bgcol the line disappears. c.on.()
+   and c.off.() call wrline.() to switch the cursor on and off. At the end of a
+   text line the cursor is temporarily invisible. */
+
+let move.() be g.sc.movea(m.sd.display,
+                          x0+i rem xlen*m.sd.charwidth, y0-i/xlen*m.sd.linw)
+
+and wrline.(colour) be
+$(  move.(); g.sc.mover(0,-m.sd.linw)
+    g.sc.selcol(colour); g.sc.liner(m.sd.plot,m.sd.charwidth,0)
+$)
+
+and c.on.() be unless i = len do wrline.(fgcol)
+and c.off.() be unless i = len do wrline.(bgcol)
+
+and wrchar.(ch) be
+$(  move.()
+    g.sc.selcol(bgcol); g.sc.rect(m.sd.plot,m.sd.charwidth,-m.sd.linw)
+    g.sc.mover(-m.sd.charwidth,m.sd.charheight); g.sc.selcol(fgcol); wrch(ch)
+$)
+
+and fillbox.(t,colour) be
+$(  g.sc.movea(m.sd.display,t!0,t!1)
+    g.sc.selcol(colour); g.sc.rect(m.sd.plot, m.sd.charwidth * t!2,
+                                             -m.sd.linw * t!3-4)
+$)
+
+and setupinput.(t,s.) be
+$(  x0, y0, fgcol, bgcol, xlen, s := t!0, t!1, t!4, t!5, t!2, s.
+            trap.(1,x0,0,m.sd.disw)
+            trap.(2,y0,0,m.sd.disYtex)
+            trap.(3,xlen,0,m.sd.charsperline)
+            trap.(4,t!3,0,m.sd.displines)
+    len := t!2 * t!3
+    i := 0; imax := 0; c.on.()
+    for i = 1 to len do s%i := ' '
+$)
+
+and addtoinput.(ch) be test g.ut.printingchar(ch) then
+    test i = len then g.sc.beep() or
+    $(  wrchar.(ch); i := i+1; s%i := ch
+        if i rem xlen = 0 & i < len & ch ~= ' ' do
+        $(  let j = i-1
+            $(  if j < i-xlen return
+                if s%(j+1) = ' ' break
+                j := j-1
+            $) repeat
+            j := j+1
+            for k = 1 to i-j do $( s%(i+k) := s%(j+k); s%(j+k) := ' ' $)
+            $(  let m = 2*(i-j)
+                i := j
+                for k = 1 to m do $( wrchar.(s%(i+1)); i := i+1 $)
+            $)
+        $)
+        if i > imax do imax := i
+    $)
+or
+$(  let inc = ?
+    switchon ch into
+    $(  case m.kd.delete:
+            if i = 0 | i < imax do $( g.sc.beep(); endcase $)
+            s%i := ' '; i := i-1; imax := imax-1; wrchar.(' ')
+            return
+        case m.kd.up: if i < xlen return; inc := -xlen; goto lab
+        case m.kd.down: if i >= len-xlen return; inc := xlen; goto lab
+        case m.kd.left: if i = 0 return; inc := -1; goto lab
+        case m.kd.right:
+            if i = len return; inc := 1
+        lab:
+            if i+inc > imax return
+            i := i+inc; return
+        case m.kd.noact: return
+        case m.kd.return:
+            $(  let i = imax
+                while i > 0 & s%i = ' ' do i := i-1
+                s%0 := i; return
+            $)
+    $)
+$)
+
+and addstringtoinput.(u) be
+$(  let ulen = u%0
+    if ulen > len-i do $( g.sc.beep(); return $)
+    for j = 1 to ulen do
+    $(  let ch = u%j
+        test ch = ' ' = s%(i+1) then
+        $(  i := i+1
+            if i > imax do imax := i
+        $) or addtoinput.(ch)
+    $)
+$)
+
+and highlightinput.(ibase,itop,newfgcol,newbgcol) be
+$(  let a,b,c = i,fgcol,bgcol
+            trap.(5,ibase,0,255)
+            trap.(6,itop,0,len)
+    i,fgcol,bgcol := ibase-1, newfgcol,newbgcol
+    until i >= itop do $( wrchar.(s%(i+1)); i := i+1 $)
+    i,fgcol,bgcol := a,b,c
+$)
+
+and g.nf.boxinput(mode,p1,p2,p3,p4) = valof
+$(  // pick up statics:
+    let h = g.nf.p+p.s
+    i,imax,len,xlen,x0,y0,s,fgcol,bgcol := h!0,h!1,h!2,h!3,h!4,h!5,h!6,h!7,h!8
+    test mode = 'c' then
+    $(  if p1 = m.kd.noact resultis imax
+        $(  let state = g.sc.pointer(m.sd.off)
+            c.off.(); addtoinput.(p1)
+            if p1 ~= m.kd.return do c.on.()
+            g.sc.pointer(state)
+        $)
+        trap.(7,i,0,len)
+    $)
+    or
+    $(  let state = g.sc.pointer(m.sd.off)
+        switchon mode into
+        $(  case 'f': fillbox.(p1,p2); endcase
+            case 'i': setupinput.(p1,p2); endcase
+            case 's': c.off.(); addstringtoinput.(p1); c.on.(); endcase
+            case 'h': highlightinput.(p1,p2,p3,p4); endcase
+            case '+': c.on.(); endcase
+            case '-': c.off.()
+        $)
+        g.sc.pointer(state)
+    $)
+    // restore statics:
+    h!0,h!1,h!2,h!3,h!4,h!5,h!6,h!7,h!8 := i,imax,len,xlen,x0,y0,s,fgcol,bgcol
+    resultis imax
+$)
+
+

@@ -1,0 +1,14 @@
+*spool :4.tmp.tempnat
+*| compNAT AES Version 1.0 20.5.87
+*| national disc overlays
+*|     
+*time
+*dir :4.ARC.NT        
+c comp
+*dir ^.NV         
+c comp
+*dir ^.NW         
+c comp
+*dir $.ARC.utils
+*time
+*spool

@@ -1,0 +1,18 @@
+*| LINKCOM AES Version 1 10.6.87
+*| link the community disc modules
+*|
+*SPOOL $.tmp.linkCOM
+*time
+*dir $.ARC.CM
+c linc
+*dir $.ARC.CO
+c linc
+*dir $.ARC.CP
+c linc
+*dir $.ARC.CT
+c linc
+*dir $.ARC.CF
+c linc     
+*time
+*SPOOL
+*dir $.ARC.utils

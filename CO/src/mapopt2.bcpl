@@ -1,0 +1,200 @@
+//  UNI SOURCE  4.87
+
+section "mapopt2"
+
+/**
+         CO.MAPOPT2 - Routines for Output of Grid References
+         ---------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.map
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+          8.1.86  1        D.Hepper    Initial version
+         14.5.86  2        DNH         banner alignment
+         27.5.86  3        DNH         L3 GR accuracy
+                                       Channel Isles GR handling
+         15.9.86  4        DNH         L2 chan. GR handling !
+         20.10.86   5      DNH         Banner 1 pixel to left
+******************************************
+         30.4.87     6     DNH      UNI version
+                                    32 bit handling updated
+
+
+         Uses grid ref. and screen primitives of the GR library
+         in UT package and screen handler SC.
+
+         NB! for dubious historical reasons the routines defined
+         here are CM rather than CO.  The two packages are
+         inextricably intertwined...
+
+         Globals defined:
+            g.cm.show.grid.banner ()
+            g.cm.show.grid.ref ()
+**/
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glCMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.cmhd"
+get ":4.ARC.H.grhd"
+
+/**
+         G.CM.SHOW.GRID.BANNER () - Displays the message area
+               banner for the Grid Ref Option.
+         ----------------------------------------------------
+
+         PROCEDURE g.cm.show.grid.banner ()
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED: none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         PROGRAM DESIGN LANGUAGE:
+         g.cm.show.grid.banner ()
+            clear message area to cyan box
+            output banner string in blue
+         end procedure
+**/
+
+
+let g.cm.show.grid.banner () be
+$(
+   g.sc.mess ("%S", table 0)     // null string to clear message area to cyan
+   g.sc.selcol (m.sd.blue)
+   g.sc.movea (m.sd.message,
+                  m.sd.charwidth * 12 + m.sd.mesXtex - 1,   // 20.10.86
+                     m.sd.mesYtex)
+   g.sc.ofstr ("National Grid Ref%S", table 0)   // table 0 is frig to avoid PS
+$)
+
+
+/**
+         G.CM.SHOW.GRID.REF - Displays a Domesday format GR in
+                                   the message area
+         -----------------------------------------------------
+
+         PROCEDURE  g.cm.show.grid.ref ()
+
+         INPUTS:
+         no parameters.  Uses global context x and y pointer
+         positions and the Map static map level.  This is used
+         to indicate the accuracy (number of digits) in the
+         display.
+
+         OUTPUTS:
+         Uses screen primitives to write to the screen in the
+         message area as specified in FS sect. 4.4.8.  No return
+         code.
+
+         GLOBALS MODIFIED: none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Not to be used for invalid GR's.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.cm.show.grid.ref ()
+            set up string format according to map level
+            convert x,y position to hectometre residuals
+            add map corner grid ref to residuals
+            get grid ref into domesday format
+            calculate values to output
+            convert each number to a string
+            clear message area
+            move cursor to text position in message area
+            output the grid ref
+         end procedure
+**/
+
+let g.cm.show.grid.ref () be
+$(
+   let title = "National Grid Ref"
+   let e, n = ?,?
+   let d, w = ?,?          // divisor and digit width
+   let message = ?
+   let e.s  = vec 2        // easting digits
+   let n.s  = vec 2        // northing digits
+   let sq.s = vec 1        // mixed format letters
+   let sqe.s= vec 1        // mixed format easting residual
+   let sqn.s= vec 1        // mixed format northing residual
+   let sys = g.cm.s!m.grid.system
+   let x = x.of (g.xpoint)    // hectometre residuals from screen coords
+   let y = y.of (g.ypoint)
+
+   if g.cm.s!m.map = L0.north + map.L1 - map.L0 then
+      if g.xpoint < g.cm.a.of (0) do                  // no can do
+      $( g.sc.pointer (m.sd.on)
+         g.sc.ermess ("Point is outside National Grid")
+         return
+      $)
+
+      // set up message format
+   switchon g.cm.s!m.cmlevel into
+   $( case 1:
+         message := "*s*s%S*s%S*s*s*s%S*s*s*s%S*s%S*s%S"
+         d := 100; w := 1
+         endcase
+      case 2:
+         message := "*s%S*s%S*s*s%S*s*s%S*s%S*s%S"
+         d := 10;  w := 2
+         endcase
+      case 3: case 4:
+         message := "%S*s%S*s%S*s%S*s%S*s%S"
+         d := 1;   w := 3
+   $)
+
+   if g.cm.s!m.cmlevel >= 4 do x, y := x/10, y/10    // dm -> hm
+   e := g.cm.s!m.x0 + x    // corner plus residual
+   n := g.cm.s!m.y0 + y
+
+      // set top bits according to Domesday format for g.ut.grid.letter.code
+   if sys = m.grid.is.NI | sys = m.grid.is.Channel do
+   $( e := e | #X8000
+      if sys = m.grid.is.Channel do
+         n := n | #X8000
+   $)
+   g.ut.grid.letter.code (e, n, sq.s)
+   e := g.ut.grid.trim (e)          // remove artificial top bit to get value
+   g.ut.grid.to.string (e/d, e.s, w+2)
+   $(                               // needs 32 bit to deal with northing
+      let n32 = vec 1               // in case it is for the Channel Isles
+      let d32 = vec 1
+      let r32 = vec 1
+      let junk = ?
+
+      g.ut.set32 (n, 0, n32)
+      g.ut.set32 (d, 0, d32)
+      g.ut.div32 (d32, n32, r32)     // n32 := n/d
+      g.ut.grid.to.string ( g.ut.get32 (n32, @junk), n.s, w+2)
+   $)
+         // (if Chan.Isles have square codes must use g.ut.div32 here too)
+   g.ut.grid.to.string ((e rem 1000)/d, sqe.s, w)
+   g.ut.grid.to.string ((n rem 1000)/d, sqn.s, w)
+   if sys = m.grid.is.Channel do
+      sq.s%0, sqe.s%0, sqn.s%0 := 0,0,0     // null strings
+   g.sc.mess ("%S", table 0)     // 20.10  see also g.cm.show.grid.banner
+   g.sc.selcol (m.sd.blue)
+   g.sc.movea (m.sd.message, m.sd.mesXtex - 1, m.sd.mesYtex)
+   g.sc.ofstr (message, e.s, n.s, title, sq.s, sqe.s, sqn.s)    // write it !!
+$)
+
+
+/*
+         x.of (a) is the inverse of a.of (x).  It converts a
+         pixel position to a residual distance in whatever units
+         'width' is defined in.  Similarly y.of (b).
+*/
+
+and x.of (a) = muldiv (a-g.cm.s!m.a0, g.cm.s!m.width, g.cm.s!m.a1-g.cm.s!m.a0)
+and y.of (b) = muldiv (b-g.cm.s!m.b0, g.cm.s!m.height, g.cm.s!m.b1-g.cm.s!m.b0)
+.

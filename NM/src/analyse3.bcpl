@@ -1,0 +1,355 @@
+//  PUK SOURCE  6.87
+
+
+/**
+         NM.ANALYSE3 - NATIONAL MAPPABLE ANALYSE OPERATION
+         -------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         MAPPROC
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         11.03.86 1        D.R.Freed   Initial version
+         14.07.87 2        DNH         fix g.dy.action setting
+         21.08.87 3        SRY         Added toggle video mode
+          3.09.87 4        SRY         Removed local/national -> nn/auto4
+                                       added setting when Fkey4 hit
+          1.10.87 5        SRY         Fill menu bar if hit Auto from Man.
+
+         g.nm.anal.to.class
+         g.nm.class
+         g.nm.up.to.class
+         g.nm.clas.to.man
+         g.nm.man.to.auto
+         g.nm.to.auto
+**/
+
+section "nmanalyse3"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.sihd"
+get ":4.ARC.H.kdhd"
+get ":4.ARC.H.nmhd"
+get ":4.ARC.H.nmclhd"
+
+
+/**
+         G.NM.ANAL.TO.CLAS - ANALYSE TO CLASS TRANSITION
+         -----------------------------------------------
+
+         Initialisation for entering class sub-operation
+         from analyse.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         g.nm.s
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.anal.to.clas []
+         -----------------
+
+         save class intervals to g.nm.s
+         save palette to g.nm.s
+         display key
+         set scope to national
+         set entry mode FALSE
+         display menu bar for class
+**/
+
+let g.nm.anal.to.clas () be
+$(
+   MOVE (g.nm.class.upb, g.nm.s + m.plotted.upb,
+         (m.nm.num.of.class.intervals + 1) * m.nm.max.data.size)
+
+   // read palette and save physical colours for restoring if we
+   // come back without doing a Replot
+   for i = 1 to m.nm.num.of.class.intervals do
+      g.nm.s!(m.plotted.palette + i - 1) :=
+         g.sc.physical.colour (g.nm.class.colour!i)
+
+   g.nm.display.key (TRUE)
+
+   g.nm.s!m.nm.scope := m.wnational
+   g.nm.s!m.nm.entry.mode := FALSE
+   nm.display.class.bar ()
+$)
+
+
+/**
+         G.NM.CLASS - ACTION ROUTINE FOR CLASS SUB-OPERATION
+         ---------------------------------------------------
+
+         Action routine for top level of the class sub-operation.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         g.nm.s
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.class []
+         ----------
+
+**/
+
+and g.nm.class () be
+$(
+/* This section unnec. as Auto is suppressed anyway
+   if g.key = m.kd.fkey4
+   $( for i = m.box1 to m.box6 do
+      g.nm.s!(m.nm.menu + i) := m.sd.act
+
+      if g.nm.s!m.nm.value.data.type = m.nm.categorised.type
+      // suppress National/Local toggle
+         g.nm.s!(m.nm.menu + m.box6) := m.wblank
+   $)
+*/
+   if g.key = m.kd.tab g.nm.toggle.video.mode()
+$)
+
+
+/*
+      nm.display.class.bar
+
+         displays menu bar for class operation
+*/
+
+and nm.display.class.bar () be
+$(
+   for i = m.box1 to m.box6 do
+      g.nm.s!(m.nm.menu + i) := m.sd.act
+
+   if g.nm.s!m.nm.value.data.type = m.nm.categorised.type
+      // suppress Automatic classing
+      $(
+         g.nm.s!(m.nm.menu + m.box4) := m.wblank
+      $)
+
+   g.sc.menu (g.nm.s + m.nm.menu)
+$)
+
+/**
+         G.NM.UP.TO.CLASS - CLASS SUB-OPERATION UP TO CLASS
+         --------------------------------------------------
+
+         Initialisation for leaving a sub-operation of class
+         for the top level of class.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.up.to.class []
+         ----------------
+
+         IF entry mode is enabled THEN
+            disable entry mode
+         ENDIF
+         display class menu bar
+**/
+
+and g.nm.up.to.class () be
+$(
+   if (g.nm.s!m.nm.entry.mode = TRUE) then
+      g.nm.disable.entry.mode ()
+
+   nm.display.class.bar ()
+$)
+
+
+/**
+         G.NM.CLAS.TO.MAN - CLASS TO MANUAL TRANSITION
+         ---------------------------------------------
+
+         Initialisation for entering manual classing
+         sub-operation from top level of class.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         g.dy.action
+         g.nm.s
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.clas.to.man []
+         ----------------
+
+         load child overlay "cnmMANU"
+         set up g.dy.action
+         draw menu bar
+         reposition videodisc for underlay
+**/
+
+and g.nm.clas.to.man () be
+$(
+   g.nm.load.child ("cnmMANU")
+
+   // set up action routine now that overlay is loaded
+   G.dy.action := !( G.stactr!(g.Context!m.state) + @g.dummy )
+
+   for i = m.box1 to m.box6 do
+      g.nm.s!(m.nm.menu + i) := m.sd.act
+
+   if NOT g.nm.s!m.nm.intervals.changed then
+      g.nm.s!(m.nm.menu + m.box4) := m.wblank   // suppress Replot
+
+   if (g.nm.s!m.nm.value.data.type = m.nm.categorised.type) then
+      g.nm.s!(m.nm.menu + m.box3) := m.wblank   // suppress Automatic classing
+
+   g.sc.menu (g.nm.s + m.nm.menu)
+
+   g.nm.position.videodisc ()
+$)
+
+
+/**
+         G.NM.MAN.TO.AUTO - TRANSITION FROM MANUAL TO AUTO
+         -------------------------------------------------
+
+         Initialisation routine for transition from manual
+         to automatic.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.man.to.auto []
+         ----------------
+
+         IF entry mode is enabled THEN
+            disable entry mode
+         ENDIF
+         do entry to auto ini
+**/
+
+and g.nm.man.to.auto () be
+$(
+   if (g.nm.s!m.nm.entry.mode = TRUE) then
+      g.nm.disable.entry.mode ()
+
+   g.nm.to.auto ()
+   // Next line added SRY 1.10.87 so that Nested is not suppressed
+   for i = m.box1 to m.box6 do (g.nm.s+m.nm.menu)!i := m.sd.act
+$)
+
+
+/**
+         G.NM.TO.AUTO - TO AUTOMATIC TRANSITION
+         --------------------------------------
+
+         Initialisation for entering automatic classing
+         sub-operation.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         g.dy.action
+         g.nm.s
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.to.auto []
+         ------------
+
+         set method static to blank
+         load child overlay "cnmAUTO"
+         set up g.dy.action
+         reposition videodisc for underlay
+**/
+
+and g.nm.to.auto () be
+$(
+   g.nm.s!m.nm.gen.purp := m.wblank
+
+   g.nm.load.child ("cnmAUTO")
+
+   // set up action routine now that overlay is loaded
+   G.dy.action := !( G.stactr!(g.Context!m.state) + @g.dummy )
+
+   g.nm.position.videodisc ()
+$)
+
+.
+
+
+
+

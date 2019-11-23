@@ -1,0 +1,617 @@
+//  AES SOURCE  4.87
+
+/**
+         UT.UTILS2 - UTILITIES PACKAGE PART 2
+         ------------------------------------
+
+         This file contains:
+
+         G.ut.cache    - cache 2nd P -> I/O P
+         G.ut.restore  - restore I/O P -> 2nd P
+         G.ut.srmove   - move a block between core and SRAM
+
+         G.ut.copy.screen - copy main screen RAM to shadow RAM
+                            or vice versa
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         kernel
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         14.11.85 1        P.Cunnell   Initial version
+         15.1.86  2        PAC         Use the SC routines
+         11.03.86 3        PAC         add trap call in CACHE
+         25.03.86 4        PAC         Added G.ut.wait
+         27.03.86 5        PAC         Bugfix in cache
+         15.04.86 6        DRF         G.ut.copy.screen added
+                                       & g.ut.cache, g.ut.restore
+                                       modified to use sr.move
+         17.04.86 7        PAC         Added G.ut.printingchar
+         17.04.86 8        DRF         G.ut.copy.screen modified
+         24.04.86 9        DRF         Bug in G.ut.copy.screen
+         11.06.86 10       PAC         Add bookmark utilities
+                                       split into utils1/2
+         02.07.86 11       PAC         Fix nasty restore bug
+         09.07.86 12       PAC         Remove debug around traps
+                                       and use ut manifests for SR.move
+         10.07.86 13       PAC         Use new 'halfram' manifest
+         30.07.86 14       PAC         Add reset of bookmark cache area
+           7.8.86 15       PAC         Make srmove global
+          12.5.87 16       PAC         Adopted for AES system
+          19.6.87 17       PAC         Fix srmove bug
+          28.7.87 18       PAC         A500 sprites for bookmark
+          14.9.87 19       PAC         Add UNI mod - 'try for size'
+**/
+
+SECTION "utils2"
+
+GET "LIBHDR"
+GET "SYSHDR"
+GET ":4.ARC.GH.glhd" // the globals
+GET ":4.ARC.H.sdhd"  // screen handler
+GET ":4.ARC.H.sdphd" // screen handler privates 
+GET ":4.ARC.H.iohd"  // I/O area definitions, etc.
+GET ":4.ARC.H.iophd" // I/O memory addresses, etc.
+GET ":4.ARC.H.uthd"
+
+// addresses of lookup tables for cache & restore
+STATIC
+$( s.addrs         = -1 // init to impossible value
+   s.area.used     = -1
+$)
+
+
+/*
+         check that the byte.size quoted is not larger than the
+         maximum allowed for that area number on a cache or restore.
+*/
+
+LET try.for.size (trap.number, area.no, byte.size) BE
+$(         // special case for last Nat.: first Com. is not contiguous
+   LET top = (area.no = m.io.max.Natflag) -> m.io.NatTop,s.addrs!(area.no+1)
+   LET max.size.bytes = top - s.addrs!area.no
+
+   G.ut.trap ("UT", trap.number, TRUE, 1, byte.size, 0, max.size.bytes)
+$)
+
+/**
+         G.UT.CACHE - CACHE MEMORY TO I/O PROCESSOR
+         ------------------------------------------
+
+         Saves a specified section of second processor memory in
+         the I/O processor, for future retrieval by the routine
+         G.UT.RESTORE.
+
+         INPUTS:
+
+         word address of memory block start
+         size of area to save
+         area number ( a manifest from IOHDR )
+
+         OUTPUTS:
+
+         flag set TRUE for succesful cache
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         The size of the area to save is the same as the size
+         parameter which was used to originally GETVEC the
+         vector. i.e. the G.dy.init routine will have similar
+         lines to :
+
+         my.vector := GETVEC( my.vector.size )
+         G.ut.restore( my.vector, my.vector.size, m.io.myarea )
+
+         and G.dy.free has:
+
+         G.ut.cache( my.vector, my.vector.size, m.io.myarea )
+         FREEVEC ( my.vector )
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.ut.cache [ address, size, area.number ]
+         ----------
+
+         IF lookup tables are not initialised
+            THEN initialise tables
+         ENDIF
+
+         IF address is 'screen save manifest'
+
+            THEN save screen area
+
+            ELSE
+            Calculate 2nd. processor byte address from 'address'
+            Calculate size of area in bytes using the formula :
+               size in bytes := (size+1)*2
+            Lookup sideways RAM address for cache, using table
+
+            Move 'size in bytes' bytes from 2nd. processor to
+               I/O processor sideways RAM
+
+            Update 'area used' table.
+         ENDIF
+**/
+
+AND G.ut.cache ( vec.address, vec.size, area.no ) = VALOF
+$(
+   IF s.addrs = -1 THEN init.tables()
+
+   SWITCHON area.no INTO
+   $(
+      CASE m.io.screen   : save.screen() ; ENDCASE
+
+      CASE m.io.ComtoNat :
+      $(
+        // copy the Community caches onto National area   
+        //
+        MOVE( G.cachevec+m.io.comstart/bytesperword,
+              G.cachevec+m.io.natstart/bytesperword,
+              m.io.halfram/bytesperword )
+
+        // reset the flags for national cache
+        FOR i = m.io.min.Natflag TO m.io.max.Natflag
+           DO s.area.used!i := FALSE
+
+        // return the community flags in vec, starting at 0
+        FOR i = m.io.min.Comflag TO m.io.max.Comflag
+           DO vec.address!(i-m.io.min.Comflag) := s.area.used!i
+      $)
+      ENDCASE
+
+      CASE m.io.NattoCom :
+      $(
+        // copy the National caches onto Community area         
+        //
+        MOVE( G.cachevec+m.io.natstart/bytesperword,
+              G.cachevec+m.io.comstart/bytesperword,
+              m.io.halfram/bytesperword )
+
+        // reset the flags for community cache
+        FOR i = m.io.min.Comflag TO m.io.max.Comflag
+           DO s.area.used!i := FALSE
+
+        // return the national flags in vec, starting at 0
+        FOR i = m.io.min.Natflag TO m.io.max.Natflag
+           DO vec.address!(i-m.io.min.Natflag) := s.area.used!i
+
+      $)
+      ENDCASE
+
+      DEFAULT :
+      $(
+         LET size.of.area = (vec.size+1)* bytesperword
+
+         try.for.size( 1, area.no, size.of.area )
+
+         s.area.used!area.no := TRUE
+
+         G.ut.movebytes( vec.address,       // from.vec
+                         0,                 // offset
+                         G.cachevec,        // to.vec
+                         s.addrs!area.no,   // offset
+                         size.of.area )     // bytes    
+      $)
+      ENDCASE
+   $) // end of switchon
+
+   RESULTIS TRUE  // either we've saved a screen, or the cache was successful
+$)
+
+// save display screen
+// N.B. this is only done in HELP bookmark, so we assume
+// the screen to save is in the main map, NOT shadow RAM
+
+AND save.screen() BE
+$(
+   LET name = "bookscrn*c" * bytesperword + 1 // m/c address
+   LET pb   = VEC 7    
+
+   OSByte( 112,1 ) // page main screen into memory map
+
+   pb!0 := G.sc.sprite.area              // unused if system sprite
+   pb!1 := name                          // sprite name
+   pb!2 := 0                             // exclude palette
+   pb!3 := 0                             // lh edge
+   pb!4 := 0                             // bottom edge
+   pb!5 := 1280                          // rh edge
+   pb!6 := 1024                          // top edge
+  
+   check.( OsSprite( m.sd.get.user.sprite, pb )) // traps if it fails
+
+   OSByte( 112,0 ) // page back the shadow screen for HELP
+$)
+
+AND check.( res ) BE UNLESS res DO G.ut.trap("UT",40,TRUE,1,#xFF,0,0)
+
+/**
+         G.UT.RESTORE - RESTORE SAVED MEMORY FROM I/O PROCESSOR
+         ------------------------------------------------------
+
+         This routine gets back the previously saved memory from
+         the I/O processor.
+
+         INPUTS:
+
+         word address of memory block start
+         size of area to restore
+         area number ( a manifest from IOHDR )
+
+         OUTPUTS:
+
+         flag set TRUE if the area had been previously CACHED.
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         The size of the area to save is the same as the size
+         parameter which was used to originally GETVEC the
+         vector. i.e. the G.dy.init routine will have similar
+         lines to :
+
+         my.vector := GETVEC( my.vector.size )
+         G.ut.restore( my.vector, my.vector.size, m.io.myarea )
+
+         and G.dy.free has:
+
+         G.ut.cache( my.vector, my.vector.size, m.io.myarea )
+         FREEVEC ( my.vector )
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.ut.restore [ address, size, area.number ]
+         ------------
+
+         IF lookup tables are not initialised
+            THEN initialise tables
+         ENDIF
+
+         CASE OF area number:
+
+         m.io.screen     :
+            restore screen from SRAM ; endcase
+
+         m.io.ComtoNat   :
+            set up National flags from vector ; endcase
+
+         m.io.NattoCom   :
+            set up Community flags from vector ; endcase
+
+         OTHERWISE:
+
+         IF address is screen manifest
+            THEN restore screen
+            ELSE
+
+         Calculate 2nd. processor byte address from 'address'
+         Calculate size of area in bytes using the formula :
+               size in bytes := (size+1)*2
+         Lookup sideways RAM address for restore, using table
+
+         Move 'size in bytes' bytes from I/O processor
+                    sideways RAM into second processor RAM
+
+         IF operation was not successful
+            THEN return FALSE
+         ENDIF
+
+         IF 'area used' table entry for this number is TRUE
+            THEN return TRUE
+            ELSE return FALSE
+         ENDIF
+         return TRUE
+
+**/
+
+AND G.ut.restore( vec.address, vec.size, area.no ) = VALOF
+$( 
+   IF s.addrs = -1 init.tables()
+
+   SWITCHON area.no INTO
+   $(
+      CASE m.io.screen   : restore.screen() ; ENDCASE
+
+      CASE m.io.ComtoNat :
+      $(
+         // set up the national flags from vec, starting at 0
+         FOR i = m.io.min.Natflag TO m.io.max.Natflag
+            DO s.area.used!i := vec.address!(i-m.io.min.Natflag)
+      $)
+      ENDCASE
+
+      CASE m.io.NattoCom :
+      $(
+         // set up the community flags from vec, starting at 0
+         FOR i = m.io.min.Comflag TO m.io.max.Comflag
+            DO s.area.used!i := vec.address!(i-m.io.min.Comflag)
+      $)
+      ENDCASE
+
+      DEFAULT :
+      $(
+         LET size.of.area = (vec.size+1) * bytesperword   
+
+         try.for.size(2, area.no, size.of.area )
+
+         UNLESS s.area.used!area.no RESULTIS FALSE // nothing to restore
+
+         G.ut.movebytes( G.cachevec,        // from.vec  
+                         s.addrs!area.no,   // offset     
+                         vec.address,       // to.vec
+                         0,                 // offset
+                         size.of.area )     // bytes    
+      $)
+      ENDCASE
+   $)
+   RESULTIS TRUE // we've restored a screen
+$)
+
+// restore screen area from sprite
+// see comment under save.screen() above
+
+AND restore.screen() BE
+$(
+   LET name = "bookscrn*c" * bytesperword + 1 // m/c address
+   LET pb   = VEC 7    
+
+   OSByte( 112,1 ) // page main screen into memory map
+
+   pb!0 := G.sc.sprite.area              // unused if system sprite
+   pb!1 := name                          // sprite name
+
+   check.( OsSprite( m.sd.select.sprite, pb )) // traps if it fails  
+  
+   pb!0 := G.sc.sprite.area              // to be safe !
+   pb!1 := name                          // sprite name  
+   pb!2 := 0                             // lh edge   
+   pb!3 := 0                             // bottom edge  
+   pb!4 := 0                             // GCOL action
+
+   check.( OsSprite( m.sd.put.user.sprite, pb ))
+
+   OSByte( 112,0 ) // page back the shadow screen for HELP
+$)
+
+AND init.tables() BE
+$( LET addresses = TABLE
+       m.io.a0add,   m.io.a1add,   m.io.a2add,   m.io.a3add,   m.io.a4add,
+       m.io.a5add,   m.io.a6add,   m.io.a7add,   m.io.a8add,   m.io.a9add,
+       m.io.a10add,  m.io.a11add,  m.io.a12add,  m.io.a13add,  m.io.a14add,
+       m.io.a15add,  m.io.a16add,  m.io.a17add,  m.io.a18add,  m.io.a19add,
+       m.io.a20add,  m.io.a21add,  m.io.a22add,  m.io.a23add,  m.io.a24add
+
+   LET areas = TABLE
+       FALSE,        FALSE,        FALSE,        FALSE,        FALSE,
+       FALSE,        FALSE,        FALSE,        FALSE,        FALSE,
+       FALSE,        FALSE,        FALSE,        FALSE,        FALSE,
+       FALSE,        FALSE,        FALSE,        FALSE,        FALSE,
+       FALSE,        FALSE,        FALSE,        FALSE,        FALSE
+
+   s.addrs     := addresses
+   s.area.used := areas
+$)
+
+/**
+         G.UT.COPY.SCREEN - COPY SCREEN BETWEEN MAIN AND SHADOW
+         ------------------------------------------------------
+
+         Copies the main screen RAM to the shadow screen RAM, or
+         vice versa, using a work area in sideways RAM as
+         intermediate workspace.
+
+         The menu bar area of the screen is not saved; it is
+         cleared in the shadow RAM.
+
+         If the copy is from shadow to main, then the display is
+         temporarily switched to the shadow RAM to make the copy
+         visually undetectable.
+
+         INPUTS:
+
+         area number (a manifest from IOHDR) to be used as
+                     intermediate workspace
+
+         size of area
+
+         source screen  m.ut.main copies main to shadow screen
+                        m.ut.shadow copies shadow to main screen
+
+         OUTPUTS:
+
+         Returns TRUE if everything kosher,
+                 FALSE if an operating system error occurred
+
+         GLOBALS MODIFIED:
+
+         none
+
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.ut.copy.screen [area.number, size, source.screen]
+         ----------------
+
+         Turn off mouse pointer
+
+         IF lookup tables are not initialised
+            THEN initialise tables
+         ENDIF
+
+         IF source.screen is shadow THEN
+            switch display to shadow screen RAM
+         ELSE
+            clear shadow screen
+         ENDIF
+
+         copy screen memory from #x3000 to #x7AFF, using
+            sideways RAM given by area.number as intermediate
+            workspace for *srread and *srwrite
+
+         IF source.screen is shadow THEN
+            restore display to main RAM
+         ELSE
+            page main screen memory back into map
+         ENDIF
+
+         restore mouse pointer to its entry state
+
+         RETURN error flag
+**/
+
+AND G.ut.copy.screen (area.no, size, source.screen) = VALOF
+$(
+   LET screen = (source.screen = m.ut.main) -> 1,2
+   LET x,y    = 0,0
+   LET xincr  = ?
+   LET ptr    = g.sc.pointer(m.sd.off)
+   LET error  = FALSE
+   LET name   = "tempscr*C" * bytesperword + 1
+   LET bank   = ?
+
+   xincr := m.sd.disW/16      // shift the stuff in 16 slices
+
+   if source.screen = m.ut.shadow 
+   then OsByte( 113, 2 )      // display shadow RAM whilst copying
+
+   bank := OsByte( 112, screen )
+
+   $(
+      OsByte( 112, screen )   // select source screen for VDU access
+
+      get.block( name, x, xincr ) // pick up a chunk
+
+      OsByte( 112, 3-screen ) // select destination screen for VDU access
+
+      put.block( name, x, xincr ) // put it into destination memory
+
+      x := x+xincr            // update coordinate pointer
+
+   $) repeatuntil x >= m.sd.disW
+
+   OSByte( 112, bank ) // restore VDU access to previous mode
+   OsByte( 113, bank ) // restore display to previous mode after copy
+
+   g.sc.pointer (ptr)
+
+   resultis (NOT error)
+$)
+
+AND get.block( n, x, w ) BE
+$(
+   LET pb = VEC 7
+
+   pb!0 := G.sc.sprite.area              // unused if system sprite
+   pb!1 := n                             // sprite name
+   pb!2 := 0                             // exclude palette
+   pb!3 := x                             // lh edge
+   pb!4 := 0                             // bottom edge
+   pb!5 := x+w                           // rh edge
+   pb!6 := 1024                          // top edge
+  
+   check.( OsSprite( m.sd.get.user.sprite, pb )) // traps if it fails
+$)
+
+AND put.block( n, x, w ) BE
+$(
+   LET pb   = VEC 7    
+
+   pb!0 := G.sc.sprite.area              // unused if system sprite
+   pb!1 := n                             // sprite name
+
+   check.( OsSprite( m.sd.select.sprite, pb )) // traps if it fails  
+  
+   pb!0 := G.sc.sprite.area              // to be safe !
+   pb!1 := n                             // sprite name  
+   pb!2 := x                             // lh edge   
+   pb!3 := 0                             // bottom edge  
+   pb!4 := 0                             // GCOL action
+
+   check.( OsSprite( m.sd.put.user.sprite, pb ))
+$)
+
+/**
+         G.UT.SRMOVE - MOVE MEMORY BETWEEN CORE AND SRAM
+         -----------------------------------------------
+
+         ++++++++++ THIS FUNCTION REMOVED 28.7.87 ++++++++
+
+         General purpose memory move between either second
+         processor or I/O processor and sideways RAM
+
+         INPUTS:
+
+         Control      : m.ut.from.SRAM, m.ut.to.SRAM
+         SR.address   : address in range 0 - #xFFBF
+         size         : size of block in bytes
+         start.addr   : main RAM start byte address
+         hi.order.addr: 0 = 2nd processor, #xFFFF = I/O proc.
+
+         OUTPUTS:
+
+         TRUE if transfer was successful
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Note that this routine uses BYTE addresses for all
+         address parameters. ( i.e. word address<<1 )
+
+         It also is assumed that all sideways RAMS are set to
+         SRDATA, so that the sideways area can be addressed as a
+         contiguous block.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         initialise parameter block for OSWORD call
+         call OSWORD 66
+**/
+
+/* ********************************************************************
+
+AND G.ut.srmove( control, main, size, SRstart, hi.order) = VALOF 
+$(
+   LET str = VEC 30/bytesperword+1    
+
+                     // main   size sram addr
+          // 123456789012345678901234567
+   LET c1 = "SRWRITE 00000000 +0000 0000*c*n"
+   LET c2 = "SRREAD  00000000 +0000 0000*c*n"     
+
+   // initialise string
+   MOVE ( (control = m.ut.to.SRAM -> c1,c2), str, 30/bytesperword+1 )
+
+   if hi.order = #xFFFF do main := main | #xFFFF0000 // in i/o proc
+  
+   to.hex( str, main, 16 )
+   to.hex( str, size, 22 )
+   to.hex( str, Srstart, 27 )
+                  
+   s.MCRESULT := NOT Oscli( str ) // set to TRUE if error occurred
+
+   RESULTIS NOT s.MCRESULT // BUT ... result is TRUE for success !!
+$)
+
+AND to.hex( s, v, off ) BE
+$( s%off := "0123456789ABCDEF"%((v & #xF) + 1)  
+   v := v>>4  
+   off := off-1         
+$) REPEATUNTIL v = 0
+
+************************************************************** */
+.

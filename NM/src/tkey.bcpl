@@ -1,0 +1,147 @@
+
+/**
+      Tests the routines in NM.KEY
+
+            g.nm.init.classes
+            g.nm.init.class.colours
+            g.nm.check.class.intervals
+            g.nm.display.key
+**/
+
+section "tkey"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.dhhd"
+get ":5.h.nmhd"
+
+
+let start() be
+$(
+   g.ut.errorstream := 0
+
+   get.globals ()
+
+   g.nm.s!m.nm.num.auto.cut.points := 4
+
+   g.sc.mode (2)
+
+   writes ("*n*n*n*n     Tests for KEY *n*n")
+
+   g.sc.mess ("Incidence data")
+   writes ("*n*n*n*n*n Press space for next key display*n")
+
+   g.nm.s!m.nm.value.data.type := m.nm.incidence.type
+   g.nm.init.class.colours (g.nm.class.colour)
+   set.classes (TABLE 0, 1, -1, -1)
+   key ()
+
+   g.nm.s!m.nm.primary.norm.factor := 0
+   g.nm.s!m.nm.secondary.norm.factor := 1
+
+   g.nm.s!m.nm.value.data.type := 0
+   g.nm.init.class.colours (g.nm.class.colour)
+
+   g.sc.mess ("Primary norm (0) : 1 2 3 4")
+   set.classes (TABLE 1, 2, 3, 4)
+   key ()
+
+   g.sc.mess ("Primary norm (0) : 0 1 2 3")
+   set.classes (TABLE 0, 1, 2, 3)
+   key ()
+
+   g.sc.mess ("Primary norm (0) : 1 2 3 -")
+   set.classes (TABLE 1, 2, 3, -1)
+   key ()
+
+   g.sc.mess ("Primary norm (0) : 1 2 3 - colour")
+   set.classes (TABLE 1, 2, 3, -1)
+   g.sc.palette (g.nm.class.colour!3,
+                 g.sc.complement.colour (g.nm.class.colour!2))
+   g.sc.palette (g.nm.class.colour!3,
+                 g.sc.complement.colour (g.nm.class.colour!3))
+   key ()
+
+   g.nm.init.class.colours (g.nm.class.colour)
+   g.sc.mess ("Primary norm (0) : 1 2 - -")
+   set.classes (TABLE 1, 2, - 1, -1)
+   key ()
+
+   g.sc.mess ("Primary norm (0) : 1 - - -")
+   set.classes (TABLE 1, -1, -1, -1)
+   key ()
+
+   g.sc.mess ("Primary norm (0) : - - - -")
+   set.classes (TABLE -1, -1, -1, -1)
+   key ()
+
+   g.sc.mess ("Primary norm (0) : 0 - - -")
+   set.classes (TABLE 0, -1, -1, -1)
+   key ()
+
+   g.nm.s!m.nm.value.data.type := m.nm.ratio.and.numerator.type
+   g.sc.mess ("Secondary norm (1) : 1 2 3 4")
+   set.classes (TABLE 1, 2, 3, 4)
+   key ()
+$)
+
+
+and key() be
+$(
+   let ch = ?
+
+   ch := rdch() repeatuntil (ch = ' ')
+
+   test g.nm.check.class.intervals() then
+      $(
+         g.nm.display.key(FALSE)
+         ch := rdch() repeatuntil (ch = ' ')
+         g.nm.display.key(TRUE)
+      $)
+   else
+      g.sc.ermess ("Inconsistent class intervals")
+
+   ch := rdch() repeatuntil (ch = ' ')
+$)
+
+and set.classes (vec.ptr) be
+$(
+   g.nm.init.classes (m.nm.num.of.class.intervals, g.nm.class.upb)
+
+   for i = 1 to 4 do
+
+         if vec.ptr!(i-1) >= 0 then
+            $(
+               g.nm.class.upb!(i*m.nm.max.data.size + m.lsw) := vec.ptr!(i-1)
+               g.nm.class.upb!(i*m.nm.max.data.size + m.msw) := 0
+            $)
+$)
+
+
+and get.globals() be
+$(
+   g.nm.frame := getvec (m.nm.frame.size - 1)
+   g.nm.areal := getvec (m.nm.areal.vector.size)
+   g.nm.s := getvec (m.nm.global.statics.size)
+   g.nm.values := getvec ( (m.nm.fine.blocksize * m.nm.fine.blocksize + 1) *
+                                                            m.nm.max.data.size)
+   g.nm.areal.map := getvec (m.nm.areal.map.size)
+   g.nm.class.upb := getvec ((m.nm.num.of.class.intervals + 1) *
+                                                            m.nm.max.data.size)
+   g.nm.class.colour := getvec (m.nm.num.of.class.intervals)
+
+   g.context := getvec (m.contextsize)
+$)
+
+.
+
+
+
+
+
+
+
+
+
+
+

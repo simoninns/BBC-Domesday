@@ -1,0 +1,14 @@
+*| compile the text parts of PHTX overlay
+*|
+co gentext1
+co gentext2
+*|
+co ctext1
+co ctext2
+co ctext3
+co ctext4
+*|
+co aatext1
+co aatext2
+co aatext3
+co aatext4

@@ -1,0 +1,429 @@
+//  AES SOURCE  6.87
+
+/**
+         HE.HELP0 - HELP OVERLAY
+         -----------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.help
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR  DETAILS OF CHANGE
+         30.04.86 1        PAC     Initial version
+         24.05.86 2        JIBC    Fix menu bar, reduce messages
+         29.05.86 3        PAC     Fix status page display
+         26.06.86 4        PAC     Split in two
+         01.07.86 5        PAC     Remove status page last line
+         02.07.86 6        PAC     put itemrec on separate line
+         15.07.86 7        PAC     Say "none" if frame.no = 0
+         16.07.86 8        PAC     Use GL7HDR
+         30.07.86 9        PAC     Don't display mixed GR if CI
+         31.07.86 10       PAC     Don't show DEMO if from film
+          9.10.86 11       DNH     Area type & name new line
+*********************************************************************
+         16.6.87  12       PAC     ADOPTED FOR UNI
+**/
+
+SECTION "b.help0"
+
+GET"LIBHDR"
+
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glHEhd"
+get ":4.ARC.H.sthd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.dhhd"
+get ":4.ARC.H.hehd"
+get ":4.ARC.H.grhd"
+
+/**
+         G.HE.HELPINI - INITIALISE ROUTINE FOR HELP
+         ------------------------------------------
+
+         Called on entry to the help overlay
+         This routine displays the HELP status page,
+         and sets up the menu bar.
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         .......
+
+         SPECIAL NOTES FOR CALLERS:
+
+         .......
+
+         PROGRAM DESIGN LANGUAGE:
+
+         IF national disc
+         THEN read in data from the GAZETTEER and MAPDATA
+              files for the status page and AREAL displays
+
+         display the status page
+
+         IF previous state was AREA or MAPPABLE DATA
+         THEN display "AREAL" on the menu bar
+
+         IF previous state was FILM
+         THEN don't display "DEMO" on the menu bar
+**/
+
+LET G.he.helpini() BE
+$(
+   LET discid         = (G.he.save+m.he.context.start)!m.discid
+   LET previous.state = (G.he.save+m.he.context.start)!m.laststate
+
+   IF (discid = m.dh.natA)
+   THEN
+      init.types() // read in the data from gazetteer
+                   // that status page will need
+
+   // display status page
+   status.page()
+
+   // set flag if we've come from AREA or MAPPABLE DATA
+   // n.b. this is a terribly long-winded way of doing it,
+   // the easy way is to say :
+   //
+   // G.he.work!m.he.show.areal :=
+   //    (m.st.uarea <= previous.state <= m.st.compare)
+   // but this is safer !
+
+   SWITCHON previous.state INTO
+   $(
+      DEFAULT          : G.he.work!m.he.show.areal := FALSE
+      ENDCASE
+
+      CASE m.st.uarea  : // state number 15
+      CASE m.st.area   :
+      CASE m.st.datmap :
+      CASE m.st.manal  :
+      CASE m.st.mdetail:
+      CASE m.st.resol  :
+      CASE m.st.mareas :
+      CASE m.st.mclass :
+      CASE m.st.manual :
+      CASE m.st.autom  :
+      CASE m.st.equal  :
+      CASE m.st.nested :
+      CASE m.st.quant  :
+      CASE m.st.retri  :
+      CASE m.st.compare: G.he.work!m.he.show.areal := TRUE // state number 31
+      ENDCASE
+   $)
+
+   // film has no demo
+   TEST previous.state = m.st.film
+   THEN G.he.work!m.he.show.demo := FALSE
+   ELSE G.he.work!m.he.show.demo := TRUE
+
+$)
+
+AND init.types() BE
+$(
+   LET offset  = TABLE 0,0            // initial read is from offset 0
+   LET buffer  = G.he.work+m.he.types // word address of AU types buffer
+   LET context = G.he.save + m.he.context.start
+   LET type.AU = context!m.areal.unit
+
+   // get the AU names data for use now, and later by AREAL
+   // this reads the first 26 records from the gazetteer; it is
+   // assumed that there are no more than 26 AU types.
+   //
+   G.dh.read( G.he.work!m.he.gazhandle,
+              offset, buffer,
+              m.he.rec.size * 26 ) // rec.size is number of bytes in record
+
+   // find the names for the status page
+   //
+   // first the AOI type and AOI name
+   //
+   TEST context!m.type.AOI = -1
+   THEN // area type & name are invalid
+   $(
+      G.he.work!m.he.AOI.type.str := 0
+      G.he.work!m.he.AOI.name.str := 0
+   $)
+   ELSE find.type.and.name() // type & name are valid
+
+   // now find the current AU type for mappable data
+   $(
+      LET byteoffset = 0
+      LET invalid.AU = "None"
+      LET str.len    = invalid.AU%0+1 // string plus length byte
+
+      TEST type.AU ~= -1 THEN
+      $(
+         WHILE G.ut.unpack16(buffer,byteoffset) ~= type.AU
+            DO byteoffset := byteoffset + m.he.rec.size
+
+         byteoffset := byteoffset + m.he.name.off
+         str.len    := buffer%byteoffset+1 // string + length byte
+      $)
+      ELSE buffer := invalid.AU
+
+      // now move the type into G.he.work vector
+      //
+      G.ut.movebytes( buffer, byteoffset,
+                     (G.he.work+m.he.AU.type.str), 0, str.len )
+   $)
+
+$)
+
+AND find.type.and.name() BE
+$(
+   LET ptr     = VEC 1
+   LET name32  = VEC 1
+   LET siz32   = VEC 1
+   LET type.no = (G.he.save + m.he.context.start)!m.type.AOI
+   LET name.no = (G.he.save + m.he.context.start)!m.name.AOI
+   LET recbuff = G.he.work + m.he.namebuff
+   LET buffer  = G.he.work + m.he.types
+   LET byteoffset = 0
+
+   G.ut.set32( m.he.rec.size, 0, siz32 ) // byte size for record
+
+   // search for this AU type
+   //
+   WHILE G.ut.unpack16(buffer,byteoffset) ~= type.no
+      DO byteoffset := byteoffset + m.he.rec.size
+
+   byteoffset := byteoffset + m.he.name.off // point to the string
+
+   // now move the type into G.he.work vector
+   //
+   G.ut.movebytes( buffer, byteoffset,
+                  (G.he.work+m.he.AOI.type.str), 0,
+                   buffer%byteoffset+1 )    // string + length byte
+
+   // Pick up the AU name
+   //
+   // setup pointer to get offset to first name for this AU
+   //
+   byteoffset := byteoffset - m.he.name.off + m.he.addr.off
+
+   G.ut.unpack32( buffer, byteoffset, ptr )
+
+   // now find offset to name record at ptr + recordsize * name.AOI
+   //
+   G.ut.set32( (name.no-1), 0, name32 ) // 1st record is at offset 0
+   G.ut.mul32( siz32, name32 )          // this is recordsize * name.AOI
+   G.ut.add32( ptr, name32 )            // and add pointer to first record
+
+   G.dh.read( G.he.work!m.he.gazhandle, name32, recbuff, m.he.rec.size )
+
+   G.ut.unpack32( recbuff, m.he.nth.name.off, ptr )
+
+   G.dh.read( G.he.work!m.he.gazhandle, ptr, recbuff, m.he.rec.size )
+
+   // now move the type into G.he.work vector
+   //
+   G.ut.movebytes( recbuff, m.he.name.off,
+                  (G.he.work+m.he.AOI.name.str), 0,
+                   recbuff%m.he.name.off+1 )    // string + length byte
+$)
+
+/**
+         G.HE.TO.MAIN - INIT ROUTINE FROM HELP SUB-OPS
+         ---------------------------------------------
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         display status page
+**/
+AND G.he.to.main() BE status.page()
+
+/**
+         status.page [] - display the normal status page for HELP
+         -----------
+
+         this displays the user's status page (i.e. NOT the one
+         that we are using for debug purposes).
+
+         Uses the context information in G.he.save for its
+         display.
+**/
+AND status.page() BE
+$(
+   LET CX     = G.he.save+m.he.context.start
+   LET oldlen = (CX+m.itemrecord)%0
+   LET discid = CX!m.discid
+   LET none.str = "None"
+   LET indent.str = "*S"
+
+   G.sc.pointer( m.sd.off )
+   G.sc.clear( m.sd.display )
+
+   G.sc.mess("Help Sequence: Current System Status")
+
+   line.(1)
+
+   SWITCHON discid INTO
+   $(
+      CASE m.dh.south :
+      CASE m.dh.north :
+      $(
+         G.sc.odrop("Community Disc - ")
+
+         TEST discid = m.dh.south
+         THEN G.sc.odrop("Southern")
+         ELSE G.sc.odrop("Northern")
+
+         G.sc.odrop(" Side")
+      $)
+      ENDCASE
+
+      CASE m.dh.natA :
+      CASE m.dh.natB :  G.sc.odrop("National Disc")
+      ENDCASE
+   $)
+
+   G.sc.selcol( m.sd.cyan )
+
+   // display last video frame number
+
+   line.(3)
+   G.sc.oprop( "Last video frame displayed: " )
+   TEST CX!m.frame.no = 0
+   THEN G.sc.oprop(none.str)
+   ELSE  // convert unsigned 16 bit frame no. to a string, and print
+   $(
+      LET buf = VEC 6 / bytesperword
+      LET ptr = 1
+      G.vh.word.asc( CX!m.frame.no, buf )
+
+      WHILE buf%ptr = '0' DO // strip leading zeroes
+      $( buf%ptr := '*S'
+         ptr := ptr + 1
+      $)
+      G.sc.oprop( buf ) // print it
+   $)
+
+   // display current item record
+
+   line.(5)
+   IF oldlen > 32 THEN (CX+m.itemrecord)%0 := 32
+   G.sc.oprop( "Last item examined: ")
+   line.(6)
+   G.sc.oprop (indent.str)
+   G.sc.oprop(oldlen > 0 -> CX+m.itemrecord, none.str)
+   (CX+m.itemrecord)%0  := oldlen
+
+   line.(8)
+
+   // now display alternative information for Nat/Com discs
+   TEST (discid = m.dh.natA)
+   THEN
+   $(
+      G.sc.oprop("Current area of interest:")
+      line.(9)
+      TEST (CX!m.type.AOI ~= -1)
+      THEN
+      $( G.sc.oprop("Area type:")
+         line.(10); G.sc.oprop (indent.str)
+         G.sc.oprop( G.he.work+m.he.AOI.type.str )
+         line.(11)
+         G.sc.oprop("Area name:")
+         line.(12); G.sc.oprop (indent.str)
+         G.sc.oprop( G.he.work+m.he.AOI.name.str )
+      $)
+      ELSE
+      TEST good.gridrefs(CX)
+      THEN
+      $( G.sc.oprop("Grid references: ")
+         line.(10)
+         grid.refs ('b',CX!m.grbleast, CX!m.grblnorth )
+         line.(11)
+         grid.refs ('t',CX!m.grtreast, CX!m.grtrnorth )
+      $)
+      ELSE
+      $( G.sc.oprop(indent.str)
+         G.sc.oprop(none.str)
+      $)
+
+      // now mappable data status
+      line.(14)
+      G.sc.oprop("Mappable data status:")
+      line.(15)
+      G.sc.oprop("Areal unit: ")
+      G.sc.oprop( G.he.work+m.he.AU.type.str )
+      line.(16)
+      G.sc.oprop("Resolution: ")
+      TEST CX!m.resolution ~= -1
+      THEN G.sc.ofstr("%n km.",CX!m.resolution)
+      ELSE G.sc.oprop( none.str )
+   $)
+   ELSE
+   IF (discid = m.dh.south) | (discid = m.dh.north)
+   THEN
+   $(
+      G.sc.oprop("Grid references for current map:")
+      line.(9)
+      grid.refs ('b',CX!m.grbleast, CX!m.grblnorth )
+      line.(10)
+      grid.refs ('t',CX!m.grtreast, CX!m.grtrnorth )
+   $)
+
+   G.sc.pointer(m.sd.on)
+
+$)
+
+//
+// goto specified line
+//
+AND line.( lineno ) BE G.sc.movea( m.sd.display, m.sd.disXtex,
+                                   m.sd.disYtex - lineno*m.sd.linW )
+//
+// returns TRUE if grid refs are not invalid
+//
+AND good.gridrefs(in.vec) = in.vec!m.grbleast ~= 0 & in.vec!m.grblnorth ~= -1
+
+//
+// display grid refs in both forms
+// e.g. '0526 0158 (TQ 26 58)' is the string displayed
+//
+AND grid.refs( switch, east, north ) BE
+$(
+   LET string = VEC 10 / bytesperword
+
+   TEST switch = 'b'
+   THEN G.sc.oprop("Bottom left: ")
+   ELSE G.sc.oprop("Top right:   ")
+
+   G.ut.grid.eight.digits( east, north, string )
+   G.sc.ofstr( "%s ", string )
+
+   UNLESS G.ut.grid.region( east, north ) = m.grid.is.Channel
+   DO
+   $(
+      G.ut.grid.mixed( east, north, string )
+      G.sc.ofstr( "(%s)", string )
+   $)
+$)
+.
+

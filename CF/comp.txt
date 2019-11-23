@@ -1,0 +1,10 @@
+*| compile the Community find overlay
+co find0
+co find1
+co find2
+co find3
+co find4
+co find5
+co find6
+co find7
+co find8

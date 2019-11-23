@@ -1,0 +1,3 @@
+*|  join the data handler
+*remove c.kernel
+Join c.dh1 c.dh2 c.seldisc c.userdata -to c.kernel

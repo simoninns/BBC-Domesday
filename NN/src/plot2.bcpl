@@ -1,0 +1,261 @@
+/**
+         NM.PLOT - LIBRARY PLOT BLOCK ROUTINES
+         -------------------------------------
+
+         NAME OF FILES CONTAINING RUNNABLE CODE:
+
+         cnmDISP
+         cnmWIND
+         cnmRETR
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         18/04/86 1        D.R.Freed   Initial version
+         02/10/86 2        DRF         Optimised; colour
+                                        no longer passed as
+                                        a parameter in
+                                        g.nm.plot.block;
+                                       g.nm.plot.fine.block,
+                                       g.nm.square.colour
+                                         added
+         g.nm.plot.block
+         g.nm.plot.fine.block
+         g.nm.square.colour
+**/
+
+section "nmplot"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.sdhd"
+get ":0.h.uthd"
+get ":0.h.nmhd"
+
+manifest
+$(
+   m.x.pix.to.gs.shift = 3
+   m.y.pix.to.gs.shift = 2
+$)
+
+
+/**
+         G.NM.PLOT.BLOCK - PLOT A BLOCK OF GRID SQUARES
+         ----------------------------------------------
+
+         Plots a block of squares at specified grid square
+         coordinates of specified size in the current colour
+
+         INPUTS:
+
+         Grid square east coordinate
+         Grid square north coordinate
+         Size of block sides (block must be square)
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+
+         SPECIAL NOTES FOR CALLERS:
+
+         May be used to plot a single square, a fine block or a
+         uniform block.
+
+         NB: COMPARE3 (link sub-operation) contains the routine
+             link.block which is closely based on this routine
+             but is separate for efficiency reasons; if this
+             routine is optimised to speed up the display time
+             then link.block should be similarly modified
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.plot.block [east, north, size]
+         ---------------
+
+         calculate x and y start positions in graphics coords
+         calculate size in Domesday graphics coordinates
+         plot square in current colour
+**/
+
+let g.nm.plot.block (grid.sq.east, grid.sq.north, block.size) be
+$(
+   let x, y = ?, ?
+
+   grid.to.graphics (grid.sq.east, grid.sq.north, @x, @y)
+
+// g.sc.movea (m.sd.display, x, y)
+   VDU ("25,%,%;%;", 4, x, y)
+
+// g.sc.rect (m.sd.plot, size.x, size.y)
+   VDU ("25,%,%;%;", #x61,
+        (block.size * g.nm.s!m.nm.x.pix.per.grid.sq <<
+                                          m.x.pix.to.gs.shift) - 1,
+        (block.size * g.nm.s!m.nm.y.pix.per.grid.sq <<
+                                          m.y.pix.to.gs.shift) - 1 )
+$)
+
+
+/**
+         G.NM.PLOT.FINE.BLOCK - PLOT A FINE BLOCK OF GRID SQUARES
+         --------------------------------------------------------
+
+         Plots a fine block of squares with specified grid square
+         coordinate origin.
+
+         INPUTS:
+
+         Grid square east origin
+         Grid square north origin
+         Address of values/areas vector
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Only to be used for plotting a fine block of single squares
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.plot.fine.block [east, north, values]
+         --------------------
+
+         calculate x and y start positions in graphics coords
+         FOR east = 1 to fine blocksize
+            FOR north = 1 to fine blocksize
+               IF areal data THEN
+                  get value for area
+               ENDIF
+               classify value into colour
+               plot square
+            ENDFOR
+         ENDFOR
+**/
+
+and g.nm.plot.fine.block (grid.sq.east, grid.sq.north, values) be
+$(
+   let x, y, size.x, size.y, start.x  =  ?, ?, ?, ?, ?
+   and colour, last.colour, index =  ?, ?, ?
+   and areal.data, area, last.area = ?, ?, ?
+
+   areal.data := (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data)
+   last.colour := -1
+   last.area := -1
+
+   grid.to.graphics (grid.sq.east, grid.sq.north, @start.x, @y)
+   size.x := (g.nm.s!m.nm.x.pix.per.grid.sq << m.x.pix.to.gs.shift) - 1
+   size.y := (g.nm.s!m.nm.y.pix.per.grid.sq << m.y.pix.to.gs.shift) - 1
+   index := m.nm.max.data.size
+
+   for north = 1 to m.nm.fine.blocksize do
+
+      $(
+         x := start.x
+
+         for east = 1 to m.nm.fine.blocksize do
+
+            $(
+               // g.sc.movea (m.sd.display, x, y)
+               VDU ("25,%,%;%;", 4, x, y)
+
+               test areal.data then
+                  $(
+                     area := g.nm.values!index
+                     test area = last.area then
+                        colour := last.colour
+                     else
+                        $(
+                           colour :=
+                              g.nm.square.colour (
+                                 g.nm.areal + (area * m.nm.max.data.size))
+                           last.area := area
+                         $)
+                  $)
+               else
+                  colour := g.nm.square.colour (values + index)
+
+               if colour ~= last.colour then
+                  $(
+                     g.sc.selcol (colour)
+                     last.colour := colour
+                  $)
+
+               // g.sc.rect (m.sd.plot, size.x, size.y)
+               VDU ("25,%,%;%;", #x61, size.x, size.y)
+
+               index := index + m.nm.max.data.size
+               x := x + size.x + 1
+            $)
+
+         y := y + size.y + 1
+      $)
+$)
+
+
+/*
+      grid.to.graphics
+
+         converts a pair of grid square coordinates into Domesday
+         display area graphics coordinates
+*/
+
+and grid.to.graphics (grid.e, grid.n, graphics.e.ptr, graphics.n.ptr) be
+$(
+   let res = g.context!m.resolution
+
+   !graphics.e.ptr :=
+        ( ( ( (grid.e * res) - g.nm.s!m.nm.km.low.e) *
+                                   g.nm.s!m.nm.x.pix.per.grid.sq) /
+              res  +  g.nm.s!m.nm.x.min) << m.x.pix.to.gs.shift
+
+    !graphics.n.ptr :=
+        ( ( ( ( (grid.n * res) - g.nm.s!m.nm.km.low.n) *
+                                   g.nm.s!m.nm.y.pix.per.grid.sq) /
+                res  +  g.nm.s!m.nm.y.min) << m.y.pix.to.gs.shift) +
+                                                         m.sd.disY0
+$)
+
+
+/*
+      g.nm.square.colour
+
+         returns the colour to be used for the value at the given
+         address based on the class intervals; traps if no match
+         since there should always be a ">" entry
+*/
+
+and g.nm.square.colour (value.ptr) = valof
+$(
+   let class, interval  =  ?, ?
+
+   class := 0
+   interval := g.nm.class.upb
+
+   $(repeat
+
+      if (g.ut.cmp32 (value.ptr, interval) ~= m.ut.gt) then
+         resultis (g.nm.class.colour!class)
+
+      class := class + 1
+      interval := interval + m.nm.max.data.size
+
+   $)repeat
+
+      repeatuntil (class > m.nm.num.of.class.intervals)
+
+   // if reach this point, the class intervals must be corrupt
+   g.ut.trap ("NM", 1, TRUE, 1, class, 0, m.nm.num.of.class.intervals)
+$)
+
+.

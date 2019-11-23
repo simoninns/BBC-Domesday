@@ -1,0 +1,91 @@
+
+and g.nf.extractfiles(p) be
+$(  let t = p+p.t
+    let items = 0
+    let c = vec 1
+    let rec.len = vec 1
+    let n.recs = vec 1
+    let dummy = vec 1
+//    let dummy1 = vec 1
+    let one = vec 1
+    let zero = vec 1
+    let neg = vec 1
+    let sign = p!c.file.rec < 0 -> -1, 0
+
+   G.ut.set32(1, 0, one)
+   G.ut.set32(0, 0, zero)
+   G.ut.set32(-1, -1, neg)
+   G.ut.set32(p!c.file.rec, sign, c)
+   // record length in bytes
+   g.ut.set32(m.item.rec.size-4,0,rec.len)  //28.7.87 MH
+   // determine file length in records to set up bounds for log chopping
+   g.dh.length(g.nf.p!c.names, n.recs)   // in bytes
+   g.ut.div32(rec.len, n.recs, dummy)   // in records
+//   G.ut.set32(21, 0, dummy1)
+   if G.ut.cmp32(c, zero) = m.lt //dummy1) = m.lt then
+      G.ut.mov32(zero, c)
+   G.ut.mov32(n.recs, dummy)
+//   G.ut.sub32(dummy1, dummy)
+   unless G.ut.cmp32(c, dummy) = m.lt then
+     G.ut.mov32(dummy, c)
+
+   G.ut.add32(one, n.recs)
+    g.sc.mess("Finding titles, please wait")
+    while items < m.titlespp+1 & (g.ut.cmp32(c, n.recs) = m.lt) do
+    $(  if type.included(g.dh.read.type(c)) then
+        $( unless g.dh.read.names.rec(p!c.names,c,t+(items*m.item.wrec.size),
+                           m.item.rec.size) = m.item.rec.size do // 16.12.87 MH 
+           $(  trap.(3,2,1,0)
+               finish  
+           $)
+          items := items + 1
+          if items = 1 p!c.file.rec := !c
+        $)
+        G.ut.add32(one, c)
+    $)
+if g.ut.cmp32(c, n.recs) = m.eq then
+$( G.sc.ermess("at end")
+    G.ut.mov32(n.recs,c)
+   g.ut.sub32(one, c)
+   g.ut.sub32(one, c)
+$)
+G.sc.ermess("1 items=%n",items)
+    p!c.last.rec := !c
+    if items < m.titlespp+1 then
+    $( let i = 0
+       let c1 = vec 1
+       let last.rec = vec 1
+       let zero = vec 1
+       
+       G.ut.set32(0, 0, zero)
+       G.ut.mov32(c, c1)
+       while i < m.titlespp & (g.ut.cmp32(c1, neg) = m.gt) do
+       $(
+          if type.included(g.dh.read.type(c1)) then
+          $( i := i + 1
+             G.ut.mov32(c1, last.rec)
+          $)
+          G.ut.sub32(one, c1)
+       $)
+G.sc.ermess("i = %n",i)
+//       G.ut.add32(one, c1)
+       G.ut.mov32(c1, c)
+       p!c.file.rec := !c   
+       items := 0
+       while items < m.titlespp+1 & (g.ut.cmp32(c, n.recs) = m.lt) do
+       $(  if type.included(g.dh.read.type(c)) then
+           $( unless g.dh.read.names.rec(p!c.names,c,t+(items*m.item.wrec.size),
+                           m.item.rec.size) = m.item.rec.size do // 16.12.87 MH 
+              $(  trap.(3,2,1,0)
+                  finish  
+              $)
+             items := items + 1
+             if items = 1 p!c.file.rec := !c
+           $)
+           G.ut.add32(one, c)
+       $)
+G.sc.ermess("2 items=%n",items)
+    $)   
+    p!c.titles := items
+    g.sc.clear(m.sd.message)
+$)

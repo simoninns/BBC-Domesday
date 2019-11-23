@@ -1,0 +1,290 @@
+
+//  UNI SOURCE  4.87
+
+section "map4"
+
+/**
+         CM.B.MAP4 - High Level Map Operations for Map
+         ---------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+         r.map
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         18.2.86  1        DNH         Initial version
+         29.5.86  2                    Turn over handling
+          6.6.86  3                    Clear startup message
+          7.7.86  4                    bugfix isol.map flag
+         20.10.86  5       DNH         fix icon vec chain
+
+         GLOBALS DEFINED:
+         g.cm.highlight.level0
+         g.cm.down
+         g.cm.up
+**/
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glCMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.dhhd"
+get ":4.ARC.H.cmhd"
+get ":4.ARC.H.cm2hd"
+
+/**
+         function submapindex (m,n,a,b) returns the submap index
+         of the submap at the screen position (a,b) given the
+         matrix dimensions of the submap grid m by n.  This ONLY
+         works for the current map since data for the screen
+         position of the grid for this map is used.
+**/
+
+let submapindex(m,n,a,b) =
+    muldiv (a - g.cm.s!m.a0, m, g.cm.s!m.a1 - g.cm.s!m.a0) +
+    muldiv (b - g.cm.s!m.b0, n, g.cm.s!m.b1 - g.cm.s!m.b0)*m
+
+
+/**
+         procedure g.cm.highlight.level0 () checks the current
+         screen position of the cursor and tries to highlight the
+         area of the level 0 map where the cursor is.  If the
+         cursor is not on any level 1 map area no change is made,
+         unless the frame is set to 0 in which case the North or
+         South L0 map is chosen depending on the disc side
+         currently in the player.
+**/
+
+and g.cm.highlight.level0 () be
+$(
+    if (g.screen = m.sd.display) &
+       (g.cm.s!m.a0 <= g.xpoint < g.cm.s!m.a1) &
+       (g.cm.s!m.b0 <= g.ypoint < g.cm.s!m.b1) do
+    $(  let p = g.cm.s!m.recptr
+        let newi = submapindex (g.cm.mof(p), g.cm.nof(p), g.xpoint, g.ypoint)
+        let newmap = g.cm.submap (p, newi)
+        if newmap ~= 0 do
+            g.cm.showframe (newmap + map.L0 - map.L1)
+    $)
+    if g.cm.s!m.frame = 0 do                // initialise to most suitable
+        g.cm.showframe ((g.context!m.discid = m.dh.south) ->
+                                                        L0.south, L0.north)
+$)
+
+
+/**
+         function downmaprec(display flags, a, b) does the real
+         work of going down a level (to a greater level number,
+         ie. zoom in) by working out which submap should be
+         zoomed in to.
+         Care is taken not to upset the map information in the
+         statics unless the submap it is trying to get to really
+         does exist, in which case its info is read in as the
+         current map.  The display flags are passed straight to
+         g.cm.showmap.
+         The position of the new map on the latest map is
+         determined.  This is used for the expanding framework
+         graphics during the zoom.  The calculation is only done
+         if genuinely required.  Values must be calculated while
+         the map details are those of the current map or the
+         screen position would be wrong.
+**/
+
+and downmaprec(dispflags,a,b) = valof       // a,b = text cursor position
+$(  let nextp = g.cm.findmaprec(g.cm.s!m.map)
+    let nexti = submapindex(g.cm.mof(nextp),g.cm.nof(nextp),a,b)
+    let nextmap = g.cm.submap(nextp,nexti)
+    let nextlevel = nextp%10 + 1
+    if nextmap = 0 resultis false
+            //  set up details for 'expand frame' graphics, but only if nec.
+    if nextlevel >= 2 & (dispflags & m.cm.graphics.bit) ~= 0 do
+    $(  let w = g.cm.mwidth (nextlevel, nextmap)
+        let h = g.cm.mheight (nextlevel, nextmap)
+        let m = g.cm.mof (nextp)
+        let x, y = ?,?
+        if nextlevel = 4 do      // adj for change of units L3 (hm) to L4 (dm)
+        $( w := w/10;  h := h/10
+        $)
+        x := nexti rem m * w
+        y := nexti / m * h
+        g.cm.s!m.old.a0 := g.cm.a.of (x)
+        g.cm.s!m.old.b0 := g.cm.b.of (y)
+        g.cm.s!m.old.a1 := g.cm.a.of (x + w)
+        g.cm.s!m.old.b1 := g.cm.b.of (y + h)
+    $)
+    g.cm.s!m.map := nextmap
+    g.cm.s!m.recptr := nextp
+    g.cm.s!m.sind := nexti
+    g.cm.submapinfo()
+    g.cm.showmap(dispflags, m.down)
+    resultis true
+$)
+
+
+/**
+         procedure g.cm.down(display flags) tries to zoom in from
+         the current map at the current global cursor position.
+         It handles zoom in from L0 to L1 itself, zooming to the
+         L1 map corresponding to the currently highlighted L0
+         frame.  This relies on the map record order of L0 frames
+         and L1 frames being the same.
+         The vector 'keep' is used to store information for
+         getting from a level 3, 4 or 5 map back up to
+         the nearest record.  Its vector must have been obtained
+         in g.dy.init.  Error messages are put out if the zoom
+         fails for any reason.  The 'turn disc over' business is
+         now handled correctly.  The display flags are
+         used for g.cm.showmap and may be set so that graphics
+         etc are disabled when g.cm.down is used repeatedly to go
+         to a given map or grid reference.
+**/
+
+and g.cm.down (dispflags) be
+$(  let a = g.xpoint
+    let b = g.ypoint
+    let rc = 0          // default failure for level 5 etc
+    g.cm.s!m.reason := 255
+    test g.cm.s!m.cmlevel = 0 do
+    $(  g.cm.s!m.map := g.cm.s!m.frame + map.L1 - map.L0   // corresponding L1
+                                    // to current highlighted region on L0
+        g.cm.s!m.recptr := g.cm.findmaprec (g.cm.s!m.map)
+        g.cm.mapinfo ()
+        g.cm.showmap (dispflags, m.down)
+        g.sc.clear (m.sd.message)         // clear "Community Disc..." message
+        return      // ok
+    $)
+    else
+    if (g.cm.s!m.a0 <= a < g.cm.s!m.a1) &
+       (g.cm.s!m.b0 <= b < g.cm.s!m.b1) do switchon g.cm.s!m.cmlevel into
+    $(  case 1: case 2:
+            rc := downmaprec (dispflags, a, b); endcase
+        case 3: case 4:
+        $(  let p = g.cm.s!m.recptr
+            let d = g.cm.s!m.istart
+            let x,y = ?,?
+            if d = 0 endcase
+            if (p%(d+1) & 4) ~= 0 do
+            $(  if g.cm.testbit(p,d+2,submapindex(5,5,a,b)) do
+                    rc := downmaprec (dispflags, a, b)
+                endcase
+            $)
+            until d = g.cm.s!m.iend do
+            $(  let a0, b0, a1, b1 = ?,?,?,?
+                x,y := p%(d+2),p%(d+3)
+                a0 := g.cm.a.of(x)
+                a1 := g.cm.a.of(x+ p%(d+4))
+                b0 := g.cm.b.of(y)
+                b1 := g.cm.b.of(y+ p%(d+5))
+                if a0 <= a < a1 & b0 <= b < b1 do
+                $(  g.cm.s!m.old.a0 := a0       // copy for expanding frame
+                    g.cm.s!m.old.a1 := a1
+                    g.cm.s!m.old.b0 := b0
+                    g.cm.s!m.old.b1 := b1
+                    break
+                $)
+                d := d+p%d
+            $)
+            if d = g.cm.s!m.iend endcase    // failed
+            g.cm.s!m.cmlevel := g.cm.s!m.cmlevel+1
+            $(  let k = g.cm.s!m.keep + (g.cm.s!m.cmlevel-4)*9
+                k!0, k!1 := g.cm.s!m.map, g.cm.s!m.ptaddress
+                k!2, k!3 := g.cm.s!m.x0, g.cm.s!m.y0
+                k!4, k!5 := g.cm.s!m.istart, g.cm.s!m.texts
+                k!6, k!7 := g.cm.s!m.photos, g.cm.s!m.isolatedmap
+                k!8 := g.cm.s!m.iend
+            $)
+            g.cm.s!m.map := g.ut.unpack16(p,d+6)
+            g.cm.s!m.ptaddress := g.ut.unpack16(p,d+8)
+            if g.cm.s!m.cmlevel = 5 do x,y := x/10, y/10
+            g.cm.s!m.x0, g.cm.s!m.y0 := g.cm.s!m.x0 + x, g.cm.s!m.y0 + y
+            g.cm.s!m.texts := (p%(d+1) & 1) ~= 0
+            g.cm.s!m.photos := (p%(d+1) & 2) ~= 0
+
+// BUGFIX: ICON VEC WAS CHAINING INTO OBLIVION, CAUSING L4 MAP TO APPEAR TO
+// ITS OWN RECORD IN SOME CASES, EG. VICKERSTOWN.     DNH  20.10.86
+// old version is the line commented out.
+//            test p%d = d+10 then g.cm.s!m.istart := 0
+            test p%d = 10 then g.cm.s!m.istart := 0
+            else
+            $(  g.cm.s!m.istart := d+10
+                g.cm.s!m.iend := d+p%d
+            $)
+            unless g.cm.s!m.cmlevel = 5 do
+               g.cm.otherpars ()            // incorrectly sets isol.map false
+            g.cm.s!m.isolatedmap := true    // ...so set it true
+            g.cm.showmap (dispflags, m.down)
+            return      // ok
+        $)
+    $)
+
+    if rc = 0 do                            // failed
+    $(  if g.cm.s!m.data.accessed do        // video has been muted
+            g.cm.showmap (m.cm.frame.bit)   // restore current map
+        if (dispflags & m.cm.messages.bit) ~= 0 do
+        $(  g.sc.pointer (m.sd.on)          // restore pointer before ermess
+            if g.cm.s!m.reason = 254 do
+            $(  g.sc.ermess ("Turn videodisc over for more detail *
+                                                            *in this area")
+                g.cm.turn.over.setup ()
+            $)
+            if g.cm.s!m.reason = 255 do
+                g.sc.ermess ("No further zoom is possible here")
+        $)
+    $)
+$)
+
+
+/**
+         procedure g.cm.up (display flags) is the main routine
+         for zooming out.  It handles zooming out from an
+         isolated map at level 4 or 5 separately, and L1 to L0 in
+         a slightly special way, showing the highlighted parent
+         frame of the L1 map while setting the current map to the
+         only one with a record: map.L0, the first L0 map.
+         When the parent is found it is displayed, but display
+         flags may prevent the frame or graphics appearing if the
+         routine is being used to find a given map on entry from
+         Photo, Text or Find operations.
+         Since all maps have a parent the routine cannot fail.
+**/
+
+and g.cm.up (dispflags) be
+$(
+    if 2 <= g.cm.s!m.cmlevel <= 4 & (dispflags & m.cm.graphics.bit) ~= 0 do
+    $(                             // (can't show graphics for L5->L4)
+        let w, h = g.cm.s!m.width, g.cm.s!m.height
+        if g.cm.s!m.cmlevel = 4 do w, h := w/10, h/10
+                                 // set up for shrinking frame:
+        g.cm.s!m.old.x0 := g.cm.s!m.x0
+        g.cm.s!m.old.x1 := g.cm.s!m.x0 + w
+        g.cm.s!m.old.y0 := g.cm.s!m.y0
+        g.cm.s!m.old.y1 := g.cm.s!m.y0 + h
+    $)
+    test g.cm.s!m.isolatedmap then
+    $(  let k = g.cm.s!m.keep + (g.cm.s!m.cmlevel-4)*9
+        g.cm.s!m.cmlevel := g.cm.s!m.cmlevel-1
+        g.cm.s!m.map := k!0
+        g.cm.otherpars()           // (must be done before k!7 restored)
+        g.cm.s!m.ptaddress := k!1
+        g.cm.s!m.x0, g.cm.s!m.y0 := k!2, k!3
+        g.cm.s!m.istart, g.cm.s!m.texts := k!4, k!5
+        g.cm.s!m.photos, g.cm.s!m.isolatedmap := k!6, k!7
+        g.cm.s!m.iend := k!8
+    $)
+    else
+    $(  test g.cm.s!m.cmlevel = 1 then
+            g.cm.s!m.map := map.L0      // the only one with a record
+        else
+            g.cm.s!m.map := g.cm.s!m.parent         // usual case
+        g.cm.s!m.recptr := g.cm.findmaprec(g.cm.s!m.map)
+        g.cm.mapinfo()
+    $)
+
+    test g.cm.s!m.cmlevel = 0 & (dispflags & m.cm.frame.bit) ~= 0 then
+    $(   g.cm.clear.yellow.border ()
+         g.cm.s!m.frame := 0        // back to L0. Wait for highlight
+    $)
+    else g.cm.showmap (dispflags, m.up)
+$)
+.

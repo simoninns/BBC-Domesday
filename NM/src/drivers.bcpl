@@ -1,0 +1,180 @@
+/*    Plot routines to be used by g.nm.process.variable follow    */
+
+
+/*
+      nm.plot.uniform.block
+
+         plots a block whose values are all the same, due to
+         index level compression
+
+         for areal mappable data, sets entry in areal map
+         for grid square data, counts non-missing squares that fall within
+            the area of interest
+*/
+
+and nm.plot.uniform.block (record.number, offset, east, north, block.size) be
+$(
+   let value = vec m.nm.max.data.size
+   and num.e, num.n  =  ?, ?
+
+   for word = m.lsw to m.msw by m.order
+      value!word := 0
+
+   test (record.number = m.nm.max.negative.value) then
+
+      value!m.msw := record.number
+
+   else  // record.number <= 0
+
+         test (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data) then
+
+            $(
+            move (g.nm.areal + ( (- record.number) * m.nm.max.data.size ),
+                  value,
+                  m.nm.max.data.size)
+
+            g.nm.set.map.entry (-record.number)
+            $)
+
+         else
+            $(
+            test g.nm.dual.data.type(g.nm.s!m.nm.raster.data.type) then
+
+                  g.nm.widen (offset, 2, value)
+            else
+                  g.nm.widen ( - record.number, 2, value)
+
+            // calculate the number of squares that actually lie within the
+            // area of interest
+
+            num.e :=
+               nm.min (east + block.size, g.nm.s!m.nm.grid.sq.top.e) -
+                  nm.max (east, g.nm.s!m.nm.grid.sq.low.e)
+
+            num.n :=
+               nm.min (north + block.size, g.nm.s!m.nm.grid.sq.top.n) -
+                  nm.max (north, g.nm.s!m.nm.grid.sq.low.n)
+
+            g.nm.s!m.nm.num.areas := g.nm.s!m.nm.num.areas + (num.e * num.n)
+            $)
+
+   nm.plot.block (east, north, block.size, nm.square.colour (value) )
+
+$)
+
+
+/*
+      nm.min
+
+         returns the minimum of the two input values
+*/
+and nm.min (a, b) = a < b -> a, b
+
+
+/*
+      nm.max
+
+         returns the maximum of the two input values
+*/
+and nm.max (a, b) = a > b -> a, b
+
+
+
+/*
+      nm.plot.fine.block
+
+         plots the specified fine block of values
+
+         For every square that falls within area of interest:
+            for areal mappable data, sets entry in areal map
+            for grid square data, adds 1 to the number of areas count
+
+         assumes the following order for an n*n matrix of values
+         1 -> n*n, where n is m.nm.fine.blocksize :
+
+               .
+               .
+               .
+         n+1   n+2   n+3   ...   ...   2n
+          1     2     3    ...   ...    n
+*/
+
+and nm.plot.fine.block (start.east, start.north) be
+$(
+   let areal.data, wholly.within =  ?, ?
+   and curr.e, curr.n, index, area, last.area, colour =  ?, ?, ?, ?, ?, ?
+   and last.colour   =  ?
+
+   areal.data := (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data)
+
+   // see if whole fine block is within area of interest - if it is
+   // then processing of the block can be performed more quickly
+
+   wholly.within :=
+         (start.east >= g.nm.s!m.nm.grid.sq.low.e) &
+         (start.east + m.nm.fine.blocksize <= g.nm.s!m.nm.grid.sq.top.e) &
+         (start.north >= g.nm.s!m.nm.grid.sq.low.n) &
+         (start.north + m.nm.fine.blocksize <= g.nm.s!m.nm.grid.sq.top.n)
+
+   last.area := -1
+
+   // process block
+
+   for north = 1 to m.nm.fine.blocksize do
+
+      for east = 1 to m.nm.fine.blocksize do
+
+         $(square
+         curr.e := start.east + east - 1
+         curr.n := start.north + north - 1
+
+         // see if this square is within area of interest;
+         // NOTE that since BCPL evaluates conditional expressions from
+         //      left to right and stops as soon as value is known, then
+         //      blocks wholly within the area will only perform the first
+         //      part of the test
+
+         if wholly.within |
+               ( (curr.e >= g.nm.s!m.nm.grid.sq.low.e) &
+                 (curr.e < g.nm.s!m.nm.grid.sq.top.e) &
+                 (curr.n >= g.nm.s!m.nm.grid.sq.low.n) &
+                 (curr.n < g.nm.s!m.nm.grid.sq.top.n) )   then
+            $(inside
+            index := ((north-1) * m.nm.fine.blocksize + east) *
+                                                         m.nm.max.data.size
+            test areal.data then
+               $(areal
+               // NOTE g.nm.values contains boundary values which are used to
+               //      index areal vector - all boundary values fit into lsw
+
+               area := g.nm.values!index
+
+               move (g.nm.areal + (area * m.nm.max.data.size),
+                     g.nm.values + index,
+                     m.nm.max.data.size)
+
+               test area = last.area then
+                  colour := last.colour
+               else
+                  $(norepeat
+                     g.nm.set.map.entry (area)
+                     colour := nm.square.colour (g.nm.values + index)
+                     last.area := area
+                     last.colour := colour
+                  $)norepeat
+               $)areal
+            else
+               $(gridsquare
+               colour := nm.square.colour (g.nm.values + index)
+
+               // only count non-missing grid-square values
+               if colour > m.sd.black2 then
+                  g.nm.s!m.nm.num.areas := g.nm.s!m.nm.num.areas + 1
+               $)gridsquare
+
+            nm.plot.block (curr.e, curr.n, 1, colour)
+            $)inside
+         $)square
+$)
+
+

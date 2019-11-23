@@ -1,0 +1,529 @@
+//  $MSC
+//  AES SOURCE  4.87
+
+/**
+         SC.SCRMOUSE - MOUSE DRIVER INTERFACE
+         ------------------------------------
+
+         This is the special version of mouse, which allows
+         generation and readback of test script files.
+
+         This module contains the procedures:
+
+         G.sc.mouse    - get  mouse position
+         G.sc.pointer  - turn mouse pointer on/off
+         G.sc.moveptr  - move mouse pointer
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         kernel
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         01.07.86 1        PAC         Duplicated from SC.MOUSE
+         04.07.86 2        PAC         First proper version
+**/
+
+SECTION "Super.Mouse"
+
+NEEDS "VDU"
+
+GET "LIBHDR"
+GET "SYSHDR"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.H.sdhd"
+GET ":4.ARC.H.sdphd"
+GET ":4.ARC.H.kdhd"
+GET ":4.ARC.H.uthd"
+
+MANIFEST $( m.unset  =  0   // modes of operation
+            m.normal = 'N'
+            m.read   = 'R'  // read/write to file
+            m.write  = 'W'
+
+            m.cont   = 'C'  // continuous
+            m.step   = 'S'  // step mode
+            m.cr     = #x0D // line delimiter
+            m.end    = 5    // ctrl-E ends write
+            m.setstep= 19   // ctrl-S sets step mode
+            m.setcont= 3    // ctrl-C sets cont mode
+            m.scradd = #x3000
+            m.oshwm  = #x1200
+            m.get    = 5    // opcodes for GB/PB to I/O proc
+            m.put    = 6
+         $)
+
+STATIC   $( s.ptrstatus = m.sd.off     // used by pointer routine (initially OFF)
+            s.mode      = m.unset      // operation mode
+            s.stepmode  = m.step       // operation stepped/continuous
+            s.handle    = 0            // file handle
+            s.EOF       = FALSE        // flag for EOF
+            s.oldX      = 0            // last X
+            s.oldY      = 0            // and Y positions
+            s.do.noacts = 0            // return a few noacts after FN key
+            s.stackptr  = 0            // LONGJUMP after EOF detected
+            s.label     = 0
+            s.ioptr     = 0            // pointer to I/O processor buffer
+            // s.lim       = 0            // limit of bytes to read from I/O
+            s.oshwm     = #x1200       // normal value of oshwm
+         $)
+
+/**
+         SC.MOUSE - MOUSE INTERFACE
+         --------------------------
+
+         This routine provides the interface to the mouse driver,
+         and is used by GETACT to obtain the current key press,
+         and the co-ordinates of the mouse pointer.
+
+         INPUTS:
+
+         pointer to results vector
+
+         OUTPUTS:
+
+         current X position, current Y position, key press
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Mouse [-> X position, Y position, keypress ]
+
+         read next key press from keyboard buffer
+         read mouse pointer X and Y positions
+         return current position
+         return keypress
+
+         RETURN
+
+**/
+LET g.sc.mouse( result ) BE
+$( LET ch, newX, newY = ?,?,?
+
+   // read the keyboard buffer
+
+   ch := OPSYS(#x81,0,0)
+   IF (ch & #xFF00) ~= 0
+
+   THEN ch := m.kd.noact // no key read
+
+   // get pointer position
+
+   newX := OPSYS( #x80,7,0 )
+   newY := OPSYS( #x80,8,0 )
+
+//************ NEW CODE*****************************************
+   SWITCHON s.mode INTO
+   $(
+      CASE m.unset  : setup.() ; ENDCASE
+      CASE m.normal :            ENDCASE
+      CASE m.write  :
+      $(
+         UNLESS (ch = m.kd.noact) & (s.oldX = newX) & (s.oldY = newY)
+         DO write.rec( ch, newX, newY )
+         IF ch = m.end
+         THEN $( close.script() ; s.mode := m.normal $)
+      $)
+      ENDCASE
+
+      CASE m.read   :
+      $(
+         s.stackptr := LEVEL()
+         s.label    := errlab
+
+errlab:  IF s.EOF | (ch = m.end)
+         THEN $( ch := 0 ; close.script() ; s.mode := m.normal
+                 ENDCASE
+              $)
+
+         IF ch = m.setstep THEN s.stepmode := m.step  // ctrl-S sets step mode
+         IF ch = m.setcont THEN s.stepmode := m.cont  // ctrl-C sets cont mode
+
+         TEST s.do.noacts > 0
+         THEN
+         $( ch, newX, newY := 0, s.oldX, s.oldY
+            s.do.noacts := s.do.noacts-1
+         $)
+         ELSE
+         $(
+            read.rec( @ch, @newX, @newY )
+            G.sc.moveptr( newX, newY )     // update pointer pos
+
+            UNLESS (ch = m.kd.noact) | G.ut.printingchar(ch)
+            DO s.do.noacts := 5
+
+            IF (s.stepmode = m.step)
+            THEN
+            $( let dum = ?
+               dum := OPSYS(#x81,0,0)
+               REPEATUNTIL (dum = ' ') | (dum=m.setcont)
+               IF dum=m.setcont THEN s.stepmode := m.cont
+            $)
+         $)
+      $)
+      ENDCASE
+
+   $)
+
+   s.oldX := newX  // save old pointer position
+   s.oldY := newY
+//**************************************************************
+
+   // return with information
+   result!0 := newX
+   result!1 := newY
+   result!2 := ch
+$)
+
+//*********** NEW SUBROUTINES **********************************
+AND setup.() BE
+$(
+   LET ch = 'N'
+   G.sc.mess("Logica Test Harness")
+   G.sc.selcol( m.sd.cyan); G.sc.movea(m.sd.display,0,m.sd.disYtex)
+
+   WRITES("Mode: N(ormal),R(ead),W(rite) ?"); ch := CAPCH(RDCH())
+
+   s.oshwm := OPSYS(180,0,255)<<8
+   s.ioptr := s.oshwm // pointer := oshwm (minimum value)
+
+   TEST (ch=m.read) | (ch=m.write)
+   THEN
+   $(
+      LET result = FALSE
+      s.mode := ch
+      result := open.script() REPEATUNTIL result
+   $)
+   ELSE s.mode := m.normal
+
+   IF s.mode=m.read
+   THEN
+   $( WRITES("*nRead: C(ont),S(tep) ?")
+      ch := RDCH(); ch := CAPCH(RDCH())
+      s.stepmode := (ch = m.cont)-> ch, m.step
+   $)
+   OPSYS(21,0)
+$)
+
+AND open.script() = VALOF
+$(
+   LET name = VEC 20
+   LET type = (s.mode=m.read) -> m.ut.open.read, m.ut.open.write
+   LET adfs = "-adfs-"
+   LET i,ch = ?,?
+   LET len  = 0
+
+   ch := RDCH()  // dummy read
+
+   FOR i = 1 TO 40 DO name%i := 0
+
+   WRITEF("*nGive file name :%s",adfs)
+
+   RDITEM( name+3, 17 )
+   len := (name+3)%0
+
+   FOR i = 1 TO 6 DO name%i := adfs%i
+
+   name%0 := len + 6
+
+   name%((name%0)+1) := m.cr  // terminate filename properly
+
+   CALLBYTE( m.ut.osfind, type, (name<<1)+1 )
+
+   s.handle := MCRESULT & #xFF
+
+   IF (s.handle = 0) | ((MCRESULT & #xFF00) = #xFF00)
+   THEN $( G.sc.ermess("Open failed :%n",s.handle)
+           G.sc.selcol(m.sd.cyan)
+           WRITES("*nName is:"); G.sc.oprop( name )
+           RESULTIS FALSE
+        $) // failed
+
+   s.handle := s.handle<<8 // move handle to top byte for subsequent use
+
+   TEST s.mode = m.write
+   THEN write.rec(0,0,0) // start with dummy record
+   ELSE osgbpb( m.ut.read.op, s.oshwm, m.scradd-s.oshwm )
+
+   vid.on()
+   RESULTIS TRUE
+$)
+
+AND close.script() BE
+$( // new lines osgbpb and vid.on
+   IF s.mode = m.write
+   THEN osgbpb( m.ut.write.op, s.oshwm, s.ioptr-s.oshwm ) // flush out buffer
+
+   CALLBYTE( m.ut.osfind, m.ut.close, s.handle )
+   vid.on()
+$)
+
+// write out ch,x,y to the file in ascii
+
+AND write.rec( ch,x,y) BE
+$(
+   LET num.str = VEC 3
+
+   G.vh.word.asc( ch, num.str )
+   FOR i = 3 TO 5 DO bput.( num.str%i )
+
+   bput.(' ')
+   G.vh.word.asc( x, num.str )
+   FOR i = 2 TO 5 DO bput.( num.str%i )
+
+   bput.(' ')
+   G.vh.word.asc( y, num.str )
+   FOR i = 2 TO 5 DO bput.( num.str%i )
+
+   bput.(' ')    // add a space at eol - necesary for read.rec
+
+   IF G.ut.printingchar(ch) THEN bput.(ch)
+
+   bput.(m.cr)
+$)
+
+AND read.rec( chA,xA,yA ) BE
+$(
+   LET ch     = 'X' // bget.()
+
+   WHILE ~numeric.(ch) DO  // find first number after C/R
+   $(
+      WHILE ch ~= m.cr DO ch := bget.()
+      ch := bget.()
+   $)
+
+   !chA := getnum.(@ch)
+   !xA  := getnum.(@ch)
+   !yA  := getnum.(@ch)
+
+   IF !chA = m.end
+   THEN
+   $( s.EOF := TRUE ; LONGJUMP( s.stackptr, s.label ) $)
+
+   // file pointer is now at the end of the
+   // numbers on the current line.
+   // next char is the start of a comment
+   // ( which may be only a single space )
+$)
+
+AND getnum.(ch) = VALOF
+$(
+   LET number = 0   // reset number
+
+   WHILE ~numeric.(!ch) DO !ch:= bget.() // read to start of next number
+
+   WHILE numeric.(!ch) DO   // read value
+   $( number := number*10 + (!ch-'0') ; !ch := bget.() $)
+
+   RESULTIS number  // return value
+$)
+
+AND numeric.(ch) = '0' <= ch <= '9'
+
+AND hibeep.() BE
+$( LET block = TABLE #x0013, #xFFF1, #x0095, #x0007
+   CALLBYTE( #xFFF1,7,block<<1 )
+$)
+
+/* *********** OLD CODE *************************
+AND bput.(ch) BE CALLBYTE( #xFFD4, ch, s.handle )
+
+AND bget.() = VALOF
+$(
+   CALLBYTE( #xFFD7, ?, s.handle )
+   IF (MCRESULT & #x100) ~= 0
+   THEN $( s.EOF := TRUE ; LONGJUMP( s.stackptr, s.label ) $)
+   RESULTIS MCRESULT & #xFF
+$)
+  ********************************************** */
+
+AND bput.(ch) BE
+$(
+   tubeit( m.put, @s.ioptr, ch )
+   IF s.ioptr >= m.scradd
+   THEN
+   $( osgbpb( m.ut.write.op, s.oshwm, s.ioptr-s.oshwm ) // flush out buffer
+      s.ioptr := s.oshwm
+   $)
+$)
+
+AND bget.() = VALOF
+$(
+   LET ch = ?
+
+   ch := tubeit( m.get, @s.ioptr )
+
+   IF s.ioptr >= m.scradd
+   THEN
+   $( LET bytes = osgbpb( m.ut.read.op, s.oshwm, s.ioptr-s.oshwm )
+      s.ioptr := s.oshwm
+      // s.lim   := bytes + s.oshwm // may not be full buffer
+   $)
+   RESULTIS ch
+$)
+
+AND vid.on() BE G.vh.video('9')
+
+//
+// get/put byte from/to I/O main RAM at pointer
+// type is m.get, m.put (5,6)
+//
+AND tubeit( type, pointer, byte ) = VALOF
+$(
+   LET block = TABLE 0,#xFFFF,0
+   block!0  := !pointer
+   !pointer := !pointer + 1
+   block%4  := byte
+   CALLBYTE( m.sd.osword, type, block<<1)
+   RESULTIS block%4
+$)
+
+// OSGBPB (opcode, main ram address, size in bytes)
+//
+// entry point to operating system block transfer routine
+//
+// reads/writes (according to opcode) a block of memory between
+// IO processor and floppy disc file.
+//
+// EXAMPLE osgbpb( m.ut.read.op/m.ut.write.op, main.addr, chunk.size )
+//
+AND osgbpb( opcode, byte.ptr, size.bytes ) = VALOF
+$(
+   let wcb = VEC 7   // write control block
+   let rc  = ?
+   let frame = G.vh.poll( 'F', wcb )
+
+   wcb%1 := s.handle>>8   // file handle
+   wcb!1 := byte.ptr      // main RAM address
+   wcb!2 := #xFFFF        // HI order address
+   wcb!3 := size.bytes    // size in bytes
+   wcb!4 := 0             // ditto, HI word
+
+   rc := CALLBYTE( m.ut.osgbpb, opcode, (wcb<<1)+1 )
+
+   hibeep.()
+   G.vh.frame( frame )
+   vid.on()
+
+   IF (MCRESULT & #x100) ~=0 THEN RESULTIS (size.bytes-wcb!3)// transfer failed
+   RESULTIS size.bytes
+$)
+
+//**************** END OF NEW STUFF *********************************
+
+/**
+         G.SC.POINTER - TURN ON/OFF MOUSE POINTER
+         ----------------------------------------
+
+         Accesses the mouse driver routine to turn the pointer on
+         or off.
+
+         INPUTS:
+
+         flag for on/off (true turns it on)
+
+         OUTPUTS:
+
+         old pointer status (true=on)
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine returns the old value of mouse status,
+         which should be preserved by the calling routine.
+         e.g.
+         $( initial.state := g.sc.pointer ( m.sd.off )
+            .
+            . // code to output graphics / text
+            .
+            g.sc.pointer ( initial.state )
+         $)
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.SC.POINTER [ flag ]
+         ------------
+         IF flag = true  & pointer is off
+            THEN turn on pointer
+         IF flag = false & pointer is on
+            THEN turn off pointer
+         RETURN ( oldstatus )
+**/
+AND G.sc.pointer ( flag ) = VALOF
+$( LET ptr.on  = "**POINTER 1*c" // strings
+   LET ptr.off = "**POINTER 2*c" // to pass to OSCLI
+
+   TEST ( flag & (~s.ptrstatus) )
+      THEN $( CALLBYTE( m.sd.oscli, ?, (ptr.on<<1)+1 ) // turn on pointer
+              s.ptrstatus := m.sd.on   // update status
+              RESULTIS m.sd.off        // pointer oldstate = OFF
+           $)
+      ELSE IF ( ~flag & s.ptrstatus )
+         THEN $( CALLBYTE( m.sd.oscli, ?, (ptr.off<<1)+1 ) // turn off pointer
+                 s.ptrstatus := m.sd.off  // update status
+                 RESULTIS m.sd.on         // pointer oldstate = ON
+              $)
+   RESULTIS s.ptrstatus // no change
+$)
+
+/**
+         G.SC.MOVEPTR - MOVE MOUSE POINTER
+         ---------------------------------
+
+         Used by cursor key accelerator to move the mouse
+         pointer around.
+
+         INPUTS:
+
+         X position, Y position in BBC graphics coordinates
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Do not move the mouse pointer around without updating
+         G.Xpoint and G.Ypoint, otherwise they will get out of
+         step.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.moveptr [ X pos, Y pos ]
+         ------------
+
+         Convert X pos and Y pos to strings
+         Send *TSET command to operating system
+**/
+
+AND G.sc.moveptr(x,y) BE
+$( LET command = "**TSET 0000, 0000*C"
+   LET num.str = VEC 3
+
+   G.vh.word.asc( x, num.str )
+   FOR i = 2 TO 5 DO command%(i+5):= num.str%i
+
+   G.vh.word.asc( y, num.str )
+   FOR i = 2 TO 5 DO command%(i+11):= num.str%i
+
+   // move the pointer
+   CALLBYTE( m.sd.oscli, ?, (command<<1)+1 )
+$)
+
+.
+

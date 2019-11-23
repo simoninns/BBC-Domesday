@@ -1,0 +1,118 @@
+//  AES SOURCE  4.87
+
+section "She"
+
+/**
+         SI.SHE - State Inits for Help
+         -----------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.stinit
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         23.4.87     1     DNH      Created from stiniXX
+**/
+
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.H.sthd"
+get ":4.ARC.H.stphd"
+get ":4.ARC.H.sihd"
+
+
+
+let g.st.she () be
+$(
+
+// overlay name for Help states
+
+    G.stover!m.st.help      := m.whelp
+    G.stover!m.st.helptxt   := m.whelp
+    G.stover!m.st.areal     := m.whelp
+    G.stover!m.st.demo      := m.whelp
+    G.stover!m.st.book      := m.whelp
+    G.stover!m.st.config    := m.whelp
+
+// menu words for Help states
+
+    G.stmenu!((m.st.help-1)*m.st.barlen+1)        := (136 << 7) | m.wExit
+     G.stmenu!((m.st.help-1)*m.st.barlen+2)       := (272 << 7) | m.wHelpText
+      G.stmenu!((m.st.help-1)*m.st.barlen+3)      := (152 << 7) | m.wDemo
+       G.stmenu!((m.st.help-1)*m.st.barlen+4)     := (264 << 7) | m.wBookmark
+        G.stmenu!((m.st.help-1)*m.st.barlen+5)    := (204 << 7) | m.wSystem
+         G.stmenu!((m.st.help-1)*m.st.barlen+6)   := (172 << 7) | m.wAreal
+    G.stmenu!((m.st.helptxt-1)*m.st.barlen+1)     := m.st.boxw  | m.wExit
+     G.stmenu!((m.st.helptxt-1)*m.st.barlen+2)    := m.st.boxw  | m.wMain
+      G.stmenu!((m.st.helptxt-1)*m.st.barlen+3)   := m.st.boxw  | m.wFirst
+       G.stmenu!((m.st.helptxt-1)*m.st.barlen+4)  := m.st.boxw  | m.wEnd
+        G.stmenu!((m.st.helptxt-1)*m.st.barlen+5) := m.st.boxw  | m.wPrint
+         G.stmenu!((m.st.helptxt-1)*m.st.barlen+6):= m.st.boxw  | m.wWrite
+    G.stmenu!((m.st.demo-1)*m.st.barlen+1)        := (160 << 7) | m.wExit
+     G.stmenu!((m.st.demo-1)*m.st.barlen+2)       := (164 << 7) | m.wMain
+      G.stmenu!((m.st.demo-1)*m.st.barlen+3)      := (252 << 7) | m.wContinue
+       G.stmenu!((m.st.demo-1)*m.st.barlen+4)     := (208 << 7) | m.wBlank
+        G.stmenu!((m.st.demo-1)*m.st.barlen+5)    := (208 << 7) | m.wBlank
+         G.stmenu!((m.st.demo-1)*m.st.barlen+6)   := (208 << 7) | m.wBlank
+    G.stmenu!((m.st.areal-1)*m.st.barlen+1)       := (160 << 7) | m.wExit
+     G.stmenu!((m.st.areal-1)*m.st.barlen+2)      := (164 << 7) | m.wMain
+      G.stmenu!((m.st.areal-1)*m.st.barlen+3)     := (160 << 7) | m.wDemo
+       G.stmenu!((m.st.areal-1)*m.st.barlen+4)    := (272 << 7) | m.wBookmark
+        G.stmenu!((m.st.areal-1)*m.st.barlen+5)   := (212 << 7) | m.wSystem
+         G.stmenu!((m.st.areal-1)*m.st.barlen+6)  := (232 << 7) | m.wBlank
+    G.stmenu!((m.st.book-1)*m.st.barlen+1)        := (160 << 7) | m.wExit
+     G.stmenu!((m.st.book-1)*m.st.barlen+2)       := (168 << 7) | m.wMain
+      G.stmenu!((m.st.book-1)*m.st.barlen+3)      := (280 << 7) | m.wSetmark
+       G.stmenu!((m.st.book-1)*m.st.barlen+4)     := (164 << 7) | m.wSave
+        G.stmenu!((m.st.book-1)*m.st.barlen+5)    := (256 << 7) | m.wGomark
+         G.stmenu!((m.st.book-1)*m.st.barlen+6)   := (172 << 7) | m.wLoad
+    G.stmenu!((m.st.config-1)*m.st.barlen+1)      := m.st.boxw  | m.wExit
+     G.stmenu!((m.st.config-1)*m.st.barlen+2)     := m.st.boxw  | m.wMain
+      G.stmenu!((m.st.config-1)*m.st.barlen+3)    := m.st.boxw  | m.wBlank
+       G.stmenu!((m.st.config-1)*m.st.barlen+4)   := m.st.boxw  | m.wBlank
+        G.stmenu!((m.st.config-1)*m.st.barlen+5)  := m.st.boxw  | m.wBlank
+         G.stmenu!((m.st.config-1)*m.st.barlen+6) := m.st.boxw  | m.wBlank
+
+// Help transitions
+
+    G.sttran!((m.st.help-1)*m.st.barlen+1)       := m.st.help
+     G.sttran!((m.st.help-1)*m.st.barlen+2)      := m.st.helptxt
+      G.sttran!((m.st.help-1)*m.st.barlen+3)     := m.st.demo
+       G.sttran!((m.st.help-1)*m.st.barlen+4)    := m.st.book
+        G.sttran!((m.st.help-1)*m.st.barlen+5)   := m.st.config
+         G.sttran!((m.st.help-1)*m.st.barlen+6)  := m.st.areal
+    G.sttran!((m.st.helptxt-1)*m.st.barlen+1)      := m.st.helptxt
+     G.sttran!((m.st.helptxt-1)*m.st.barlen+2)     := m.st.help
+      G.sttran!((m.st.helptxt-1)*m.st.barlen+3)    := m.st.helptxt
+       G.sttran!((m.st.helptxt-1)*m.st.barlen+4)   := m.st.helptxt
+        G.sttran!((m.st.helptxt-1)*m.st.barlen+5)  := m.st.helptxt
+         G.sttran!((m.st.helptxt-1)*m.st.barlen+6) := m.st.helptxt
+    G.sttran!((m.st.areal-1)*m.st.barlen+1)      := m.st.areal
+     G.sttran!((m.st.areal-1)*m.st.barlen+2)     := m.st.help
+      G.sttran!((m.st.areal-1)*m.st.barlen+3)    := m.st.demo
+       G.sttran!((m.st.areal-1)*m.st.barlen+4)   := m.st.book
+        G.sttran!((m.st.areal-1)*m.st.barlen+5)  := m.st.config
+         G.sttran!((m.st.areal-1)*m.st.barlen+6) := m.st.areal
+    G.sttran!((m.st.demo-1)*m.st.barlen+1)       := m.st.demo
+     G.sttran!((m.st.demo-1)*m.st.barlen+2)      := m.st.help
+      G.sttran!((m.st.demo-1)*m.st.barlen+3)     := m.st.demo
+       G.sttran!((m.st.demo-1)*m.st.barlen+4)    := m.st.demo
+        G.sttran!((m.st.demo-1)*m.st.barlen+5)   := m.st.demo
+         G.sttran!((m.st.demo-1)*m.st.barlen+6)  := m.st.demo
+    G.sttran!((m.st.book-1)*m.st.barlen+1)       := m.st.book
+     G.sttran!((m.st.book-1)*m.st.barlen+2)      := m.st.help
+      G.sttran!((m.st.book-1)*m.st.barlen+3)     := m.st.book
+       G.sttran!((m.st.book-1)*m.st.barlen+4)    := m.st.book
+        G.sttran!((m.st.book-1)*m.st.barlen+5)   := m.st.help
+         G.sttran!((m.st.book-1)*m.st.barlen+6)  := m.st.book
+    G.sttran!((m.st.config-1)*m.st.barlen+1)      := m.st.config
+     G.sttran!((m.st.config-1)*m.st.barlen+2)     := m.st.help
+      G.sttran!((m.st.config-1)*m.st.barlen+3)    := m.st.config
+       G.sttran!((m.st.config-1)*m.st.barlen+4)   := m.st.config
+        G.sttran!((m.st.config-1)*m.st.barlen+5)  := m.st.config
+         G.sttran!((m.st.config-1)*m.st.barlen+6) := m.st.config
+$)
+.

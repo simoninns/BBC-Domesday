@@ -1,0 +1,293 @@
+//  PUK SOURCE  6.87
+
+/**
+         NATIONAL CHART - GETDATA
+         ------------------------
+
+         This module contains G.nc.getdata and its utility routines
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.chart
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+       16.10.86   9        SRY         No 'Loading' if looping
+        4.11.86   10       SRY         Move 'Loading' message
+*******************************************************************************
+        3.06.87   11       SRY         Changes for UNI
+       13.08.87   12       SRY         Modified for DataMerge
+       21.09.87   13       SRY         6-byte add
+**/
+
+SECTION "Chart7"
+
+
+GET "libhdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.gH.glNChd"
+GET ":4.ARC.gH.glNMhd"
+GET ":4.ARC.H.sdhd"
+GET ":4.ARC.H.nchd"
+
+STATIC
+$( byteinset=? vstart=? vcats=? dataset=? size=? signed=?
+   vals=? cv=? sv=? skip=? offset=? datasize=?
+   last.var=? cc=? small.length=? sb=? cb=? lsize=?
+   read.cell=? BtoB=? r.err=? r.cats=?
+$)
+
+/**
+         G.NC.GETDATA - GET CHART DATA FROM DISC
+         ---------------------------------------
+
+         Read dataset and convert to bar values
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         Returns number of bars or segments in the chart
+
+         GLOBALS MODIFIED:
+
+         contents of G.nc.area/m.nc.values
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Assume data file open
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.nc.GetData []
+         ---------------
+
+         See Retrieval software
+**/
+
+let g.nc.getdata() be
+$( unless g.nc.area!m.nc.cc = m.nc.looping g.sc.mess("Loading Data")
+   env(1)
+
+   unless r.err
+   $( get.first()
+      unless r.err
+      $( $( read.cell()
+            if count.on() break
+            inc.pointer()
+         $) repeat
+      $)
+   $)
+
+   env(2)
+$)
+
+
+//////////////////////////////////////////////////////////////////////////////
+//                                                                          //
+//             Utility routines used by GetData only                        //
+//                                                                          //
+//////////////////////////////////////////////////////////////////////////////
+
+
+and count.on() = valof  // count to next included item
+   for i = 2 to last.var // do a multi-var ripple count of categories
+      test vcats%i = r.cats%i // last category
+      then $( if i = last.var resultis true  // complete
+              vcats%i := 1
+              while omitted(i)
+              $( move.on(i)
+                 vcats%i := vcats%i + 1
+              $)
+           $)
+      else $( let cycle = false
+              vcats%i := vcats%i + 1
+              while omitted(i)
+              $( test vcats%i = r.cats%i
+                 then $( if i = last.var resultis true // complete
+                         cycle := true
+                         vcats%i := 1
+                      $)
+                 else vcats%i := vcats%i + 1
+                 move.on(i)
+              $)
+              unless cycle resultis false // count finished - more data
+           $)
+
+
+and get.first() be // get first included item
+   for i = 2 to last.var while omitted(i) // get first valid cell
+      $( move.on(i)
+         vcats%i := vcats%i + 1
+      $)
+
+and env(start.finish) be
+   test start.finish = 1
+   then $( let vp = g.nc.area + m.nc.gcats
+           let size.needed = vec 1
+           datasize := (g.nc.area%m.nc.dsize) & #X7F
+           vcats := getvec(24/bytesperword) // Current category for variable (bytes)
+           vstart := getvec(24) // Points to groupcats record for var (words)
+           skip := getvec(24)  // Number of records to skip if this var is omitted
+           offset := getvec(1) // Byte offset in data file of chunk of dataset
+           small.length := getvec(1) // Length of file Data1 minus a maxvec size - in bytes
+           cb := getvec(24/bytesperword) // Index of bar no for curvar
+           sb := getvec(24/bytesperword) // Index of bar no for secvar
+           lsize := getvec(1) // Size in 2 words
+           r.cats := getvec(24/bytesperword)
+           cc := G.nc.area!m.nc.cc
+           last.var := G.nc.area%m.nc.vars
+           cv := G.nc.area!m.nc.cv
+           sv := G.nc.area!m.nc.sv
+           r.err := false
+           BtoB := cc = m.nc.BtoB
+           unless 2 <= cv <= last.var goto error
+           for i = 1 to last.var
+           $( r.cats%i := g.nc.cats(i)
+              vcats%i := 1 // Current category
+              vp := vp + m.nc.gpwords
+              vstart!i := vp
+           $)
+           skip!2 := 1 // No. of records to skip for each var if omitted
+           FOR i = 2 TO last.var - 1 skip!(i + 1) := (skip!i)*(G.nc.area%i)
+           vals := G.nc.area + m.nc.values - 3 // so start at 1 not 0
+           FOR i = 3 TO m.nc.values.words + 2 vals!i := 0
+           bar.index()
+           signed := ((G.nc.area%m.nc.dsize) & #X80) ~= 0
+           read.cell := VALOF SWITCHON datasize INTO
+           $( CASE 1: RESULTIS read.cell1
+              CASE 2: RESULTIS read.cell2
+              CASE 4: RESULTIS read.cell4
+           $)
+           size := (maxvec() >> 1) << 1 // Words - even
+           G.ut.trap("NC",3,TRUE,2,size,2,0)
+           dataset := getvec(size)
+           size := size * bytesperword // Now bytes
+           G.ut.set32(size & #XFFFF, size >> 16, lsize)
+           // Work out size needed and truncate buffer if nec.
+           G.ut.set32(datasize, 0, size.needed)
+           for i = 1 to G.nc.area%m.nc.vars
+           $( let t = vec 1
+              G.ut.set32(G.nc.cats(i), 0, t)
+              G.ut.mul32(t, size.needed)
+           $)
+           if G.ut.cmp32(size.needed, lsize) = m.lt
+              G.ut.mov32(size.needed, lsize)
+           G.ut.mov32(G.nc.area+m.nc.dataptr, offset)
+           G.dh.length(G.nc.area!m.nc.handle, small.length)
+           G.ut.sub32(lsize, small.length)
+           G.ut.sub32(lsize, offset)
+           read.data()
+           return
+
+        error:
+           g.sc.ermess("Invalid variable: %n", cv)
+           r.err := true
+        $)
+   else $( let fp = vec FP.LEN
+           freevec(dataset)
+           freevec(vcats)
+           freevec(vstart)
+           freevec(skip)
+           freevec(offset)
+           freevec(small.length)
+           freevec(cb)
+           freevec(sb)
+           freevec(lsize)
+           freevec(r.cats)
+           FFLOAT(0, g.nc.area+m.nc.sampsiz)
+           for i = 1 to g.nc.area!m.nc.nb
+           $( g.nm.int48.to.fp(vals+i*3, fp)
+              FPLUS(fp, g.nc.area+m.nc.sampsiz, g.nc.area+m.nc.sampsiz)
+           $)
+           g.sc.clear(m.sd.message)
+        $)
+
+and bar.index() be // set up bar no = cb%(cat of cv) [+ sb%(cat of sv)]
+$( let num, inc, gno, v, d, n = 1, 1, 0, cv, cb, (vstart!cv)!m.nc.incg
+   if btob
+   $( num := 0
+      inc := (vstart!sv)!m.nc.incg
+      n := n * inc
+   $)
+   g.nc.area!m.nc.nb := n
+   for k = 1 to 2
+   $( let cats = g.nc.cats(v)
+      let vp = vstart!v
+      for i = 1 to vp!m.nc.incg
+      $( let cat = ?
+         $( cat := 0 // get next group
+            gno := gno + 1
+            cat := cat + 1 repeatuntil (cat = cats) | (((vp!cat) & #xff) = gno)
+         $) repeatuntil ((vp!cat) & #x8000) = 0
+         for cat = 1 to cats if ((vp!cat) & #xff) = gno d%cat := num
+         num := num + inc
+      $)
+      unless btob break
+      inc, num, gno, v, d := 1, 1, 0, sv, sb
+   $)
+$)
+
+and inc.pointer() be  // increment pointer, reading data if necessary
+$( byteinset := byteinset + datasize
+   if byteinset >= size read.data()
+$)
+
+and read.data() be
+$( g.ut.add32(lsize, offset)
+   if g.ut.cmp32(offset, small.length) = m.gt
+   $( g.ut.add32(lsize, small.length)
+      g.ut.sub32(offset, small.length)
+      G.ut.mov32(small.length, lsize)
+   $)
+   if g.ud.read(G.nc.area!m.nc.handle, offset, dataset, !lsize) = 0
+   $( r.err := true
+      g.nc.area!m.nc.l.s := m.nc.error
+   $)
+   byteinset := 0
+$)
+
+and read.cell1() be  // get value of 1-byte cell
+$( let barno = cb%(vcats%cv)
+   LET value = vec 1
+   let v = dataset%byteinset
+   if btob barno := barno + sb%(vcats%sv)
+   test (not signed) | (v < #x80)
+   then G.ut.set32(v, 0, value)
+   else G.ut.set32(v | #Xff00, #Xffff, value)
+   g.nm.mpadd(value, vals + barno*3) // vals points 3 before start
+$)
+
+and read.cell2() be  // get value of 2-byte cell
+$( let barno = cb%(vcats%cv)
+   let value = vec 1
+   let v = signed -> G.ut.unpack16.signed(dataset, byteinset),
+                     G.ut.unpack16(dataset, byteinset)
+   IF BtoB barno := barno + sb%(vcats%sv)
+   !value := v
+   value!1 := ((v >= 0) | (~signed)) -> 0, #XFFFF
+   g.nm.mpadd(value, vals + barno*3) // vals points 3 before start
+$)
+
+and read.cell4() be  // get value of 4-byte cell
+$( let barno = cb%(vcats%cv)
+   let t = vec 1
+   if btob barno := barno + sb%(vcats%sv)
+   g.ut.unpack32(dataset, byteinset, t)
+   g.nm.mpadd(t, vals + barno*3) // vals points 3 before start
+$)
+
+and omitted(v) = valof // is this variable & its current category relevant ?
+$( let vp = vstart!v
+   let curgroup = !vp
+   let lgroup = vp!(vcats%v)
+   unless (lgroup & #x8000) = 0 resultis true
+   resultis (curgroup ~= m.nc.all) & (v ~= cv) &
+            (lgroup ~= curgroup) & (not btob | (v ~= sv))
+$)
+
+and move.on(var) be for j = 1 to skip!var inc.pointer()
+.

@@ -1,0 +1,247 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.SORTRANK - LIBRARY ROUTINE TO RANK A SET OF VALUES
+         -----------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmCORR
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         31.07.86 1        D.R.Freed   Initial version
+         10/10/86  2       DRF      Optimised by removing
+                                          preliminary checks
+                                          before calling 32-bit
+                                          compare routine
+         *****************************
+
+        21.7.87     3     DNH      CHANGES FOR UNI
+         1.9.87     4     SRY      UNI bug in sort
+
+         g.nm.sort.rank
+**/
+
+section "nmsortrank"
+
+$<RCP
+needs "FLCONV"
+$>RCP
+
+get "libhdr"
+$<RCP
+get "fphdr"
+$>RCP
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.uthd"
+get ":4.ARC.H.nmhd"
+
+
+/*
+      g.nm.sort.rank
+
+         calculates a set of rankings in the frame buffer
+         for the data in the areal vector; the final rankings
+         occupy the first half of the frame buffer and the
+         method relies on there being twice this amount of space
+         in the frame buffer, since the second half is used as
+         workspace - if there are too many data values to do this, then
+         the slower rank routine must be used
+
+         the rankings are all shifted left by 1 bit so that ties
+         can be correctly handled (they always give a value ending
+         in .0 or .5)
+
+         also calculates a tie correction factor which is returned
+         in a FP vector
+*/
+
+let g.nm.sort.rank (num.data.values, fp.tie.factor) be
+$(
+   let positions.ptr, pass, index, vec.i = ?, ?, ?, ?
+   and current.value = vec 1
+
+   // mark frame buffer dirty, since we are about to use it as workspace
+   g.nm.init.frame.buffer ()
+
+   // the method used is to sort the areal vector, sorting an array of
+   // the original positions in the vector simultaneously; one pass
+   // through the sorted data and positions then produces the rankings.
+   // the second half of the frame buffer is used to record the original
+   // positions of the data values, and the first half of the frame buffer
+   // will have the final rankings
+
+   // initialise the position vector in preparation for the sort
+   positions.ptr := g.nm.frame + num.data.values  // start of 2nd half
+
+   // initialise tie correction factor
+   FFLOAT (0, fp.tie.factor)
+
+   for i = 0 to (num.data.values - 1) do
+      positions.ptr!i := i
+
+   sort (g.nm.areal, positions.ptr, num.data.values)
+
+   index := 0
+   vec.i := 0
+   pass := 1
+
+   $(repeat
+      // find the number of ties; all equal values are now adjacent
+
+      let num.ties, vec.n, rank = ?, ?, ?
+
+      g.ut.mov32 (g.nm.areal + vec.i, current.value)
+      num.ties := 1
+      vec.n := (index + num.ties) * m.nm.max.data.size
+
+      while (index + num.ties < num.data.values) &
+            ( g.ut.cmp32 (current.value, g.nm.areal + vec.n) = m.eq ) do
+         $(
+            num.ties := num.ties + 1
+            vec.n := vec.n + m.nm.max.data.size
+         $)
+
+      // assign rank(s); if there is only one value the rank is the
+      // current pass, but if there are several ties we must
+      // calculate the average rank and assign it to all occurrences;
+      // we must also adjust the tie correction factor
+
+      // Note that the ranking is always shifted once left to enable
+      // averages to be accurately stored
+
+      // it can be proven that the average rank of n ties on pass p =
+      //    p + (n - 1) / 2
+      // since we shift the rank left (multiply by 2), we get
+      //    2p + n - 1
+
+      test num.ties = 1 then
+         rank := pass << 1
+      else
+         $(
+            rank := (pass << 1) + num.ties - 1
+            g.nm.calc.tie.correction (num.ties, fp.tie.factor)
+         $)
+
+      for i = index to (index + num.ties - 1) do
+         g.nm.frame!(positions.ptr!i) := rank
+
+      index := index + num.ties
+      vec.i := vec.i + num.ties * m.nm.max.data.size
+      pass := pass + num.ties
+
+   $)repeat    repeatuntil (pass > num.data.values)
+
+$)
+
+
+/*
+      sort
+
+         Sorts an array of 32-bit values based on 'first' into
+         ascending order using Treesort 3;
+         A corresponding array of 16-bit positions
+         pointed to by 'pos.base' is rearranged in parallel with the
+         values.  This latter must have been set up before Sort is
+         called.
+
+         NB: this routine is closely based on NN.B.TREESORT (S.Young);
+             any modifications should be checked in both files
+*/
+
+and sort (first, pos.base, number) BE
+$(
+
+   let child   = ?
+   let current = ?
+   let next    = ?
+   let topofarray = first + ((number-1) * m.nm.max.data.size)
+   let second = first + m.nm.max.data.size
+   let f1 = first - m.nm.max.data.size
+   let halfway = f1 + (number/2)*m.nm.max.data.size
+
+   let savedroot = vec 1
+   let t = vec 1
+
+   let saved.pos = ?
+   let index = ?
+
+// Two big FOR loops follow with the same algorithm (siftup) in the
+// inner WHILE loop of both, to save procedure calls.
+
+   FOR s = halfway TO second BY -m.nm.max.data.size DO
+   $(
+      current := s
+      g.ut.mov32 (current, savedroot)
+
+      child := f1 + 2 * (current - f1)
+      next := child + m.nm.max.data.size
+      index := (current - first)/m.nm.max.data.size
+      saved.pos := pos.base!index
+
+      $(
+         UNLESS child = topofarray
+            UNLESS (g.ut.cmp32 (child, next) = m.gt)
+               child := next
+
+         UNLESS (g.ut.cmp32 (child, savedroot) = m.gt) break
+
+         g.ut.mov32 (child, current)
+         pos.base!index := pos.base!((child - first)/m.nm.max.data.size)
+         current := child
+
+         index := (current - first)/m.nm.max.data.size
+         child := f1 + 2 * (current - f1)
+         next := child + m.nm.max.data.size
+
+      $) REPEATUNTIL child > topofarray
+
+      g.ut.mov32(savedroot, current)
+
+      pos.base!index := saved.pos
+   $)
+
+   FOR temptop = topofarray TO second BY -m.nm.max.data.size DO
+   $(
+      current := first
+      g.ut.mov32 (current, savedroot)
+      child := second
+      next := child + m.nm.max.data.size
+      index := (current - first)/m.nm.max.data.size
+      saved.pos := pos.base!index
+
+      $( UNLESS child = temptop
+            UNLESS g.ut.cmp32 (child, next) = m.gt
+               child := next
+
+         UNLESS g.ut.cmp32 (child, savedroot) = m.gt break
+
+         g.ut.mov32 (child, current)
+         pos.base!index := pos.base!((child - first)/m.nm.max.data.size)
+         current := child
+
+         index := (current - first)/m.nm.max.data.size
+         child := f1 + 2 * (current - f1)
+         next := child + m.nm.max.data.size
+
+      $) REPEATUNTIL child > temptop
+
+      g.ut.mov32 (savedroot, current)
+      pos.base!index := saved.pos
+
+      // Swap elements 1 & temptop
+
+      g.ut.mov32 (first, t)
+      g.ut.mov32 (temptop, first)
+      g.ut.mov32 (t, temptop)
+
+      !t := !pos.base
+      index := (temptop - first)/m.nm.max.data.size
+      !pos.base := pos.base!index
+      pos.base!index := !t
+   $)
+$)
+.

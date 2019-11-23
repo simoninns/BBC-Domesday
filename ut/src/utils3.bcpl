@@ -1,0 +1,210 @@
+//  $MSC
+//  AES SOURCE  4.87
+
+/**
+         UT.UTILS3 - UTILITIES PACKAGE PART 3
+         ------------------------------------
+
+         This file contains:
+
+         g.ut.set32 - set a 32 bit value
+         g.ut.get32 - split a 32 bit value
+         g.ut.mov32 - move a 32 bit number
+         g.ut.movebytes - move bytes in memory
+         g.ut.align - align a string for output
+         g.ut.unpack16 - unpack unsigned value
+         g.ut.unpack16.signed - unpack siged value
+         g.ut.unpack32 - unpack 32 bit value
+         g.ut.diag - diagnostic status check
+
+         This version is for a machine of the following type:
+
+         * 32 bit, 4 bytes per word, BCPL
+         * low-byte-first in a word
+
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         kernel
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         29.4.87     1     DNH      CREATED FOR UNI
+         12.5.87     2     PAC      Adopted for AES  
+          9.6.87     3     PAC      Bug fixes as per
+                                    UNI version
+**/
+
+SECTION "utils3"
+
+GET "LIBHDR"
+GET ":4.ARC.GH.glhd"
+
+
+/**
+         function g.ut.set32 (low.16, high.16, a32.adr)
+         ----------------------------------------------
+
+         g.ut.set32 returns the address at which it has put the
+         two 16 bit values 'high.16' and 'low.16'.
+
+         a32.adr := g.ut.set32 (low.16, high.16, a32.adr)
+**/
+
+let g.ut.set32 (low.16, high.16, a32.adr) = valof
+$(
+   !a32.adr := (low.16 & #xFFFF) | high.16<<16
+   resultis a32.adr
+$)
+
+/**
+         function g.ut.get32 (a32.adr, high.16.adr)
+         ------------------------------------------
+
+         g.ut.get32 returns the low 16 bits of the 32 bit value
+         at a32.adr, putting the high 16 bits into the location at
+         high.16.adr.  No sign- extension is performed on either
+         of the returned values.
+
+         low.16 := g.ut.get32 (a32.adr, high.16.adr)
+**/
+
+let g.ut.get32 (a32.adr, high.16.adr) = valof
+$(
+   !high.16.adr := (!a32.adr)>>16
+   resultis (a32.adr!0 & #xFFFF)
+$)
+
+
+/**
+         procedure g.ut.mov32 (s32.adr, d32.adr)
+         ---------------------------------------
+
+         g.ut.mov32 moves the 32 bit value from s32.adr to
+         d32.adr.
+
+         g.ut.mov32 (s32.adr, d32.adr)
+**/
+
+let g.ut.mov32 (s32, d32) be !d32 := !s32
+
+/**
+         procedure g.ut.movebytes (s, soff, d, doff, bytes)
+         --------------------------------------------------
+
+         g.ut.movebytes moves 'bytes' bytes from
+         's % soff' to 'd % doff'.
+
+         This may be used explicitly to word align something by
+         specifying the destination offset 'doff' as 0.
+
+         g.ut.movebytes (s, soff, d, doff, bytes)
+**/
+
+let g.ut.movebytes (s, soff, d, doff, bytes) be
+$(
+   let j = 0
+   while j < bytes do
+   $(
+      d%(doff+j) := s%(soff+j)
+      j := j+1
+   $)
+$)
+
+
+/**
+         function g.ut.align (s.adr, offset, buf.adr, bytes)
+         ---------------------------------------------------
+
+         returns an address to the string starting at 's.adr %
+         offset' such that the string is aligned to the current
+         word size.  The alignment is done by copying the string,
+         of length 'bytes', to the buffer address 'buf.adr'.  If
+         the string is already word aligned the function returns
+         's.adr' + offset/bytesperword'.
+
+         This function is specifically intended for sending
+         strings directly to output routines directly from data
+         structures as a 'one-off'.
+
+         a.adr := g.ut.align (s.adr, offset, buf.adr, bytes)
+**/
+
+let g.ut.align (s, soff, d, bytes) = valof
+$(
+   if (soff REM BYTESPERWORD) = 0  RESULTIS s + soff/BYTESPERWORD
+   g.ut.movebytes (s, soff, d, 0, bytes)
+   RESULTIS d
+$)
+
+/**
+         function g.ut.unpack16 (adr, offset)
+         ------------------------------------
+
+         g.ut.unpack16 returns the 16 bit value of the low-byte-
+         first two bytes starting at 'adr % offset'.  If
+         'bytesperword' is 4 the top two bytes of 'value' will
+         always be #X0000.
+
+         value := g.ut.unpack16 (adr, offset)
+**/
+
+let g.ut.unpack16 (s, soff)  = ( s%(soff+1) << 8 ) | s%soff
+
+/**
+         function g.ut.unpack16.signed (adr, offset)
+         -------------------------------------------
+
+         g.ut.unpack16.signed returns the 16 bit signed value of
+         the low-byte-first two bytes starting at 'adr % offset'.
+         If 'bytesperword' is 4 then bits 16 to 31 are sign-
+         extended by setting them to the value of bit 15.
+
+         value := g.ut.unpack16.signed (adr, offset)
+**/
+
+let g.ut.unpack16.signed (s, soff) = valof
+$(
+   let v = g.ut.unpack16( s, soff )
+
+   if (v & #x8000) ~= 0 then v := v | #xFFFF8000   
+
+   resultis v
+$)
+         
+/**
+         function g.ut.unpack32 (s.adr, s.offset, d.adr)
+         ----------------------------------------------
+
+         g.ut.unpack32 returns the address 'd.adr' into which it
+         has unpacked the 4 byte (32 bit) value starting at
+         's.adr % s.offset'.  'd.adr' must point to 4 bytes of
+         memory, preferably declared as 'vec 1'.
+
+         value := g.ut.unpack32 (s.adr, s.offset, d.adr)
+**/
+
+let g.ut.unpack32 (s, soff, d) = valof
+$(                        // prob. faster than using g.ut.movebytes
+   d%0, d%1, d%2, d%3 := s%soff, s%(soff+1), s%(soff+2), s%(soff+3)
+   RESULTIS d
+$)
+
+/**
+         function g.ut.diag ()
+         ---------------------
+
+         g.ut.diag returns true if diagnostics are allowed, false
+         otherwise.  It checks the status of byte 34 of the CMOS
+         RAM; if this is non-zero diagnostics are permitted.
+
+         messages.allowed := g.ut.diag ()
+**/
+let g.ut.diag () = VALOF
+$(
+   OSByte( #xA1, 34, 0)
+   
+   Resultis (Result2 ~= 0)
+$)
+.

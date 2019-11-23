@@ -1,0 +1,4 @@
+*| link AES Nat PHOTO
+*dir C
+Join natinit natpho1 natpho2 natpho3 -to $.ARC.l.photo
+*back

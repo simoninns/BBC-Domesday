@@ -1,0 +1,18 @@
+*spool :4.tmp.compCOM
+*| compCOM AES Version 1 20.5.87
+*| community disc overlays
+*|     
+*time
+*dir $.ARC.CO
+c comp
+*dir ^.CM
+c comp
+*dir ^.CP
+c comp
+*dir ^.CT
+c comp
+*dir ^.CF
+c comp
+*dir $.ARC.utils
+*time
+*spool    

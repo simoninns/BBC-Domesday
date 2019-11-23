@@ -1,0 +1,34 @@
+*search adm.item.wrec.size -in adfs::0.nf.bjo.b
+
+Search for \M.ITEM.WREC.SIZE\
+   - only in directory adfs::0.jo.b
+
+Searching adfs::0.jo.b, 1 files
+
+File hit0
+  92:     $(  let s = g.jo.p+c.t+(i-1)*m.item.wrec.size  // SA 15.01.88
+  129:             let o = (q-mbase)/m.hit.itemsize*m.item.wrec.size  // SA 15.01.88
+  211:                 G.jo.selectitem(g.jo.p+c.t+n*m.item.wrec.size)
+
+Finished: matches = 3, lines = 239
+
+Finished after 1.97 sec.
+*
+*
+*serararch m.item.rec.size -in adfs::0.jo.b
+
+Search for \M.ITEM.REC.SIZE\
+   - only in directory adfs::0.jo.b
+
+Searching adfs::0.jo.b, 1 files
+
+File hit0
+  131:             g.ut.set32(m.item.rec.size,0,v)  // SA 15.01.88
+  133:             unless g.dh.read(p!c.names,w,t+o,m.item.rec.size) = 
+  134:                    m.item.rec.size  // SA 15.01.88
+
+Finished: matches = 3, lines = 239
+
+Finished after 1.43 sec.
+*spool
+

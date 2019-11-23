@@ -1,0 +1,86 @@
+// /**
+//       NFHDR - National Find header file
+//       ---------------------------------
+//
+//       ............
+//
+//       REVISION HISTORY:
+//
+//       DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+//       22.8.86  1        M.F.Porter  Initial version
+//       22.6.86  2        MFP         m.msize value corrected
+//*****************************************************
+//       9.6.87   3        MFP         CHANGES FOR UNI
+// **/
+
+manifest $(
+
+// offsets down p :
+// The first 20 words are alloted as follows:
+
+c.state = 0     // internal state of FIND
+c.index = 1     // locator of index file
+c.names = 2     // locator of names file
+c.termcount = 3 // number of terms in the query
+c.m = 4         // ofsset in 'best match' vector giving 1st line of current
+                // screenful
+c.mend = 5      // limit of 'best match' vector
+c.h = 11        // worst match from last query invocation
+c.max = 14      // maximum possible D-value
+c.box = 16      // currently selected screen box
+c.titles = 17   // number of titles in current pagefull
+c.bestmatch = 18// sum of all weights in the query
+c.bestcount = 19// number of 'perfect matches'
+c.maxterm = 20  // slot in p+p.z of term with highest frequency
+c.ws = 24       // workspace pointer
+c.wssize = 25   // workspace size
+c.titlenumber = 26  // number of title on 1st line of current screenful
+
+p.oldq = 30     // the query from the previous invocation of find (121 bytes)
+p.z = p.oldq+121/bytesperword+1
+                // the query control vector. Contains 10 word slots for a
+                // maximum of 30 query terms
+p.m = p.z+300   // The 101 'best matches' from the last running of the query
+                // - 404 (= m.msize) words required
+m.msize = 404
+p.t = p.m+m.msize// The 20 titles for the current page of inspection. 756 bytes
+p.q = p.t+756/bytesperword
+                // current query (121 bytes)
+p.s = p.q+121/bytesperword+1
+                // room for 16 statics
+
+m.nf.datasize = 752+996/bytesperword  //  - size of the above
+
+m.nf.max.wsize = 16000 // upper limit to workspace size
+
+m.nf.indexlevels = 4
+
+o.wsize = 2  // size of an O-entry in the index (words)
+m.biisize = 4 // size in bytes of an index item
+m.iisize = m.biisize/BYTESPERWORD // ditto in words
+m.misize = 4 // size in words of a 'match' item
+m.titlespp = 20 // (max) number of titles per page
+m.tbsize = 36 // full size of a title (bytes)
+m.tsize = m.tbsize/BYTESPERWORD
+
+// offsets in the query control vector:
+c.f = 0    // frequency
+c.w = 1    // weight
+c.hl1 = 2  // highlighting base point in query string
+c.hl2 = 3  // highlighting top point in query string
+c.p = 4    // pointer to base of buffer space
+c.sp = 5   // size of buffer space
+c.i = 6    // number of items read
+c.c = 7    // 'cursor' along the buffer space
+c.o = 8    // offset into index file (2 words)
+
+m.h = 10   // size of the above
+
+m.vsize = 210/bytesperword+50  /* workspace size used by extractwords.()
+and lookupwords.(). Overgenerous by about 20 words. */
+
+
+$)
+
+
+

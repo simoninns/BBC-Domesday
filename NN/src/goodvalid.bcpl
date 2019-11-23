@@ -1,0 +1,574 @@
+//  AES SOURCE  6.87
+
+/**
+         NM.VALID - LIBRARY ROUTINES FOR VALIDATING SUB-DATASETS
+         -------------------------------------------------------
+
+         NAME OF FILES CONTAINING RUNNABLE CODE:
+
+         cnmDISP
+         cnmDETL
+         cnmWIND
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         03/06/86  1       D.R.Freed   Initial version
+         ********************************
+         2.7.87     3      DNH      CHANGES FOR UNI   
+         13.7.87    4      DNH      put in resultis true
+         14.7.87    5      DNH      fix au.useable (bug 106)
+
+         g.nm.au.usable
+         g.nm.build.areal.units
+         g.nm.res.usable
+         g.nm.calc.mapping
+**/
+
+section "nmvalid"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glNMhd"
+get ":4.ARC.H.grhd"
+get ":4.ARC.H.nmhd"
+
+manifest
+$(
+   m.gazetteer.record.length = 48 // in bytes
+
+   // byte offsets into Gazetteer record
+
+   m.au.code       = 0
+   m.au.name       = 2
+   m.num.areas     = 34
+   m.names.offset  = 36
+   m.GB.bound.addr = 40
+   m.NI.bound.addr = 44
+$)
+
+
+/**
+         G.NM.AU.USABLE - DETERMINE IF AREAL UNIT IS USABLE
+         --------------------------------------------------
+
+         Determines if the areal unit described by the given
+         code is usable and retrieves its attributes. Reads
+         the Gazetteer if the necessary record is not supplied,
+         trapping fatally if the code is not found.
+
+         INPUTS:
+
+         Pointer to Gazetteer record for areal unit
+         Areal unit code
+         Pointer to areal unit name
+         Pointer to number of areas
+         Pointer to names offset
+         Pointer to boundary address
+
+         OUTPUTS:
+
+         Returns TRUE if areal unit is usable, FALSE otherwise
+
+         If TRUE puts results at pointers by decoding record
+
+         GLOBALS MODIFIED: none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.au.usable [record.ptr, code, -> name, -> num.areas,
+         --------------       -> names.offset,
+                              -> boundary.address]
+                                             RETURNS boolean
+
+         IF record.ptr = 0 THEN
+            get the Gazetteer record
+            TRAP fatally if code not found in Gazetteer
+         ENDIF
+         get the appropriate boundary address for the AOI
+         IF number of areas <= maximum AND
+               rasterised boundary is available for
+                                    area of interest THEN
+            set up results
+            RETURN TRUE
+         ELSE
+            RETURN FALSE
+         ENDIF
+**/
+
+let g.nm.au.usable (gaz.rec.ptr, code, name.ptr, num.areas.ptr,
+                                       names.ptr, boundary.ptr) = valof
+$(
+   let   gaz.rec  =  vec m.gazetteer.record.length / BYTESPERWORD
+   and   boundary32 = vec 1
+   and   zero32 = vec 1     
+   and   num.areas = ?
+
+   g.ut.set32 (0, 0, zero32)
+
+   test gaz.rec.ptr = 0 then
+      get.gaz.record (code, gaz.rec)
+   else
+      gaz.rec := gaz.rec.ptr
+
+   switchon (g.nm.s!m.nm.grid.system) into
+
+      $(
+         CASE m.grid.is.GB:
+            g.ut.unpack32 (gaz.rec, m.GB.bound.addr, boundary32)
+         ENDCASE
+
+         CASE m.grid.is.NI:
+            g.ut.unpack32 (gaz.rec, m.NI.bound.addr, boundary32)
+         ENDCASE
+
+         DEFAULT:
+            g.ut.set32 (0, 0, boundary32)
+      $)
+
+   // ensure that number of areas can be handled and that
+   // there is a rasterised boundary dataset for the area of interest
+                     
+   num.areas := g.ut.unpack16 (gaz.rec, m.num.areas)
+
+   test ( (num.areas <= m.nm.max.num.areas) &
+          ( g.ut.cmp32 (boundary32, zero32) ~= m.eq ) ) then
+      $(
+         g.ut.movebytes (gaz.rec, m.au.name, name.ptr, 0, 32)
+         !num.areas.ptr := num.areas
+         g.ut.unpack32 (gaz.rec, m.names.offset, names.ptr)
+         g.ut.mov32 (boundary32, boundary.ptr)
+         resultis TRUE
+      $)
+
+   else
+
+      resultis FALSE
+$)
+
+
+/**
+         G.NM.BUILD.AREAL.UNITS - BUILD AREAL UNITS INDEX
+         ------------------------------------------------
+
+         Builds a combined index for the areal units referenced
+         by the current areal-mappable dataset in the frame
+         buffer.
+
+         Traps fatally if
+            a) there is not enough heap space, for use
+               as a temporary buffer, to build the index or
+            b) the frame buffer is not large enough to hold
+               all the Gazetteer records
+         These are not expected to happen, since there is
+         bags of contingency.
+
+         INPUTS: none
+
+         OUTPUTS:
+
+         Returns the offset, within each Gazetteer record, of
+                 of the control information
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Makes the frame buffer dirty
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.build.areal.units [] RETURNS offset
+         ----------------------
+
+         determine maximum heap vector size
+         IF too small to build index THEN
+            TRAP fatally
+         ENDIF
+         grab temporary vector
+         read areal unit codes from sub-dataset index into
+            vector
+         make frame buffer dirty
+         read all areal unit undex records from the first section
+            of the Gazetteer into the frame buffer
+         TRAP fatally if they won't all fit
+         set address for control vector, half way down frame buffer
+         REPEAT
+             IF Gazetteer record is referenced in
+                                 sub-dataset index THEN
+                enter record offset into control list of 
+                     used records                                          
+                increment control 
+             ENDIF
+             next record
+         UNTIL all sub-dataset index entries have been done OR
+                  have reached end of Gazetteer records    
+         mark end of list with '-1'
+         free temporary vector
+         RETURN base of control information vector
+**/
+
+and g.nm.build.areal.units () = valof
+$(
+   let num.codes, code.vec, frame.ptr, end.found = ?, ?, ?, ?
+   and control.base, control = ?, ?
+   and done = ?
+   and byte.offset = vec 1
+   and const32 = vec 1
+
+   // determine number of codes in index and load frame into buffer
+   num.codes := g.nm.num.of.subsets (m.nm.value.data.type)
+
+   // trap if maximum available vector < number of au codes
+   g.ut.trap ("NM", 4, TRUE, 2, MAXVEC (), num.codes, 0)
+
+   code.vec := GETVEC (num.codes)
+
+   // load areal unit codes from sub-dataset index
+   frame.ptr := g.nm.s!m.nm.sub.dataset.index.offset
+
+   // unpack the boundary codes
+   for i = 0 to num.codes - 1 do
+      $(
+         g.nm.inc.frame.ptr (@frame.ptr)
+         code.vec!i := g.ut.unpack16 (g.nm.frame, frame.ptr)
+         g.nm.inc.frame.ptr (@frame.ptr)
+         g.nm.inc.frame.ptr (@frame.ptr)
+      $)
+
+   // now read the Gazetteer records - reading is tuned for 30 areal units;
+   // there are presently 25 areal unit types plus the terminator record
+   // (end marker) and this is unlikely to change.
+
+   g.nm.init.frame.buffer ()
+   g.ut.set32 (0, 0, byte.offset)
+   g.ut.set32 (m.gazetteer.record.length * 30, 0, const32)
+   frame.ptr := 0
+
+   $(
+      // ensure that we won't run out of frame buffer
+      g.ut.trap ("NM", 5, TRUE, 1,
+                  frame.ptr + (30 * m.gazetteer.record.length),
+                  0, m.nm.frame.size * BYTESPERWORD )
+
+      g.dh.read (g.nm.s!m.nm.gaz.handle, byte.offset, g.nm.frame,
+                                       30 * m.gazetteer.record.length)
+      for i = 1 to 30 do
+         $(
+            end.found := end.marker (g.nm.frame, frame.ptr)
+            if end.found then
+               BREAK
+            frame.ptr := frame.ptr + m.gazetteer.record.length
+         $)
+
+      g.ut.add32 (const32, byte.offset)     // + 30 recordsworth
+   $)
+      repeatuntil end.found      // (should never need to repeat)
+  
+   // set base of control vector to half way up the frame buffer
+   control.base := g.nm.frame + m.nm.frame.size / 2
+   control := control.base
+   frame.ptr := 0        // start of gazetteer records in frame buffer
+
+   $(      // (repeat)
+      let found = FALSE
+      let code =  g.ut.unpack16 (g.nm.frame, frame.ptr + m.au.code)
+
+      done := TRUE
+      for i = 0 to num.codes - 1 do
+         $(
+            if code.vec!i = code then
+               $(
+                  found := TRUE
+                  code.vec!i := -1
+               $)
+
+            if code.vec!i ~= -1 then
+               done := FALSE
+         $)
+
+      if found then
+         $(
+            // point to this record from the control vector
+            !control := frame.ptr
+            control := control + 1
+         $)
+
+       frame.ptr := frame.ptr + m.gazetteer.record.length
+     $)
+        repeatuntil done | end.marker (g.nm.frame, frame.ptr)
+
+   // mark the end of the chain
+   !control := -1
+
+   FREEVEC (code.vec)
+
+   resultis control.base
+$)
+
+
+/*
+      get.gaz.record
+
+         loads the gazetteer record for the specified areal unit
+         into the given buffer
+
+         grabs a chunk of free heap space to use as a temporary buffer
+
+         if the areal unit code is not found in the Gazetteer then
+         the routine traps fatally
+*/
+
+and get.gaz.record (au, buffer.ptr) be
+$(
+   let buffer = ?
+   and buffer.size = ?        // size of the above, in bytes
+   and b.offset  =  ?         // byte offset to start of record in buffer
+   and f.offset32     = vec 1 // byte offset into gazetteer file, 32 bit
+   and const32        = vec 1 // gaz record size, 32 bit
+   and standby.buffer = vec m.gazetteer.record.length / BYTESPERWORD
+
+   // buffer size is tuned for 30 records - there are presently 25 areal
+   // unit types plus the terminator record (end marker) and this is
+   // unlikely to change. NOTE that the code will still work if the number
+   // of types changes, but all the records won't fit into one buffer
+
+   buffer.size :=
+      g.nm.min (m.gazetteer.record.length * 30, MAXVEC () * BYTESPERWORD)
+
+   test buffer.size < m.gazetteer.record.length then
+      $(
+         // use standby buffer of 1 record
+         buffer := standby.buffer
+         buffer.size := m.gazetteer.record.length
+      $)
+   else
+      $( // get buffer from heap
+         // round to a whole number of Gazetteer records
+         buffer.size :=
+            (buffer.size / m.gazetteer.record.length) *
+                                          m.gazetteer.record.length
+         buffer := GETVEC (buffer.size / BYTESPERWORD)  // in words
+      $)
+
+   b.offset := 0
+   g.ut.set32 (0, 0, f.offset32)
+   g.ut.set32 (m.gazetteer.record.length, 0, const32)
+
+   g.dh.read (g.nm.s!m.nm.gaz.handle, f.offset32, buffer, buffer.size)
+
+   while g.ut.unpack16 (buffer, b.offset + m.au.code) ~= au do
+      $(
+         // check for end of Gazetteer records
+         if end.marker (buffer, b.offset) then
+            g.ut.trap ("NM", 3, TRUE, 1, 1, 0, 0)
+
+         b.offset := b.offset + m.gazetteer.record.length
+         g.ut.add32 (const32, f.offset32)
+
+         if b.offset >= buffer.size then
+            $(
+               g.dh.read (g.nm.s!m.nm.gaz.handle, f.offset32,
+                                                      buffer, buffer.size)
+               b.offset := 0
+            $)
+      $)
+
+   // copy the record found
+   g.ut.movebytes (buffer, b.offset, buffer.ptr, 0, m.gazetteer.record.length)
+
+   // if the buffer came from the heap then free it
+   if buffer ~= standby.buffer then
+      FREEVEC (buffer)
+$)
+
+
+/*
+      end.marker
+
+         checks the Gazetteer record at the given address to see
+         if it is the terminator record containing the end marker
+*/
+
+and end.marker (buf.ptr, rec.offset) =
+   buf.ptr % (rec.offset + m.au.name)     = 1   &
+   buf.ptr % (rec.offset + m.au.name + 1) = 255
+
+
+/**
+         G.NM.RES.USABLE - DETERMINE IF RESOLUTION IS USABLE
+         ---------------------------------------------------
+
+         Determines if the given resolution is usable.
+
+         INPUTS:
+
+         Resolution
+
+         OUTPUTS:
+
+         Returns TRUE if resolution is usable, FALSE otherwise
+
+         GLOBALS MODIFIED: none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.res.usable [res] RETURNS boolean
+         ---------------
+
+         IF resolution is available for this dataset THEN
+            IF usable for current area of interest THEN
+               RETURN TRUE
+            ELSE
+               RETURN FALSE
+            ENDIF
+         ELSE
+            RETURN FALSE
+         ENDIF
+**/
+
+and g.nm.res.usable (res) = valof
+$(
+   let result, xpix, ypix  =  ?, ?, ?
+
+   g.nm.look.for.subset (m.nm.raster.data.type, res, @result)
+
+   if result < 0 then
+      resultis FALSE
+
+   resultis g.nm.calc.mapping (res, @xpix, @ypix)
+$)
+
+
+/**
+         G.NM.CALC.MAPPING - CALCULATE DISPLAY MAPPING
+         ---------------------------------------------
+
+         Calculates the number of pixels per grid square in the x
+         and y directions for the current area of interest and
+         specified resolution.
+
+         Indicates if the mapping is not possible at the
+         specified resolution.
+
+         INPUTS:
+
+         Resolution (size of grid square in km)
+         Address of x pixels per grid square result
+         Address of y pixels per grid square result
+
+         OUTPUTS:
+
+         Returns TRUE if the mapping is possible and returns
+                      results,
+                 FALSE in the following cases:
+
+                  i) if there is an underlay map for the area and
+                        pixels per grid square is not a whole
+                        number
+                  ii) if pixels per grid square is less than 1
+
+         NOTE that when there is an underlay map, the
+         width:height aspect ratio must not be altered. However,
+         when there is no underlay map, the area of interest may
+         be magnified to fill the available display area.
+
+
+         GLOBALS MODIFIED: none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.calc.mapping [resolution, ->xpix.pgs, ->ypix.pgs]
+         -----------------       RETURNS boolean
+
+         calculate width of area of interest in km
+         calculate height of area of interest in km
+
+         IF either width or height < 1 THEN
+               RETURN FALSE
+         ENDIF
+
+         IF height aspect / height km is less than
+                 width aspect / width in km THEN
+
+            calculate mapping based on height and check for
+                     validity
+
+         ELSE
+            calculate mapping based on width and check for
+                     validity
+         ENDIF
+
+         IF x mapping valid THEN
+            y mapping = x mapping * 2, since pixels are twice
+                                       as wide as they are high
+            RETURN TRUE
+         ENDIF
+**/
+
+and g.nm.calc.mapping (resolution, xpix.pgs.ptr, ypix.pgs.ptr) = valof
+$(
+   let km.width, km.height, x.map =  ?, ?, ?
+   and w.by.h  =  vec 1
+   and h.by.w  =  vec 1
+   and aspect  =  vec 1
+
+   km.width := g.nm.s!m.nm.km.top.e - g.nm.s!m.nm.km.low.e
+   if  (km.width <= 0) then
+      resultis FALSE
+
+   km.height := g.nm.s!m.nm.km.top.n - g.nm.s!m.nm.km.low.n
+   if (km.height <= 0) then
+      resultis FALSE
+
+   g.ut.set32 (km.width,  0, w.by.h)
+   g.ut.set32 (km.height, 0, h.by.w)
+
+   g.ut.set32 (m.nm.height.aspect, 0, aspect)
+   if (NOT g.ut.mul32 (aspect, w.by.h)) then
+      resultis FALSE    // area too wide to display
+
+   g.ut.set32 (m.nm.width.aspect, 0, aspect)
+   if (NOT g.ut.mul32 (aspect, h.by.w) ) then
+      resultis FALSE    // area too high to display
+
+   test (g.ut.cmp32 (w.by.h, h.by.w) = m.lt) then
+
+      $(
+         test (g.context!m.underlay.frame.no ~= 0) &
+               (((m.nm.pixel.height * resolution) REM (km.height * 2)) ~= 0)
+
+            then  resultis FALSE
+
+         else
+            $(
+               x.map := ( (m.nm.pixel.height * resolution) / km.height) / 2
+               if x.map < 1 then
+                  resultis FALSE
+            $)
+      $)
+
+   else
+
+      $(
+         test (g.context!m.underlay.frame.no ~= 0) &
+               (((m.nm.pixel.width * resolution) REM km.width) ~= 0)
+
+            then  resultis FALSE
+
+         else
+            $(
+               x.map := (m.nm.pixel.width * resolution) / km.width
+               if x.map < 1 then
+                  resultis FALSE
+            $)
+      $)
+
+   !xpix.pgs.ptr := x.map
+   !ypix.pgs.ptr := x.map * 2 
+
+   RESULTIS TRUE
+$)
+
+.

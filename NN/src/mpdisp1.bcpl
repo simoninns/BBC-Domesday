@@ -1,0 +1,183 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.MPDISP1 - LIBRARY MULTIPLE PRECISION NUMBER DISPLAY
+         ------------------------------------------------------
+
+         NAME OF FILES CONTAINING RUNNABLE CODE:
+
+         cnmRANK
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+       15.09.87   1        SRY      Based on mpdisp for RANK
+
+         g.nm.mpdisp
+**/
+
+section "nmmpdisp1"
+
+$<RCP
+needs "FLAR1"
+needs "FLAR2"
+needs "FLIO2"
+needs "FLCONV"
+$>RCP
+
+get "libhdr"
+$<RCP
+get "fphdr"
+$>RCP
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.nmhd"
+
+
+/**
+         G.NM.MPDISP - DISPLAY MULTIPLE PRECISION NUMBER
+         -----------------------------------------------
+
+         Displays a multiple-precision 48 bit integer at the
+         current graphics position using floating point
+         procedures.
+
+         If the number is between 0.001 and 99,999,999 it is
+         displayed in normal decimal format; otherwise it
+         is displayed in scientific notation with up to
+         12 significant digits.
+
+         The field width used is the smallest that will deliver
+         the significant digits and is returned as the value of
+         the routine.
+
+         If a floating point error is detected, an error message
+         is displayed instead of the number and 0 is returned.
+
+         INPUTS:
+
+         Pointer to 3-word integer
+         1-word normalising factor
+
+         OUTPUTS:
+
+         RETURNS field width used
+
+         GLOBALS MODIFIED:
+
+         FPEXCEP
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Machine specific because of g.nm.fpwrite
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.mpdisp [num.ptr, norm.factor] RETURNS field width
+         -----------
+
+         convert integer to floating point
+         determine number of significant digits
+         evaluate normalising factor and apply it to fp number
+         IF fp result is bad THEN
+            display error message
+            RETURN zero
+         ENDIF
+         determine field width and output format
+         display fp number
+         RETURN field width used
+**/
+
+
+let g.nm.mpdisp (num.ptr, norm.factor) = valof
+$(
+   let   zero, magnitude =  ?, ?
+   and   field.width, sig.digits = ?, ?
+   and   fp.num = vec FP.LEN
+   and   fp.result = vec FP.LEN
+   and   fp.mult = vec FP.LEN
+   and   fp.ten = vec FP.LEN
+   and   fp.temp = vec FP.LEN
+   and   neg, scientific   =  ?, ?
+
+   FPEXCEP := 0
+
+   zero := TRUE
+   for j = 0 to 5 do             // 48 bits = 6 bytes
+      if num.ptr%j ~= 0 then
+      $(
+         zero := FALSE
+         BREAK
+      $)
+
+   // convert 48 bit integer to floating-point for easy scaling and output
+   g.nm.int48.to.fp (num.ptr, fp.result)
+
+   // determine number of significant digits
+   FFLOAT (1, fp.mult)
+   FFLOAT (10, fp.ten)
+   MOVE (fp.result, fp.num, FP.LEN)
+
+   sig.digits := zero -> 1, 0
+   while (FCOMP (FABS (fp.num, fp.temp), fp.mult) ~= -1) do
+      $(
+         FDIV (fp.num, fp.ten, fp.num)
+         sig.digits := sig.digits + 1
+      $)
+
+   // evaluate normalising factor; this is 10 to power of factor
+   neg := norm.factor < 0
+   if neg then
+      norm.factor :=  - norm.factor
+
+   for i = 1 to norm.factor do
+      FMULT (fp.mult, fp.ten, fp.mult)
+
+   if neg then
+      $(
+         FDIV (FFLOAT (1, fp.temp), fp.mult, fp.mult)
+         norm.factor := - norm.factor
+      $)
+
+   // apply normalising factor to get external representation
+   FMULT (fp.result, fp.mult, fp.result)
+
+   if (FPEXCEP ~= 0) then
+      $(
+         g.sc.ermess ("Bad result")
+         resultis 0
+      $)
+
+   // determine output format - is number between 0.001 and 99,999,999 ?
+   magnitude := (norm.factor >= 0) ->
+                     sig.digits + norm.factor, - norm.factor
+
+   scientific := TRUE
+
+   test (sig.digits + norm.factor) <= -3 then
+      field.width := sig.digits + 2  // force scientific notation
+   else test ((norm.factor >=0) & (magnitude >=  9)) then
+      field.width := sig.digits  // force scientific notation
+   else
+      $(
+         scientific := FALSE
+         field.width :=
+            (sig.digits + norm.factor) <= 0 ->
+                  magnitude + 3, // allow for minus sign and "0."
+                  (norm.factor < 0) ->
+                     sig.digits + 2,  // allow for minus sign and "."
+                     magnitude + 1 // just allow for minus sign
+      $)
+
+   // display result - pointer already off
+   WRITESG(fp.result, field.width, sig.digits)
+
+   // calculate actual field width if scientific notation forced
+   if scientific then
+      field.width := sig.digits + 7 // allow for sign, ".0", "E", sign, "ee"
+
+   resultis field.width
+$)
+
+.
+

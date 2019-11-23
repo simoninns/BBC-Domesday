@@ -1,0 +1,7 @@
+*| COMPSYS AES Version 1 20.5.87
+*|
+*| compile everything
+*dir $.ARC.utils
+c compker
+c compcom
+c compnat

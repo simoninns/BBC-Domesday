@@ -1,0 +1,323 @@
+//  PUK SOURCE  6.87
+
+
+/**
+         NM.DETAIL2 - DETAIL OPERATION FOR MAPPABLE DATA
+         -----------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmDETL
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         16.10.86 1        D.R.Freed   Initial version
+                                       created from DETAIL
+                                       after optimising
+         ******************************
+         16.7.87     2     DNH      CHANGES FOR UNI
+                                    areal control vec changes
+         3.8.87      3     DNH      fix trap 88
+         21.08.87 4        SRY         Added toggle video mode
+
+         g.nm.to.areas
+         g.nm.areas
+**/
+
+section "nmdetail2"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.sihd"
+get ":4.ARC.H.kdhd"
+get ":4.ARC.H.nmhd"
+
+manifest
+$(
+   // offsets into general purpose static area
+   m.new.au          = m.nm.gen.purp + 1
+   m.control.base    = m.nm.gen.purp + 2
+   m.control         = m.nm.gen.purp + 3
+   m.au.name         = m.nm.gen.purp + 4    // 31 characters + length byte
+   m.help.visited    = m.nm.gen.purp + 20
+   m.underlay.frame  = m.nm.gen.purp + 21
+$)
+
+
+/**
+         G.NM.TO.AREAS - TRANSITION TO AREAS SUB-OPERATION
+         -------------------------------------------------
+
+         Initialisation routine for transition to areas
+         operation, from anywhere
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         g.nm.s
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.to.areas []
+         -------------
+
+         turn off mouse pointer
+         suppress Replot on menu bar
+         initialise help visited static
+         build combined index and set up control info offset
+         initialise new.au, control statics
+         write name of current areal unit to message area in red
+         reposition videodisc for underlay map
+         restore mouse pointer
+**/
+
+let g.nm.to.areas () be
+$( let entry.state = g.sc.pointer (m.sd.off)
+
+   g.nm.s!(m.nm.menu + m.box3) := m.sd.act   // ensure Resolution is on
+   g.nm.s!(m.nm.menu + m.box4) := m.wblank
+   g.sc.menu (g.nm.s + m.nm.menu)
+
+   g.nm.s!m.help.visited := FALSE
+
+   // build combined index in frame buffer
+   g.nm.s!m.control.base := g.nm.build.areal.units ()
+
+   g.nm.s!m.control := g.nm.s!m.control.base
+
+   g.nm.s!m.new.au := g.context!m.areal.unit
+
+   // find position of gaz record for current au in index by following the
+   // control list until the au code matches.  Trap if not found ( <0 ).
+
+   while au.from.control () ~= g.nm.s!m.new.au do
+   $(
+      g.nm.s!m.control := g.nm.s!m.control + 1
+      g.ut.trap ("NM", 88, TRUE, 2, !(g.nm.s!m.control), 0, 0)
+   $)
+
+   check.au ()
+   display.au.name (TRUE)
+
+   g.nm.position.videodisc ()
+   g.sc.pointer (entry.state)
+$)
+
+
+/*
+
+      display.au.name
+
+         displays the name of the new areal unit in the
+         message area using the appropriate colour
+
+         if the wipe flag is true, the message area is
+         filled with background colour before writing
+         the name
+*/
+
+and display.au.name (wipe.flag) be
+$(
+   if wipe.flag then
+      g.sc.mess ("") // fill message area with background colour
+
+   test g.nm.s!m.new.au = g.context!m.areal.unit then
+      g.sc.selcol (m.nm.flash.white)   // red whilst in Detail
+   else
+      g.sc.selcol (m.sd.blue)
+
+   g.sc.movea (m.sd.message, m.sd.mesXtex, m.sd.mesYtex)
+   g.sc.oprop (g.nm.s + m.au.name)
+$)
+
+
+/*
+      check.au
+
+         checks if the new areal unit is usable
+
+         uses m.control to locate it, and sets up
+         m.au.name in g.nm.s
+*/
+
+and check.au () = valof
+$(
+   let   dummy = vec 2
+
+   // check if usable and get name of areal unit from appropriate
+   // record in combined index
+
+   resultis
+      g.nm.au.usable (g.nm.frame + !(g.nm.s!m.control)/BYTESPERWORD,
+                        au.from.control (),
+                          g.nm.s + m.au.name, dummy, dummy, dummy)
+$)
+
+
+
+/*
+      au.from.control
+
+         Returns the areal unit from the gazetteer record
+         indicated by the control static
+*/
+
+and au.from.control () =
+    g.ut.unpack16 ( g.nm.frame, !(g.nm.s!m.control) )
+
+
+/**
+         G.NM.AREAS - ACTION ROUTINE FOR AREAS
+         -------------------------------------
+
+         Action routine for areas sub-operation.
+
+         INPUTS: none
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         g.key
+         g.context!m.areal.unit
+         g.nm.s
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.areas []
+         ----------
+
+         IF help has been visited THEN
+            clear help visited flag
+            rebuild combined index in frame buffer
+            reposition videodisc for underlay map
+         ENDIF
+
+         IF key = TAB AND pointer is in message area THEN
+            REPEAT
+               increment control for next record in chain
+                                       (with wraparound)
+            UNTIL au that is referenced and usable is found
+            IF new au is different to previous au THEN
+               turn off mouse pointer
+               write name of new au in message area
+               put or suppress Replot on menu bar, if necessary
+               restore mouse pointer
+               set key to no action
+            ENDIF
+         ENDIF
+
+         IF key = Replot function key THEN
+            current au = new.au
+            make au name in message area red (for current)
+            set up new names offset and boundary address
+            suppress Replot from menu bar
+            prevent videodisc positioning at end of replot
+            replot variable
+            rebuild combined index in frame buffer
+            reposition videodisc for underlay map
+         ENDIF
+
+         IF key = Help THEN
+            set help visited flag to TRUE
+            prevent videodisc positioning on return from Help
+         ENDIF
+**/
+
+and g.nm.areas () be
+$(
+   let num.areas, entry.state, box4 = ?, ?, ?
+   and next.au = ?
+
+      // ( I don't believe this is transparent ++++  DNH  16.7.87)
+   if g.nm.s!m.help.visited then
+
+      $(
+         g.nm.s!m.help.visited := FALSE
+         g.nm.s!m.control.base := g.nm.build.areal.units ()
+
+         g.nm.s!m.control := g.nm.s!m.control.base
+         g.context!m.underlay.frame.no := g.nm.s!m.underlay.frame
+         g.nm.position.videodisc ()
+      $)
+
+   switchon g.key into
+   $( case m.kd.tab:
+         test g.screen = m.sd.message
+         then $( $( // find next record in list; wraparound back to beginning
+                    // if reach the end
+
+                    g.nm.s!m.control := g.nm.s!m.control + 1
+                    if !(g.nm.s!m.control) = -1 do
+                    g.nm.s!m.control := g.nm.s!m.control.base
+                 $) repeatuntil check.au ()
+
+                 next.au := au.from.control ()
+                 if next.au ~= g.nm.s!m.new.au then
+                 $( entry.state := g.sc.pointer (m.sd.off)
+                    g.nm.s!m.new.au := next.au
+                    display.au.name (TRUE)
+                    box4 := (g.nm.s!m.new.au = g.context!m.areal.unit) ->
+                            m.wblank, m.sd.act
+                    if box4 ~= g.nm.s!(m.nm.menu + m.box4) then
+                    $( g.nm.s!(m.nm.menu + m.box4) := box4
+                       g.sc.menu (g.nm.s + m.nm.menu)
+                    $)
+
+                    g.sc.pointer (entry.state)
+                    g.key := m.kd.noact
+                 $)
+              $)
+         else g.nm.toggle.video.mode()
+      endcase
+
+      case m.kd.fkey4:
+         g.context!m.areal.unit := g.nm.s!m.new.au
+         display.au.name (FALSE)   // make the name red
+
+         // set up new names offset and boundary address
+         g.nm.au.usable (g.nm.frame + !(g.nm.s!m.control)/BYTESPERWORD,
+                         au.from.control (),
+                         g.nm.s + m.au.name, @num.areas,
+                         g.nm.s + m.nm.names.offset,
+                         g.nm.s + m.nm.boundary.address)
+
+         g.nm.s!(m.nm.menu + m.box4) := m.wblank
+         g.sc.menu (g.nm.s + m.nm.menu)
+
+         // initialise display processor, replot variable and
+         // reload this child overlay
+         // NOTE that it is not necessary to pick a new default
+         //      resolution since the rasterised boundaries are
+         //      assumed to be available at all resolutions;
+         // first, prevent videodisc positioning at end of replot to
+         // avoid flash before combined index is rebuilt
+
+
+         g.nm.s!m.underlay.frame := g.context!m.underlay.frame.no
+         g.context!m.underlay.frame.no := 0
+         g.nm.replot (FALSE, TRUE, FALSE)
+
+         g.nm.s!m.control.base := g.nm.build.areal.units ()
+
+         g.nm.s!m.control := g.nm.s!m.control.base
+
+
+         // now position the videodisc
+         g.context!m.underlay.frame.no := g.nm.s!m.underlay.frame
+         g.nm.position.videodisc ()
+      endcase
+
+      case m.kd.fkey1:
+         g.nm.s!m.help.visited := TRUE
+         g.nm.s!m.underlay.frame := g.context!m.underlay.frame.no
+         g.context!m.underlay.frame.no := 0
+      endcase
+   $)
+$)
+.

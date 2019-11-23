@@ -1,0 +1,14 @@
+*| compile the state table init
+co stinit
+co rcom
+co rexam
+co rgalwal
+co rhe
+co rnm
+co rsear
+co scom
+co sexam
+co sgalwal
+co she
+co snm
+co ssear

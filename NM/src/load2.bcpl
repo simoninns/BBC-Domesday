@@ -1,0 +1,440 @@
+//  PUK SOURCE  6.87
+
+/**
+         NM.LOAD2 - SUB-DATASET LOAD FOR NATIONAL MAPPABLE
+         -------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         MAPPROC
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         13.01.86 1        D.R.Freed   Initial version
+         26.02.86 2        DRF      Manifest names in g.nm.s
+                                       expanded to indicate
+                                       national scope
+                                    More rigorous checking
+                                       and more defaults
+                                       calls to g.nm.bad.data
+                                    Extra params in call to
+                                       g.nm.find.subset
+                                    Selects index to load
+                                    nm.load.areal.data made
+                                       global & uses statics
+                                    national min, max & ave
+                                       now discarded
+         ********************************
+         19.6.87     3     DNH   CHANGES FOR UNI
+
+         16.7.87     4     DNH   fix load.areal.data
+         11.08.87    5     SRY   Modified for DataMerge
+
+         g.nm.load.raster.sub.dataset
+         g.nm.load.areal.sub.dataset
+         g.nm.load.areal.data
+
+         g.nm.get.double.word    \___  moved to NM.LOAD1
+         g.nm.skip.fields        /
+**/
+
+section "nmload2"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.nmhd"
+get ":4.ARC.H.nmldhd"
+
+
+/**
+         G.NM.LOAD.RASTER.SUB.DATASET - LOAD RASTER SUB-DATASET
+         ------------------------------------------------------
+
+         Loads header information and the coarse index for the
+         specified rasterized sub-dataset, ie. grid square data
+         or areal boundary data for areal unit.
+
+         If the current dataset type is grid mappable data then
+         all the header information is loaded into globals, but
+         if it is areal boundary data then most of the header
+         information is discarded, since the areal mappable
+         dataset contains it.
+
+         INPUTS:
+
+         Position in sub-dataset index
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         g.nm.s!m.nm.data.record.number
+         g.nm.s!m.nm.data.offset
+         g.nm.s!m.nm.gr.start.e
+         g.nm.s!m.nm.gr.start.n
+         g.nm.s!m.nm.gr.end.e
+         g.nm.s!m.nm.gr.end.n
+         g.nm.s!m.nm.primary.norm.factor
+         g.nm.s!m.nm.secondary.norm.factor
+         g.nm.s!m.nm.data.size
+         g.nm.class.upb
+         g.nm.class.colour
+         g.nm.s!m.nm.equal.classes
+         g.nm.s!m.nm.nested.means.classes
+         g.nm.s!m.nm.quantile.classes
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.load.raster.sub.dataset [position]
+         ----------------------------
+
+         locate and load sub-dataset specified by position
+         extract relevant header information, depending on data
+                                                         type
+         load coarse index for sub-dataset
+**/
+
+let g.nm.load.raster.sub.dataset (position) = valof
+$(
+   let ptr, num.default.ranges, keep = ?, ?, ?
+
+   unless nm.locate.subset (m.nm.raster.data.type, position,
+                     @ptr, g.nm.s + m.nm.data.record.number,
+                     g.nm.s + m.nm.data.offset) resultis false
+
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   g.nm.s!m.nm.gr.start.e := g.ut.unpack16 (g.nm.frame, ptr)
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   g.nm.s!m.nm.gr.start.n := g.ut.unpack16 (g.nm.frame, ptr)
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   g.nm.s!m.nm.gr.end.e   := g.ut.unpack16 (g.nm.frame, ptr)
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   g.nm.s!m.nm.gr.end.n := g.ut.unpack16 (g.nm.frame, ptr)
+
+   test (g.nm.s!m.nm.dataset.type = m.nm.grid.mappable.data) then
+      $(
+         unless g.nm.inc.frame.ptr (@ptr) resultis false
+         g.nm.s!m.nm.primary.norm.factor :=
+                                    g.ut.unpack16.signed (g.nm.frame, ptr)
+         unless g.nm.inc.frame.ptr (@ptr) resultis false
+         g.nm.s!m.nm.secondary.norm.factor :=
+                                    g.ut.unpack16.signed (g.nm.frame, ptr)
+         keep := m.nm.keep
+      $)
+   else
+      $(
+         unless g.nm.skip.fields (4, @ptr) resultis false
+         keep := m.nm.discard
+      $)
+
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   g.nm.s!m.nm.data.size := g.nm.frame%ptr
+   nm.check.size (g.nm.s + m.nm.data.size)
+
+   num.default.ranges := g.nm.frame%(ptr + 1)
+
+   nm.load.default.ranges (num.default.ranges, keep, @ptr)
+   nm.load.summary.data (keep, @ptr)
+
+   resultis g.nm.load.coarse.index ()
+$)
+
+
+/**
+         G.NM.LOAD.AREAL.SUB.DATASET - LOAD AREAL.SUB-DATASET
+         ----------------------------------------------------
+
+         Loads header information and areal values for the
+         specified areal mappable sub-dataset.
+
+         INPUTS:
+
+         Position in sub-dataset index
+
+         OUTPUTS: none
+
+         GLOBALS MODIFIED:
+
+         g.nm.s!m.nm.primary.norm.factor
+         g.nm.s!m.nm.secondary.norm.factor
+         g.nm.s!m.nm.areal.data.record
+         g.nm.s!m.nm.areal.data.offset
+         g.nm.s!m.nm.nat.num.areas
+         g.nm.s!m.nm.data.size
+         g.nm.s!m.nm.areal.data.size
+         g.nm.class.upb
+         g.nm.class.colour
+         g.nm.s!m.nm.equal.classes
+         g.nm.s!m.nm.nested.means.classes
+         g.nm.s!m.nm.quantile.classes
+         g.nm.areal
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.load.areal.sub.dataset [position]
+         ---------------------------
+
+         locate and load sub-dataset specified by position
+         extract relevant header information
+         load areal unit values into areal vector
+**/
+
+and g.nm.load.areal.sub.dataset (position) = valof
+$(
+   let ptr, num.default.ranges = ?, ?
+
+   unless nm.locate.subset (m.nm.value.data.type, position, @ptr,
+                     g.nm.s + m.nm.areal.data.record,
+                     g.nm.s + m.nm.areal.data.offset) resultis false
+
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   g.nm.s!m.nm.primary.norm.factor := g.ut.unpack16.signed (g.nm.frame, ptr)
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   g.nm.s!m.nm.secondary.norm.factor := g.ut.unpack16.signed (g.nm.frame, ptr)
+
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   g.nm.s!m.nm.nat.num.areas := g.ut.unpack16 (g.nm.frame, ptr)
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   unless g.nm.inc.frame.ptr (@ptr) resultis false
+   g.nm.s!m.nm.data.size := g.nm.frame%ptr
+   nm.check.size (g.nm.s + m.nm.data.size)
+   g.nm.s!m.nm.areal.data.size := g.nm.s!m.nm.data.size
+
+   num.default.ranges := g.nm.frame%(ptr + 1)
+
+   nm.load.default.ranges (num.default.ranges, m.nm.keep, @ptr)
+   nm.load.summary.data (m.nm.keep, @ptr)
+
+   resultis g.nm.load.areal.data ()
+$)
+
+
+/*
+      nm.check.size
+
+         check data size field and assign a default if it is bad
+         Data may be between 1 and 4 byte
+*/
+
+and nm.check.size (size.ptr) be
+$(
+   if (!size.ptr < 1) |
+      (!size.ptr > 4) then
+   $(
+      g.nm.bad.data ("Data size =", !size.ptr)
+      !size.ptr := 1
+   $)
+$)
+
+
+/**
+      g.nm.load.areal.data
+
+         loads areal values for areal mappable sub-dataset into
+         global vector
+**/
+
+and g.nm.load.areal.data () = valof
+$( let result = true
+   let   ptr, value   =  ?, ?
+   let save = g.nm.s!m.nm.file.system
+   let areas = g.nm.s!m.nm.nat.num.areas
+
+   unless 1 <= areas <= m.nm.max.num.areas
+   $( g.nm.bad.data ("Num. areas =", areas)
+      goto exit
+   $)
+
+   // set zeroth element to "missing data"
+   g.ut.set32 (0, m.nm.max.neg.high, g.nm.areal)
+
+   unless g.nm.read.frame (g.nm.s!m.nm.areal.data.record)
+   $( result := false
+      goto exit
+   $)
+
+   ptr := g.nm.s!m.nm.areal.data.offset
+
+   for i = 1 to areas do
+
+      $(
+         let dest = g.nm.areal + i * m.nm.max.data.size
+
+         test g.nm.dual.data.type (g.nm.s!m.nm.value.data.type) then
+
+            $(
+               g.nm.widen ( g.ut.unpack16 (g.nm.frame, ptr), 2, dest)
+
+               unless g.nm.skip.fields (g.nm.s!m.nm.areal.data.size, @ptr)
+               $( result := false
+                  goto exit
+               $)
+            $)
+
+         else
+
+            test (g.nm.s!m.nm.areal.data.size = 2) then
+
+               g.nm.widen ( g.ut.unpack16 (g.nm.frame, ptr), 2, dest)
+
+            else
+               g.nm.unpack32 (@ptr, dest)
+
+         unless g.nm.inc.frame.ptr (@ptr)
+         $( result := false
+            goto exit
+         $)
+
+      $)
+
+exit:
+   g.nm.s!m.nm.file.system := save
+   resultis result
+$)
+
+
+/*
+      nm.locate.subset
+
+         Looks up the specified sub-dataset in the index, loads
+         the frame containing it and returns, as output
+         parameters, the record number and byte offset for the
+         start of the actual data (after the header information);
+
+         On exit, we are positioned in the header of the located
+         sub-dataset.
+*/
+
+and nm.locate.subset (index, subset.position, frame.ptr,
+                      data.record.number.ptr, data.offset.ptr) = valof
+$(
+   let key, record.number, offset  =  ?, ?, ?
+
+   unless g.nm.find.subset (index, subset.position,
+                     @key, @record.number, @offset) resultis false
+
+   // convert relative record number into absolute one
+   record.number := record.number + g.nm.s!m.nm.dataset.record.number
+
+   unless g.nm.read.frame (record.number) resultis false
+   !frame.ptr := offset
+
+   !data.record.number.ptr := g.ut.unpack16 (g.nm.frame, !frame.ptr) +
+                                          g.nm.s!m.nm.dataset.record.number
+   unless g.nm.inc.frame.ptr (frame.ptr) resultis false
+   !data.offset.ptr := g.ut.unpack16.signed (g.nm.frame, !frame.ptr) * 2
+                                             // (* 2 converts to byte offset)
+   resultis true
+$)
+
+
+/*
+      nm.load.default.ranges
+
+         loads the default ranges from the sub-dataset header;
+         IF the keep flag is true THEN
+            the ranges go into the global class interval vector
+         ELSE
+            the ranges are discarded
+*/
+
+and nm.load.default.ranges (num.of.ranges, keep.flag, ptr) be
+$(
+   if keep.flag = m.nm.discard then
+      return
+
+   if (num.of.ranges < 0) | (num.of.ranges >= m.nm.num.of.class.intervals) then
+      $(
+         g.nm.bad.data ("Num. ranges =", num.of.ranges)
+         num.of.ranges := m.nm.num.of.class.intervals - 1
+      $)
+
+   g.nm.init.classes (m.nm.num.of.class.intervals, g.nm.class.upb)
+
+   for i = 1 to num.of.ranges do
+
+      g.nm.get.size4.value (keep.flag, ptr,
+                              g.nm.class.upb + (i * m.nm.max.data.size) )
+$)
+
+
+/*
+      nm.load.summary.data
+
+         loads the summary data from the sub-dataset header;
+         if the keep flag is true, then the data goes into
+         globals, otherwise it is discarded
+*/
+
+and nm.load.summary.data (keep.flag, ptr) be
+$(
+   let   num.nested.means, num.chi.squared  =  ?, ?
+
+   if keep.flag = m.nm.discard then
+      return
+
+   // skip past the national minimum, maximum and average which are
+   // not needed
+   g.nm.skip.fields (12, ptr)
+
+   g.nm.init.classes (m.nm.num.of.class.intervals, g.nm.s + m.nm.equal.classes)
+   g.nm.init.classes (m.nm.num.of.class.intervals,
+                      g.nm.s + m.nm.quantile.classes)
+
+   nm.select.cut.points (g.nm.s!m.nm.num.auto.cut.points, keep.flag, ptr,
+                         g.nm.s + m.nm.equal.classes)
+
+   g.nm.inc.frame.ptr (ptr)
+   num.nested.means := g.ut.unpack16.signed (g.nm.frame, !ptr)
+
+   if NOT (0 < num.nested.means <= 3) then
+      $(
+         g.nm.bad.data ("Num. means =", num.nested.means)
+         num.nested.means := 3
+      $)
+
+   for i = 1 to num.nested.means do
+         g.nm.get.size4.value (keep.flag, ptr,
+                                 g.nm.s + m.nm.nested.means.classes +
+                                                  i * m.nm.max.data.size)
+   nm.select.cut.points (g.nm.s!m.nm.num.auto.cut.points, keep.flag, ptr,
+                         g.nm.s + m.nm.quantile.classes)
+
+   g.nm.inc.frame.ptr (ptr)
+   num.chi.squared := g.ut.unpack16.signed (g.nm.frame, !ptr)
+   g.nm.skip.fields (num.chi.squared * 4, ptr)  // ignore Chi-Squared intervals
+$)
+
+
+/*
+      nm.select.cut.points
+
+         selects and loads the specified set of class intervals
+         from the group of sets; discards if keep.flag false
+*/
+
+and nm.select.cut.points (req.num.cuts, keep.flag, ptr, dest.ptr) be
+$(
+   let   num.cuts =  ?
+
+   for set = 1 to 3 do
+
+      $(
+         g.nm.inc.frame.ptr (ptr)
+         num.cuts := g.ut.unpack16.signed (g.nm.frame, !ptr)
+
+         test (num.cuts = req.num.cuts) then
+
+            for cut = 1 to num.cuts do
+                  g.nm.get.size4.value (keep.flag, ptr,
+                                        dest.ptr + (cut * m.nm.max.data.size))
+         else test (num.cuts >= 0) then
+            g.nm.skip.fields (num.cuts * 4, ptr)  // wrong set of cut-points
+
+         else
+            g.nm.bad.data ("Num. cuts =", num.cuts)
+      $)
+$)
+
+.

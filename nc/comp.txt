@@ -1,0 +1,10 @@
+*| compile the Chart overlay
+co chart0
+co chart1
+co chart2
+co chart3
+co chart4
+co chart5
+co chart6
+co chart7
+co chart8

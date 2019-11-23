@@ -1,0 +1,28 @@
+*BASIC
+VDU2
+*ty. h.uthdr
+VDU12
+*ty. h.iohdr
+VDU12
+*ty. h.iophdr
+VDU12
+*ty. b.utils1
+VDU12
+*ty. b.utils2
+VDU12
+*ty. b.utils3
+VDU12
+*ty. b.calc32b
+VDU12
+*ty. h.grhdr
+VDU12
+*ty. b.grid1
+VDU12
+*ty. b.grid2
+VDU12
+*ty. b.print
+VDU12
+*ty. b.write
+VDU12
+*ty. a.calc32
+VDU12,3

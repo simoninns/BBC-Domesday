@@ -1,0 +1,37 @@
+*b.
+*dir h
+VDU2
+*ty. sdhdr
+VDU12
+*ty. sdphdr
+VDU12
+*ty. kdhdr
+*back
+*dir b
+VDU12
+*ty. graph1
+VDU12
+*ty. graph2
+VDU12
+*ty. text1
+VDU12
+*ty. text2
+VDU12
+*ty. text3
+VDU12
+*ty. textlnk
+VDU12
+*ty. getact
+VDU12
+*ty. mouse
+VDU12
+*ty. menu
+VDU12
+*ty. input
+VDU12
+*ty. number
+VDU12
+*ty. icon
+VDU12
+*ty. chart9
+VDU12,3

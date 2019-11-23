@@ -1,0 +1,142 @@
+/**
+         NM.MASK - LIBRARY MASK DISPLAY ROUTINE
+         --------------------------------------
+
+         NAME OF FILES CONTAINING RUNNABLE CODE:
+
+         cnmWIND
+         cnmCOMP
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         09/07/86 1        D.R.Freed   Initial version
+**/
+
+section "nmmask"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.sdhd"
+get ":0.h.dhhd"
+get ":0.h.nmhd"
+
+
+/**
+         G.NM.MASK - MASK PERIPHERAL MISSING AREA
+         ----------------------------------------
+
+         Masks, by plotting in black, the peripheral area of
+         the plotting window which is not within the scope of
+         the current rasterised data.
+
+         Intended for use by the Window and Link operations
+
+         INPUTS:
+
+         None
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.mask []
+         ---------
+
+         IF area of interest grid system is same as
+                           rasterised data grid system THEN
+            plot 4 black rectangles; these may all be zero size
+         ENDIF
+**/
+
+let g.nm.mask () be
+$(
+   let size, start = ?, ?
+   and xmin, xmax, ymin, ymax = ?, ?, ?, ?
+
+   if (g.nm.s!m.nm.grid.system ~= g.nm.s!m.nm.raster.grid.system) then
+      return
+
+   // calculate plot window limits in Domesday graphics coordinates
+   xmin := g.nm.s!m.nm.x.min * m.nm.x.pixels.to.graphics
+   xmax := g.nm.s!m.nm.x.max * m.nm.x.pixels.to.graphics
+   ymin := g.nm.s!m.nm.y.min * m.nm.y.pixels.to.graphics
+   ymax := g.nm.s!m.nm.y.max * m.nm.y.pixels.to.graphics
+
+   g.sc.selcol (m.sd.black2)
+
+   // bottom left hand corner to bottom right hand corner
+   g.sc.movea (m.sd.display, xmin, ymin)
+
+   size := calc.y.graphics (g.nm.s!m.nm.grid.sq.start.n)
+
+   if size > 0 then
+      g.sc.rect (m.sd.plot, xmax - xmin - 1, size - 1)
+
+   // bottom left hand corner to top left hand corner
+   g.sc.movea (m.sd.display, xmin, ymin)
+
+   size := calc.x.graphics (g.nm.s!m.nm.grid.sq.start.e)
+
+   if size > 0 then
+      g.sc.rect (m.sd.plot, size - 1, ymax - ymin - 1)
+
+   // top left hand corner to top right hand corner
+   start := calc.y.graphics (g.nm.s!m.nm.grid.sq.end.n) + ymin
+
+   if start < ymax then
+
+      $(
+         g.sc.movea (m.sd.display, xmin, start)
+         g.sc.rect (m.sd.plot, xmax - xmin - 1, ymax - start - 1)
+      $)
+
+   // bottom right hand corner to top right hand corner
+   start := calc.x.graphics (g.nm.s!m.nm.grid.sq.end.e) + xmin
+
+   if start < xmax then
+
+      $(
+         g.sc.movea (m.sd.display, start, ymin)
+         g.sc.rect (m.sd.plot, xmax - start - 1, ymax - ymin - 1)
+      $)
+$)
+
+
+/*
+      calc.x.graphics
+
+         convert easterly grid square coordinate into
+         Domesday x graphics coordinate
+*/
+
+and calc.x.graphics (grid.sq.e) =
+   ( (grid.sq.e * g.context!m.resolution - g.nm.s!m.nm.km.low.e) *
+                  g.nm.s!m.nm.x.pix.per.grid.sq) /
+                                         g.context!m.resolution *
+                                             m.nm.x.pixels.to.graphics
+
+
+/*
+      calc.y.graphics
+
+         convert northerly grid square coordinate into
+         Domesday y graphics coordinate
+*/
+
+and calc.y.graphics (grid.sq.n) =
+   ( (grid.sq.n * g.context!m.resolution - g.nm.s!m.nm.km.low.n) *
+                  g.nm.s!m.nm.y.pix.per.grid.sq) /
+                                         g.context!m.resolution *
+                                             m.nm.y.pixels.to.graphics
+.

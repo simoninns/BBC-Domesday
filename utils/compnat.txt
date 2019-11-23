@@ -1,0 +1,28 @@
+*spool :4.tmp.compNAT
+*| compNAT AES Version 1.0 20.5.87
+*| national disc overlays
+*|     
+*time
+*dir :4.ARC.NA    
+c comp
+*dir ^.NC         
+c comp
+*dir ^.NE         
+c comp
+*dir ^.NF         
+c comp
+*dir ^.NM         
+c comp
+*dir ^.NN         
+c comp
+*dir ^.NP         
+c comp
+*dir ^.NT         
+c comp
+*dir ^.NV         
+c comp
+*dir ^.NW         
+c comp
+*dir $.ARC.utils
+*time
+*spool

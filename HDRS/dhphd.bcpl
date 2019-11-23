@@ -1,0 +1,10 @@
+manifest
+$( m.osargs=#Xffda m.osargs.fstype.op=0 m.osargs.flength.op=2
+m.osbyte=#Xfff4 m.osbyte.read.ram=#Xa1 m.osfind=#Xffce
+m.osfind.open.read.op=#X40 m.osfind.close.op=#X00 m.osgbpb=#Xffd1
+m.osgbpb.gb.newptr.op=3 m.osgbpb.gb.csd.op=8 m.osgbpb.rcb.size.words=7
+m.osword=#Xfff1 m.osword.fcode.read=#X08 m.osword.fcode.get.result=#Xc8
+m.adfs.osword.read.write=#X72 m.vfs.osword.read.write=#X62
+m.name.size.words=25 m.ascii.cr=#X0d m.carry.flag=#X01 m.fs.error=#X80
+m.dh.zpage=112 m.cbsw=8 $)
+

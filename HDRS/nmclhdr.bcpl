@@ -1,0 +1,51 @@
+// /**
+//       nm.h.NMCLHDR - PRIVATE MANIFESTS FOR NM CLASS MODULES
+//       -----------------------------------------------------
+//
+//       Manifests used privately by national mappable modules
+//       related to the Class operation.
+//
+//       REVISION HISTORY:
+//
+//       DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+//       30.05.86 1        D.R.Freed   Initial version
+//       07.10.86 2        DRF         m.sd.act duplicated
+// **/
+
+manifest
+$(
+   m.sd.act =  1  // NB: copied from SDHDR to get clean compiles
+                  //     any changes must be made to both files
+
+   // offsets into g.nm.s for context variables
+
+   // m.nm.gen.purp = current automatic classing operation
+
+   m.box = m.nm.gen.purp + 1  // current box in manual entry mode
+   m.foreg.col = m.nm.gen.purp + 2  // colour for number echo in entry mode
+   m.number.string = m.nm.gen.purp + 3  // number string in entry mode
+                                        // 20 characters should be ample
+   m.low.mean  =  m.nm.gen.purp + 14  // sums for calculating nested means
+   m.high.mean =  m.nm.gen.purp + 17
+   m.n      =  m.nm.gen.purp + 20     // counts for calculating means
+   m.low.n  =  m.nm.gen.purp + 21
+   m.high.n =  m.nm.gen.purp + 22
+   m.pass   =  m.nm.gen.purp + 23     // pass indicator for auto classing
+                                      // variable processor drivers
+
+   m.next   =  m.nm.gen.purp + 24     // next location in unpacked data buffer
+                                      // for quantiles drivers
+
+   m.plotted.upb = m.nm.gen.purp + 25 // class upper bounds corresponding to
+                                      // the variable plot on display
+
+   m.plotted.palette =
+      m.plotted.upb + (m.nm.num.of.class.intervals + 1) * m.nm.max.data.size
+
+   // ********** NB **************
+
+   // m.plotted.palette + m.nm.num.of.class.intervals must always
+   // be <= m.nm.global.statics.size
+$)
+
+

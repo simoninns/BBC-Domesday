@@ -1,0 +1,7 @@
+*| link SC cintcode
+*dir c    
+*remove kernel
+Join graph1 graph2 text1 text2 text3 input number -to k1
+Join k1 virtual getact menu mouse textlnk icon setfont chart9 -to kernel
+*delete k1
+*dir ^

@@ -1,0 +1,45 @@
+/*
+      DUMMY FIND OVERLAY TO PROVIDE ACCESS TO NATIONAL MAPPABLE
+                                          AND THESAURAUS
+*/
+
+SECTION"b.dumfind"
+GET"LIBHDR"
+GET":0.h.glhd"
+GET":0.h.sdhd"
+get":0.h.sthd"
+get":0.h.sihd"
+LET G.dy.init() BE
+$(
+    g.sttran!((m.st.cfind - 1)*m.st.barlen + 6) := m.st.conten
+    g.stinit!((m.st.cfind - 1)*m.st.barlen + 6) := @G.nt.conini
+    g.stover!m.st.conten := m.wplan
+    g.stactr!m.st.conten := @G.nt.content
+
+    G.sc.mess("In find Init - M for mappable data")
+
+$)
+AND G.dy.free() BE
+$(
+    G.sc.mess("In find Free")
+$)
+AND G.cf.Find() BE
+$(
+   if (g.key = 'm') | (g.key = 'M') then
+         g.key := - m.st.datmap
+$)
+AND G.cf.finini() BE
+$(
+    G.sc.mess("In finini - Press M for mappable data")
+
+   g.context!m.stackptr := 0     // to prevent stack overflow - see
+                                 // programming note 13
+$)
+
+.
+
+
+
+
+
+

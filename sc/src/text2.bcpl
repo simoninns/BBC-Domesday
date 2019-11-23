@@ -1,0 +1,277 @@
+//  $MSC
+//  AES SOURCE  4.87
+
+/**
+         SC.TEXT2 - SECOND PART OF TEXT PACKAGE
+         --------------------------------------
+
+         The text package is split into three sections because of
+         file size. (This is the second).
+         This file contains the procedures:
+
+         G.sc.mess       - output a message
+         G.sc.ermess     - output an error message
+         G.sc.cachemess  - cache message bar to SRAM
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         kernel
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         30.04.87 1        PAC         ADOPTED FOR AES SYSTEM
+         24.07.87 2        PAC         Remove pointer calls
+**/
+
+Section "text2"
+
+GET "libhdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.H.sdhd"
+GET ":4.ARC.H.sdphd"
+
+/**
+         G.SC.MESS - OUTPUT A MESSAGE
+         ----------------------------
+
+         This outputs the given message in the message area,
+         without changing the graphics cursor position. This uses
+         the G.sc.oprop routine to produce a proportionally
+         spaced message if the string given has no 'escape'
+         (i.e. "%" characters), otherwise it uses G.sc.ofstr.
+
+         It clears the message bar before the new message is
+         written. Messages are in blue, on a cyan background.
+
+         INPUTS:
+
+         Pointer to message string
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine uses G.sc.oprop to output the message in
+         TWO cases:
+
+         - if there are no formatting commands in the string
+         - if the display is in MODE 2
+
+         This routine doesn't move the graphics cursor position.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.mess [ string pointer <,parameter list> ]
+         ---------
+         Save present cursor position
+         Draw cyan rectangle in message bar
+         Move to text start position in message bar
+
+         IF (screen mode <> 2) AND (escape characters in string)
+            THEN Output text string using OFSTR
+            ELSE Output text string using OPROP
+         ENDIF
+
+         Restore cursor position
+**/
+LET G.sc.mess ( stringptr,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11 ) BE
+$( 
+   LET coords   = VEC m.sd.coordsize  // store for cursor pos.
+   LET escapes  = FALSE
+   LET oldstate = ?
+
+   FOR i = 1 TO stringptr%0 DO // look at the format string for escapes (%)
+
+   IF stringptr%i = '%'
+      THEN $( escapes := TRUE ; BREAK $)
+
+   // oldstate := G.sc.pointer( m.sd.off )
+   G.sc.savcur ( coords )
+   G.sc.selcol ( m.sd.cyan )
+   G.sc.movea  ( m.sd.message,0,0 )
+   G.sc.rect   ( m.sd.plot, m.sd.mesw-1, m.sd.mesh-1 )
+   G.sc.movea  ( m.sd.message, m.sd.mesXtex, m.sd.mesYtex )
+   G.sc.selcol ( m.sd.blue )
+
+   TEST escapes
+
+      THEN G.sc.ofstr( stringptr,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11 )
+
+      ELSE G.sc.oprop( stringptr )
+
+   // G.sc.pointer( oldstate )
+   G.sc.rescur ( coords )
+$)
+
+/**
+         G.SC.ERMESS - OUTPUT AN ERROR MESSAGE
+         -------------------------------------
+
+         This outputs the given message in the message area,
+         without changing the graphics cursor position. This
+         either uses G.sc.ofstr (for MODE 1 messages) or the
+         G.sc.oprop (for MODE 2 messages) to produce the message
+         text. It saves the old message bar before writing the
+         new message. It beeps, waits 3 seconds then restores the
+         old message.
+
+         INPUTS:
+
+         Pointer to message string
+
+         OUTPUTS:
+
+         none ( gives a "softish lowish beep" )
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         This routine takes the same parameters as writef, so can
+         be used to output numbers as well as text. It works in
+         both modes 1 and 2, but won't output numbers in mode 2.
+         This routine does not alter the current graphics cursor
+         position.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.ermess [ string pointer <,parameter list> ]
+         ---------
+         Save present cursor position
+         Save old contents of message bar
+         Draw cyan rectangle in message bar
+         Move to text start position in message bar
+
+         IF (escape characters in string)
+            THEN Output text string using OFSTR
+            ELSE Output text string using OPROP
+         ENDIF
+
+         Output a beep using ^G
+         Wait 3 seconds (uses manifest in sdhdr)
+         Restore old message bar
+         Restore cursor position
+**/
+AND G.sc.ermess ( stringptr,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11 ) BE
+$(
+   // LET oldstate = G.sc.pointer( m.sd.off )
+
+   // save screen at message area
+   G.sc.cachemess( m.sd.save )
+
+   G.sc.mess( stringptr,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11 )
+
+   // G.sc.pointer( oldstate )
+
+   G.sc.beep()                // give a beep
+
+   G.ut.wait( m.sd.errdelay ) // delay for 200 cs
+
+   // restore screen at message area
+   G.sc.cachemess( m.sd.restore )
+
+   // G.sc.pointer( oldstate )
+$)
+
+/**
+         G.SC.CACHEMESS - CACHE MESSAGE BAR TO I/O PROCESSOR
+         ---------------------------------------------------
+
+         This routine saves the screen contents at the message
+         area in the I/O processor sideways RAM.
+
+         INPUTS:
+
+         type of operation (m.sd.save, m.sd.restore)
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Be very careful with this routine, as it may well
+         interact with system error messages( e.g. the RESTART
+         function ) You are not allowed to cache the error
+         message area unless you can ensure that it will be
+         restored before any other operation is entered. It is
+         used (for example) by overlays waiting to write to
+         floppy disc. In this case, the next action (whether
+         'READY' or 'QUIT') causes the message area to be
+         restored before any other operation is allowed.
+
+         Normally used by G.sc.ermess to restore old message bar
+         contents.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         Turn off mouse pointer
+
+         IF screen display is shadow screen
+         THEN page shadow screen into main memory map
+
+         IF command is restore
+         THEN restore message area contents from SRAM
+         ELSE save message area contents to SRAM
+
+         Restore memory map
+
+         Restore mouse pointer
+**/
+
+AND G.sc.cachemess( opcode ) BE
+$(
+          //  % 01234567 8 9
+   LET name   = "message*c*s"   
+   LET pb     = VEC 7
+
+   name%9 := 0                       // a null terminator
+   name   := name * bytesperword + 1 // m/c address
+
+   TEST opcode = m.sd.save THEN
+   $(
+      pb!0 := G.sc.sprite.area              // unused if system sprite
+      pb!1 := name                          // sprite name
+      pb!2 := 0                             // exclude palette
+      pb!3 := m.sd.mesX0                    // lh edge
+      pb!4 := m.sd.mesY0                    // bottom edge
+      pb!5 := m.sd.mesX0 + m.sd.mesw        // rh edge
+      pb!6 := m.sd.mesY0 + m.sd.mesh        // top edge
+  
+      check.( OsSprite( m.sd.get.user.sprite, pb )) // traps if it fails
+   $)
+
+   ELSE
+   $(
+      pb!0 := G.sc.sprite.area 
+      pb!1 := name                          // sprite name  
+
+      check.( OsSprite( m.sd.select.sprite, pb )) // traps if it fails  
+  
+      pb!0 := G.sc.sprite.area              // to be safe !
+      pb!1 := name                          // sprite name  
+      pb!2 := m.sd.mesX0 + m.sd.mesw        // lh edge   
+      pb!3 := m.sd.mesY0                    // bottom edge  
+      pb!4 := 0                             // GCOL action
+      $( 
+         check.( OsSprite( m.sd.put.user.sprite, pb ))
+         pb!2 := pb!2 - 4
+      $) REPEATUNTIL pb!2 < m.sd.mesX0
+   $)
+$)
+
+AND check.( res ) BE UNLESS res DO G.ut.trap("SC",40,TRUE,1,#xFF,0,0)
+.

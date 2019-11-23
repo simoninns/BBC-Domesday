@@ -1,0 +1,88 @@
+// /**
+//       SDPHDR - SCREEN DEFINITIONS PRIVATE HEADER
+//       ------------------------------------------
+//
+//       This is a private header for use of the graphics driver
+//
+//       REVISION HISTORY:
+//
+//       DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+//       14.01.86 1        P.Cunnell   Initial version
+//                                     (got from SDHDR)
+//       21.02.86 2        PAC         Add parallelgram plot code
+//       26.03.86 3        PAC         Add linelength, pagelength
+//       11.04.86 4        PAC         Add cursor key accelerator
+//       23.7.87  5        PAC         Add mouse osword opcode
+//                                     & sub-opcodes
+//       24.7.87  6        PAC         Sprite opcodes   
+// **/
+//
+MANIFEST
+$(
+// m.sd.osword is used by the 'get cursor pos' operation in GRAPH
+m.sd.osword  = #xFFF1
+m.sd.oscli   = #xFFF7
+
+m.sd.osword.mouse.op = #x15
+
+// sub - opcodes for osword #x15
+m.sd.define.cursor      = 0
+m.sd.set.bounding.box   = 1
+m.sd.define.multipliers = 2
+m.sd.set.mouse.position = 3
+
+// opcodes for OsSprite
+//
+m.sd.op.base = 256 // set to 256 for user sprites
+
+m.sd.read.control.blk  = m.sd.op.base + 8
+m.sd.clear.sprite.area = m.sd.op.base + 9
+m.sd.get.sprite.name   = m.sd.op.base + 13
+m.sd.get.user.sprite   = m.sd.op.base + 16
+m.sd.select.sprite     = m.sd.op.base + 24
+m.sd.put.user.sprite   = m.sd.op.base + 34
+
+m.sd.sprite.ws.size    = 50000 // sprite area in bytes
+
+// step sizes in graphics units for mouse pointer
+m.sd.speed1  = 4
+m.sd.speed2  = 32
+m.sd.speed3  = 56
+
+m.sd.cursor.dly.1 = 3
+m.sd.cursor.dly.2 = 12
+
+m.sd.cursor.time = 3 // step delay in cs for cursor key accel.
+
+m.sd.maxX = 1276
+m.sd.minX = 0
+m.sd.maxY = 1020
+m.sd.minY = 0
+
+// plot types for use by GRAPH package only
+// application routines should NOT use these
+m.sd.movR   = 0   // move relative
+m.sd.pltR   = 1   // plot relative, foreground
+m.sd.invR   = 2   // plot relative, inverse
+m.sd.clrR   = 3   // plot relative, background
+m.sd.movA   = 4   // move absolute
+m.sd.pltA   = 5   // plot absolute, foreground
+m.sd.invA   = 6   // plot absolute, inverse
+m.sd.clrA   = 7   // plot absolute, background
+
+// plot codes for use by the GXR routines
+m.sd.triplt = #x50   // filled triangle
+m.sd.recplt = #x60   // filled rectangle
+m.sd.parplt = #x70   // parallelogram
+m.sd.cirplt = #x98   // filled circle
+m.sd.cirout = #x90   // circle outline
+m.sd.ellplt = #xC8   // filled ellipse
+m.sd.ellout = #xC0   // ellipse outline
+m.sd.arcplt = #xA0   // arc
+m.sd.secplt = #xB0   // sector (pie slice)
+m.sd.segplt = #xA8   // segment
+m.sd.movcop = #xB8   // move/copy a rectangle
+m.sd.floodnbg = #x80 // flood to non-background
+m.sd.floodfg  = #x88 // flood to foreground
+
+$)

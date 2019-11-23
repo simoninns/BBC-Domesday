@@ -1,0 +1,19 @@
+*| LINKERNEL - Version 5 2.7.87
+*|
+*| make the kernel(s), using the bits in the l directory
+*|
+*dir $.ARC
+Join DH.c.kernel SC.c.kernel UT.c.kernel VH.c.kernel -to l.kernel
+*|
+*| Sublink the community disc overlays       
+*|
+Join l.mapoverlay l.phtx l.find -to l.community
+*|
+*| ... and the national disc ones
+*|
+Join l.walk l.contents l.natfind l.area l.chart l.text l.photo l.mapproc -to l.national
+*|
+*| now make the runnable kernel
+*|                                     
+Join $.alib.lib l.kernel KE.c.kernel l.community l.national l.help -to r.kernel
+*dir $.ARC.utils

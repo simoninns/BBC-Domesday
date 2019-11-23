@@ -1,0 +1,25 @@
+// /**
+//       GLNPHDR - GLOBALS HEADER for National Photo
+//       -------------------------------------------
+//
+//       This is a master system Global definition file
+//       Reserved for state, routine and data globals
+//
+//       REVISION HISTORY:
+//
+//       DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+//       23.4.87  1        PAC      ADOPTED FOR UNI SYSTEM
+//       16.6.87     2     DNH      New globals for buffers
+// **/
+
+GLOBAL
+$(
+
+G.np.phoini     :FGNP+0  // ini routine
+G.np.photo      :FGNP+1  // action routine
+G.np.s          :FGNP+2  // statics
+G.np.short.buff :FGNP+5  // short captions buffer
+G.np.rbuff      :FGNP+3  // temporary read buffer
+G.np.tbuff      :FGNP+4  // temporary output buffer
+
+$)

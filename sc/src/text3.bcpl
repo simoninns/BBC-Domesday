@@ -1,0 +1,239 @@
+//  $MSC
+//  AES SOURCE  4.87
+
+/**
+         TEXT3 - TEXT OUTPUT PRIMITIVES
+         ------------------------------
+
+         Text primitives file split into 3 parts because of size
+         This file contains the procedures:
+
+         G.sc.oplist       - output a list item
+         G.sc.high         - highlight a list item
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         kernel
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         30.04.87 1        PAC         ADOPTED FOR AES SYSTEM
+**/
+
+
+Section "text3"
+
+GET "libhdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.H.sdhd"
+
+static $( s.olditem = m.sd.hinvalid $) // used by G.sc.high
+
+/**
+
+         G.SC.OPLIST - OUTPUT LIST ITEM
+         -------------------------------
+
+         Output a list item, normally spaced. The text is output,
+         and the cursor moved to the start of the next row.
+
+         INPUTS:
+
+         Item number
+         Pointer to string
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Leaves cursor at start of next row, which will be the
+         same X co-ord, and one row down in Y co-ord.
+
+         Note that the text colour is the current graphics
+         colour, which means that if G.sc.high is to be used to
+         highlight the list item numbers, then m.sd.cyan MUST
+         be set up as the current colour before calling oplist.
+
+         If oplist is called with m.sd.seenumber as the item
+         number, then it will output "See: " at the bottom of the
+         screen, and then output the text string.
+
+         DO NOT USE in mode 2
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.sc.oplist [ item number, text pointer ]
+         -----------
+         Save current cursor position
+         Output the list item
+         (n.b. the mouse pointer removal is done by G.sc.ofstr)
+         Restore current cursor position one row down
+         RETURN
+
+**/
+
+LET G.sc.oplist ( itemno, textptr ) BE
+$( LET coords = vec m.sd.coordsize     // space to save cursor coords
+   LET temp,sp = ?,4      // copy of number, & leading space
+
+   IF itemno > 9999
+      THEN itemno := itemno REM 10000 // truncate
+
+   FOR i = 1 TO textptr%0 DO
+   IF ~G.ut.printingchar( textptr%i ) & (textptr%i ~= 0)
+      THEN textptr%i := '#'
+
+   G.sc.savcur( coords ) // get Y pos
+
+   TEST itemno = m.sd.seenumber
+   THEN $( G.sc.movea ( m.sd.display,m.sd.seeX,m.sd.seeY )
+           G.sc.ofstr ( "See: %S",textptr )
+        $)
+   ELSE $( // pad with spaces
+           temp := itemno
+           WHILE temp > 0 DO $( sp:=sp-1; temp := temp/10 $)
+           coords!2 := m.sd.charwidth*sp
+           G.sc.rescur( coords )            // move to pad with spaces
+           G.sc.ofstr( "%N %S", itemno, textptr )
+           coords!3 := coords!3 - m.sd.linw // set new pos one line down
+        $)
+   G.sc.rescur ( coords )
+$)
+
+/**
+
+         G.SC.HIGH - HIGHLIGHT LIST ITEM
+         -------------------------------
+
+         Highlights the currently selected list item number, and
+         returns this item number to the caller.
+
+         INPUTS:
+
+         Item number of first list item
+         Item number of last  list item
+         Flag set true if "See:" is present,
+                  false otherwise
+         (Uses global G.Ypoint to find pointer position)
+         Offset of first item in list, given in lines from the
+         display top
+
+         OUTPUTS:
+
+         Number of current 'active' list item
+
+         GLOBALS MODIFIED:
+
+         none
+         maintains static for 'old item number'
+
+         SPECIAL NOTES FOR CALLERS:
+
+         The list is assumed to be set up on the screen
+         beforehand, with the first item being positioned at
+         m.sd.disXtex, m.sd.disYtex-(offset*m.sd.linw). Use the
+         list output primitive for generating the list.
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.sc.high [ first no,last no,seeflag,offset -> selection ]
+         ---------
+         { Step 1 }
+         { Find the new item number on the current Ypoint line }
+
+         IF pointer is not on display
+            THEN new item number is 'invalid'
+            ELSE IF Y position <= 'SeeY' AND "See:" is present
+                 THEN new item number is 'See number'
+                 ELSE IF Y position > bottom of list
+                      THEN calculate new item number
+                      ELSE new item number is 'invalid'
+                      ENDIF
+                 ENDIF
+         ENDIF
+         { Step 2 }
+         { Do the necessary highlighting }
+
+         IF new item number <> old item number
+            THEN
+                 { unhighlight old item }
+                 IF old item number was 'See number'
+                    AND 'see' is present in current list
+                 THEN unhighlight "See:"
+                 ELSE IF old item is in current list
+                      THEN unhighlight old item number
+                      ENDIF
+                 ENDIF
+
+                 { highlight new item }
+                 IF new item number is 'See number'
+                 THEN highlight "See:"
+                 ELSE highlight new item number
+                 ENDIF
+         ENDIF
+
+         Save new item number in static
+
+         RETURN ( new item number )
+
+**/
+AND G.sc.high ( firstno, lastno, seeflag,offset ) = VALOF
+$( 
+   LET line,newitem,oldptr,pos = ?,?,?,?
+   LET see = "See:"
+
+   TEST G.screen ~= m.sd.display
+      THEN newitem := m.sd.hinvalid
+      ELSE TEST (G.Ypoint <= m.sd.seeY) & seeflag
+           THEN newitem := m.sd.seenumber
+           ELSE $( newitem := firstno+(m.sd.displines-(G.ypoint/m.sd.linw)-1)
+                   newitem := newitem-offset // account for list starting lower
+                   IF (newitem < firstno)|(newitem > lastno)
+                   THEN newitem := m.sd.hinvalid
+                $)
+   IF newitem ~= s.olditem
+      THEN $( G.sc.selcol ( m.sd.cyan )
+              TEST (s.olditem = m.sd.seenumber) & seeflag
+              THEN $( G.sc.movea ( m.sd.display,m.sd.seeX,m.sd.seeY )
+                      G.sc.ofstr ( see )  // unhighlight "See:"
+                   $)
+              ELSE IF (s.olditem >= firstno) & (s.olditem <= lastno)
+                   THEN padnum ( s.olditem,firstno,offset ) // unhighlight old
+
+              G.sc.selcol ( m.sd.yellow )
+              TEST newitem = m.sd.seenumber
+              THEN $( G.sc.movea ( m.sd.display,m.sd.seeX,m.sd.seeY )
+                      G.sc.ofstr ( see ) // highlight "See:"
+                   $)
+              ELSE IF (newitem >= firstno) & (newitem <= lastno)
+                   THEN padnum ( newitem,firstno,offset )
+           $)
+
+   s.olditem := newitem
+
+   RESULTIS newitem
+$)
+
+AND padnum (itemno, topno, offset) BE
+$( LET temp,pos,sp =?,?,4
+
+   pos := (m.sd.displines-(itemno-topno)-offset)*m.sd.linw
+   g.sc.movea (m.sd.display, 0, pos-4 )
+
+   IF itemno > 9999
+   THEN itemno := itemno REM 10000 // truncate
+   temp := itemno
+
+   // pad with spaces
+   WHILE temp > 0 DO $( sp:=sp-1; temp := temp/10 $)
+   G.sc.mover(m.sd.charwidth*sp,0)    // move to pad
+   G.sc.ofstr ("%N", itemno )
+$)
+.

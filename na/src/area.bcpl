@@ -1,0 +1,483 @@
+//  PUK SOURCE  6.87
+
+/**
+         NATIONAL AREA ACTION ROUTINE
+         ----------------------------
+
+         This section contains :
+
+            G.na.area and its utility routines
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.area
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         6.10.86 13        SRY         Strip trailing spaces
+                                       Another highlight bug
+         3.11.86 14        SRY         G.key noact after Return
+*******************************************************************************
+         6.06.87 15        SRY         Changes for UNI
+        21.08.87 16        SRY         Modify for PUK - NM
+        25.08.87 17        MH          Modified for virtual keyboard
+        29.09.87 18        SRY         Justselected only true for forced
+         2.10.87 19        SRY         Reverse above change
+        19.01.88 20        MH          Update to G.nm.area to initialise
+                                       menu bar word to m.wBlank when
+                                       just selected
+**/
+
+SECTION "Area1"
+
+GET "libhdr"
+GET ":4.ARC.GH.glhd"
+GET ":4.ARC.GH.glNAhd"
+GET ":4.ARC.H.sdhd"
+GET ":4.ARC.H.kdhd"
+GET ":4.ARC.H.nahd"
+GET ":4.ARC.H.vhhd"
+GET ":4.ARC.H.uthd"
+GET ":4.ARC.H.sthd"
+
+STATIC
+$( s.box=? // Communication between legal.highlight & main
+$)
+
+/**
+         G.NA.AREA - ESTABLISH AREA OF INTEREST
+         --------------------------------------
+
+         Specific action routine for area
+
+         INPUTS:
+
+         none
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         contents of G.na.buff
+         G.context gridrefs
+
+         SPECIAL NOTES FOR CALLERS:
+
+         none
+
+         PROGRAM DESIGN LANGUAGE:
+
+         G.na.area []
+         ------------
+
+         IF main pressed set justselected TRUE - for mappable data
+
+         IF menu bar transition & in forced area unwind stack
+
+         IF Reselect clear message bar
+
+         IF state just selected (ie forced area)
+         THEN call initialise routine
+
+         <Take action depending on screen state>
+
+         CASE OF screen state
+            0 :  // Entry made - do nothing until reselect
+
+            1 :  // No box highlighted
+                IF on legal box for highlighting
+                THEN highlight it
+                     initialise for input
+                     goto 2
+                ELSE IF G.key is alphanumeric THEN beep ENDIF
+                ENDIF
+
+            2 :  // One box highlighted - no chars typed
+                IF cursor key not up or down
+                THEN IF not on a box or cursor up or down
+                     THEN dehighlight old box
+                          goto 1
+                     ELSE IF G.key is not noact or return
+                          THEN Add character to box's contents (G.sc.input)
+                               goto 3
+                          ENDIF
+                     ENDIF
+                ENDIF
+
+            3 :  // Chars being typed into a box
+                Add character to box's contents (G.sc.input)
+                IF keypress is <RETURN>
+                THEN validate field (+ error message)
+                     CASE OF result
+                        successful:
+                           goto 6
+                        ambiguous grid reference:
+                           IF other box filled in
+                           THEN goto 6
+                           ELSE goto 5
+                           ENDIF
+                        unsuccessful: do nothing
+                     ENDCASE
+                ENDIF
+
+            4 :  // Sort out ambiguous grid reference
+                Read character (G.sc.input)
+                IF keypress is <RETURN>
+                THEN IF answer OK
+                     THEN IF northern Ireland
+                             Set top bit of appropriate easting reference
+                          ENDIF
+                          clear message bar
+                          goto 6
+                     ELSE goto 5
+                     ENDIF
+                     IF box 3 blank THEN redraw menu bar
+                ENDIF
+
+            5 :  // Set up question for ambiguous grid reference
+                Output message
+                Zero string length
+                Call input initialise
+                goto 4
+
+            6 : // Successful completion of 1 field
+                See if the other field is complete (+ error message)
+                CASE OF result
+                      Yes        : Clear message bar
+                                   IF name type
+                                   THEN Fetch map number from gazetteer
+                                        Display map etc
+                                   ELSE Transfer scratch area to G.context
+                                        Draw yellow rectangle
+                                   ENDIF
+                                   goto 0
+                      No         : goto 1
+             Different grid refs : goto 0
+         ENDCASE
+**/
+
+LET G.na.area() BE
+$( LET scr = G.na.buff + m.na.scr
+   LET s = TABLE 0
+   LET boxes = TABLE m.sd.act, m.sd.act, m.sd.wBlank,
+                     m.sd.act, m.sd.act, m.sd.act
+
+   TEST G.context!m.justselected
+   THEN $( G.na.areaini()
+           G.sc.mess("Area selection required to plot data")
+        $)
+   ELSE IF G.na.buff!m.na.vid.req
+        $( G.na.buff!m.na.vid.req := FALSE
+           G.vh.video(m.vh.video.on)
+        $)
+
+   IF G.na.buff!m.na.restore.bar then
+   $( boxes!m.box3 := m.sd.wBlank // added 19.01.88 MH
+      G.na.buff!m.na.restore.bar := FALSE
+   $)
+
+   SWITCHON G.key INTO
+   $( CASE m.kd.Fkey1: RETURN
+      CASE m.kd.Fkey2: // modified for PUK: only set js if forced area
+         // IF G.context!m.state = m.st.area
+         G.context!m.justselected := TRUE
+      ENDCASE
+      CASE m.kd.Fkey3:
+         G.sc.clear(m.sd.message)
+         boxes!m.box3 := m.sd.wBlank
+         RETURN
+   $)
+
+   SWITCHON G.na.buff!m.na.screen.state INTO
+   $( CASE 0: ENDCASE
+
+      CASE 1:
+         IF legal.highlight()
+         $( LET g = G.key
+            G.na.buff!m.na.box := s.box
+            G.na.highlight(m.sd.cyan)
+            G.key := m.kd.noact
+            char.input()
+            G.key := g
+            char.input()
+            screen(2)
+         $)
+      ENDCASE
+                     // 25.8.87 MH
+      CASE 2: if (G.key = m.kd.action) & (not G.menuon) & (on.box() = s.box)
+              $( screen(7)
+                 endcase
+              $)
+      case 7:
+         if G.menuon // 25.8.87 MH
+            test on.box()=m.na.unknown then
+            $(
+               G.na.highlight(m.sd.blue)
+               screen(1)
+            $)
+            else
+               screen(2)
+         UNLESS (G.key = m.kd.left) | (G.key = m.kd.right)
+            TEST ((on.box() ~= s.box) & (G.na.buff!m.na.screen.state = 2 |
+                  (G.na.buff!m.na.screen.state = 7 &
+                  G.key = m.kd.action))) | (G.key = m.kd.up) |
+                  (G.key = m.kd.down)
+            THEN $( test on.box() ~= s.box &
+                        G.na.buff!m.na.screen.state = 2 then
+                    $(
+                       G.na.highlight(m.sd.blue)
+                       screen(1)
+                    $)
+                    else if G.na.buff!m.na.screen.state = 7 &
+                         G.key = m.kd.action then
+                    $( G.na.highlight(m.sd.blue)
+                       s.box := on.box()
+                       G.na.buff!m.na.box := s.box
+                       test s.box = m.na.unknown then
+                          screen(1)
+                       else
+                       $( let g = G.key
+                          G.na.highlight(m.sd.cyan)
+                          G.key := m.kd.noact
+                          char.input()
+                          G.key := g
+                       $)
+                    $)
+                 $)
+            ELSE UNLESS G.key = m.kd.noact
+                 $(
+                    char.input()
+                    G.na.buff!m.na.entered.box := G.na.buff!m.na.box
+                    test G.na.buff!m.na.screen.state = 7 then
+                       screen(8)
+                    else
+                       screen(3)
+                 $)
+      ENDCASE
+
+      CASE 3:
+      case 8:     // 25.8.87 MH
+         UNLESS G.key = m.kd.noact char.input()
+         TEST length(G.na.buff!m.na.box) = 0
+         THEN $( test G.menuon then
+                 $( G.na.highlight(m.sd.blue)
+                    screen(1)
+                 $)
+                 else
+                    screen(7)
+              $)
+         ELSE IF G.key = m.kd.return
+              $( LET l = (G.na.buff!m.na.format = m.na.name) ->
+                          m.na.aulength, m.na.grlength
+                 SWITCHON validate() INTO
+                 $( CASE 1: // Ambiguous reference
+                       IF length(G.na.buff!m.na.other.box) = 0
+                       $( screen(5)       // Find out country
+                          ENDCASE
+                       $)  // otherwise on to ...
+                    CASE 0: screen(6); ENDCASE  // We know country is not NI
+                    CASE 2: G.sc.input(0, m.sd.blue, m.sd.cyan, l) // Cursor
+                 $)
+  //               UNLESS boxes!m.box3 = m.sd.act  // even if unsuccessful
+                 $( boxes!m.box3 := m.sd.act
+                    G.sc.menu(boxes)
+                 $)
+                 G.key := m.kd.noact
+              $)
+      ENDCASE
+
+      CASE 4:
+         UNLESS G.key = m.kd.noact G.sc.input(s, m.sd.Blue, m.sd.Cyan, 1)
+         IF G.key = m.kd.return
+         $( LET ch = capch(s%1)
+            TEST (s%0=1) & (ch='G' | ch='N')
+            THEN $( G.na.buff!m.na.country := ch
+                    IF ch='N'
+                    $( ch := (G.na.buff!m.na.box=m.na.gr1 -> m.na.ble,m.na.tre)
+                       add.top.bit(scr + ch)
+                    $)
+                    screen(6)
+                 $)
+            ELSE screen(5)
+            G.key := m.kd.noact
+         $)
+      ENDCASE
+
+      CASE 5:
+         G.sc.mess("Do you mean GB or N Ireland (G/N)?")
+         G.sc.movea(m.sd.message, m.na.answerX, m.na.answerY)
+         s%0 := 0
+         G.sc.input(s, m.sd.Blue, m.sd.Cyan, 1)
+         screen(4)
+      ENDCASE
+
+      CASE 6:
+         G.sc.clear(m.sd.message)
+         SWITCHON two.complete() INTO
+         $( CASE 0:
+            $( LET t = TRUE
+               TEST G.na.buff!m.na.format = m.na.name
+               THEN $( t := G.na.display.map()
+                       G.sc.keyboard.flush()
+                    $)
+               ELSE $( G.na.rectangle(m.sd.blue) // restore blue
+                       FOR i = 0 TO 3 G.context!(m.grbleast+i) := scr!i
+                       G.na.rectangle(m.sd.yellow)
+                       G.context!m.type.AOI := m.na.unknown
+                       G.context!m.name.AOI := m.na.unknown
+                       G.context!m.underlay.frame.no := 0
+                    $)
+               IF (G.context!m.state = m.st.area) & t
+                  G.sc.mess("Select Main for Data Map")
+               // keep on to ...
+            $)
+            CASE 1: // Can only reselect - error or complete
+               screen(0)
+            ENDCASE
+            CASE 2: screen(1)  // Only 1 complete
+         $)
+      ENDCASE
+
+      default: screen(1)
+   $)
+$)
+
+
+///////////////////////////////////////////////////////////////////////////////
+//                                                                           //
+//                  Utility routines used by AREA only                       //
+//                                                                           //
+///////////////////////////////////////////////////////////////////////////////
+
+
+AND legal.highlight() = VALOF   // Check if we can highlight box
+$( s.box := on.box()
+   IF length(s.box) > 0  RESULTIS FALSE
+   IF (length(G.na.buff!m.na.entered.box) = 0) &
+      (length(G.na.buff!m.na.other.box) = 0)
+      G.na.buff!m.na.format := m.na.unknown
+   IF s.box = m.na.unknown RESULTIS FALSE
+   SWITCHON G.na.buff!m.na.format INTO
+   $( CASE m.na.grid: RESULTIS (s.box=m.na.gr1 | s.box=m.na.gr2)
+      CASE m.na.name: RESULTIS (s.box=m.na.auname | s.box=m.na.autype)
+      default:
+         G.na.buff!m.na.format :=
+            ((s.box=m.na.gr1) | (s.box=m.na.gr2) -> m.na.grid, m.na.name)
+         RESULTIS TRUE
+   $)
+$)
+
+
+AND on.box() =   // Return the identifier of the field we are on
+((m.na.posX <= G.xpoint <= m.na.auX) ->
+   ((m.na.gr2Y - m.sd.linW <= G.ypoint <= m.na.gr2Y) ->
+      (G.xpoint <= m.na.grX -> m.na.gr2, m.na.unknown),
+      ((m.na.gr1Y - m.sd.linW <= G.ypoint <= m.na.gr1Y) ->
+         (G.xpoint <= m.na.grX -> m.na.gr1, m.na.unknown),
+         ((m.na.nameY - m.sd.linW <= G.ypoint <= m.na.nameY) ->
+            m.na.auname,
+            ((m.na.typeY - m.sd.linW <= G.ypoint <= m.na.typeY) ->
+               m.na.autype, m.na.unknown)))), m.na.unknown)
+
+
+AND validate() = VALOF   // Check an entry is OK
+$( LET scr = G.na.buff + m.na.scr
+   LET gridvec = scr + m.na.ble
+   LET string = G.na.buff!m.na.box + G.na.buff
+   LET country = G.na.buff!m.na.country
+   IF G.na.buff!m.na.format = m.na.name // strip trailing spaces
+   $( FOR i=string%0 TO 2 BY -1
+         TEST string%i = ' ' THEN string%0 := i-1 ELSE BREAK
+      RESULTIS 0
+   $)
+   IF G.na.buff!m.na.box = m.na.gr2 gridvec := scr + m.na.tre
+   RESULTIS G.na.gridref(string, gridvec, country) // Gives an error message
+$)
+
+
+AND two.complete() = VALOF   // Check we have two entries
+$( LET scr = G.na.buff + m.na.scr
+   LET box = G.na.buff!m.na.box
+   LET loweast, topeast = scr!m.na.ble, scr!m.na.tre
+   LET lownorth, topnorth = scr!m.na.bln, scr!m.na.trn
+   LET refptr = scr + (box = m.na.gr1 -> m.na.ble, m.na.tre)
+   LET maxnorth = (value(topnorth) > value(lownorth) -> topnorth, lownorth)
+   LET minnorth = (maxnorth = topnorth -> lownorth, topnorth)
+   LET error = 0
+   IF length(G.na.buff!m.na.other.box) > 0
+   $( IF G.na.buff!m.na.format = m.na.name RESULTIS 0
+      TEST (topbit(loweast)  ~= topbit(topeast) |
+            topbit(lownorth) ~= topbit(topnorth))
+      THEN error := 1
+      ELSE TEST (value(maxnorth) > value(minnorth) + m.na.north.range) &
+                (topbit(lownorth) = 0) // CI not tested - negative !
+           THEN error := 2
+           ELSE IF ((lownorth = topnorth) | (loweast = topeast)) error := 3
+      IF error > 0
+      $( G.sc.ermess( VALOF
+            SWITCHON error INTO
+            $( CASE 1: RESULTIS "Different Grid Systems specified"
+               CASE 2: RESULTIS "Selected area is too large"
+               CASE 3: RESULTIS "Selected area must be non-zero"
+            $)      )
+         RESULTIS 1
+      $)
+      G.na.icon(G.na.buff + m.na.icon, m.sd.clear)
+      IF value(loweast) > value(topeast)
+      $( scr!m.na.ble := topeast
+         scr!m.na.tre := loweast
+         topeast := loweast
+         loweast := scr!m.na.ble
+      $)
+      IF maxnorth = lownorth   // NB OK for CI
+      $( scr!m.na.bln := topnorth
+         scr!m.na.trn := lownorth
+         topnorth := lownorth
+         lownorth := scr!m.na.bln
+      $)
+      RESULTIS 0
+   $)
+   IF G.na.buff!m.na.format = m.na.grid
+   $( G.na.buff!m.na.icon := refptr!0
+      G.na.buff!(m.na.icon + 1) := refptr!1
+      G.na.icon(refptr, m.sd.plot)
+   $)
+   G.sc.mess( VALOF
+      SWITCHON box INTO
+      $( CASE m.na.auname : RESULTIS "Enter Type below"
+         CASE m.na.autype : RESULTIS "Enter Name below"
+         CASE m.na.gr1    : RESULTIS "Enter Grid Reference 2 below"
+         CASE m.na.gr2    : RESULTIS "Enter Grid Reference 1 below"
+      $)    )
+   RESULTIS 2
+$)
+
+
+AND char.input() BE   // Input a character into the current field
+$( LET length = (G.na.buff!m.na.format = m.na.name) ->
+                 m.na.aulength, m.na.grlength
+   G.sc.input(G.na.buff+G.na.buff!m.na.box, m.sd.Blue, m.sd.Cyan, length)
+$)
+
+AND screen(state) BE G.na.buff!m.na.screen.state := state
+
+AND add.top.bit(refptr) BE !refptr := (!refptr) | #X8000
+
+AND length(box) = (box = m.na.unknown) -> 0, (G.na.buff + box)%0
+
+AND value(gridref) = gridref & #X7FFF
+
+AND topbit(gridref) = gridref >> 15
+.
+
+
+
+
+
+
+
+
+

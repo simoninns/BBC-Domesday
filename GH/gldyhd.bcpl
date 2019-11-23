@@ -1,0 +1,57 @@
+
+// /**
+//       GLDYHDR - GLOBALS HEADER for DY.INIT/DY.FREE
+//       --------------------------------------------
+//
+//       This is a master system Global definition file
+//       Reserved for state, routine and data globals
+//
+//       REVISION HISTORY:
+//
+//       DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+//       26.5.87  1        PAC      CREATED FOR AES SYSTEM
+// **/
+
+GLOBAL
+$(           
+G.IN.dy.init :FGDY
+
+G.CF.dy.init :FGDY+1
+G.CF.dy.free :FGDY+2
+
+G.CM.dy.init :FGDY+3
+G.CM.dy.free :FGDY+4
+
+G.CP.dy.init :FGDY+5
+G.CP.dy.free :FGDY+6
+
+G.HE.dy.init :FGDY+7
+G.HE.dy.free :FGDY+8
+
+G.NA.dy.init :FGDY+9
+G.NA.dy.free :FGDY+10
+
+G.NC.dy.init :FGDY+11
+G.NC.dy.free :FGDY+12
+
+G.NE.dy.init :FGDY+13
+G.NE.dy.free :FGDY+14
+
+G.NF.dy.init :FGDY+15
+G.NF.dy.free :FGDY+16
+
+G.NM.dy.init :FGDY+17
+G.NM.dy.free :FGDY+18
+
+G.NP.dy.init :FGDY+19
+G.NP.dy.free :FGDY+20
+
+G.NT.dy.init :FGDY+21
+G.NT.dy.free :FGDY+22
+
+G.NV.dy.init :FGDY+23
+G.NV.dy.free :FGDY+24
+
+G.NW.dy.init :FGDY+25
+G.NW.dy.free :FGDY+26
+$)

@@ -1,0 +1,92 @@
+// /**
+//       NAHDR - HEADER FOR NATIONAL AREA
+//       ----------------------------------
+//
+//       Manifest definitions for the national area
+//       operation.
+//
+//       REVISION HISTORY:
+//
+//       DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+//      27.10.86  5        SRY         Add m.na.pix.adj
+//       3.11.86  6        SRY         Change CI GRs - map wrong
+//*****************************************************************************
+//       8.06.87  7        SRY         Changes for UNI
+//     20.01.88   8        MH          m.na.restore.bar added for reselect
+//                                     refresh in menu bar
+// **/
+
+MANIFEST $(
+m.na.buffsize  = 4200                // G.na.buff length (words)
+m.na.cachesize = 80                  // Number of words to cache, from m.na.frame
+m.na.bytes     = 6114                // Bytes in a frame buffer
+m.na.frame     = m.na.bytes/bytesperword // End of frame buffer/words
+m.na.typeY     = m.sd.linW*17        // Y-coord of AU type field
+m.na.nameY     = (m.sd.linW*29) >> 1 // Y-coord of AU name field
+m.na.gr1Y      = m.sd.linW*10        // Y-coord of Grid Ref 1 field
+m.na.gr2Y      = (m.sd.linW*15) >> 1 // Y-coord of Grid Ref 2 field
+m.na.posX      = 16                  // O.5 chars in
+m.na.answerX   = 944                 // X-coord of answer to ambiguous question
+m.na.answerY   = m.sd.linW-4         // Y-coord of same
+m.na.aulength  = 20                  // Length of AU fields (chars)
+m.na.grlength  = 11                  // Length of Grid Ref fields (chars)
+m.na.auX       = m.na.posX + 32*m.na.aulength  // Last X for AU fields
+m.na.grX       = m.na.posX + 32*m.na.grlength  // Last X for AU fields
+m.na.UKbleast    = -11600    //      \
+m.na.UKblnorth   = -980      //       |  UK Grid Refs - corners of display area
+m.na.UKtreast    = 7550      //       |
+m.na.UKtrnorth   = 13200     //      /
+m.na.CIbleast    = 5000      //       \
+m.na.CIblnorth   = #XD3EA    //(54250) |  CI Grid Refs - corners of CI box
+m.na.CItreast    = 6000      //        |
+m.na.CItrnorth   = #XD7D2    //(55250)/
+m.na.NIbleast    = 1600      //      \
+m.na.NIblnorth   = 3000      //       |  NI Grid Refs - corners of NI box
+m.na.NItreast    = 4000      //       |
+m.na.NItrnorth   = 4800      //      /
+m.na.CIx1        = 404       //     Where to move for CI box
+m.na.CIy1        = 100
+m.na.NIx1        = 404       //     Where to move for NI box
+m.na.NIy1        = 260
+m.na.CIx2        = 576
+m.na.CIy2        = 216
+m.na.NIx2        = 732
+m.na.NIy2        = 484
+m.na.ble         = 0         //  Offsets in scratch area
+m.na.bln         = 1
+m.na.tre         = 2
+m.na.trn         = 3
+m.na.pix.adj     = 2         // Adjustment for unaligned maps
+m.na.north.range = 11000     // Maximum northing range to pass to NM -
+                             // this depends on NMHDR values
+m.na.delay         = 300     // To wait m.na.delay/100 seconds
+m.na.maprecordbytes = 10     // Bytes in a MAPDATA record
+m.na.gazrecordbytes = 48     // Bytes in a GAZETTEER record
+m.na.autypebytes = 32        // Words in the text of the AU type
+m.na.aunamebytes = 44        // Words in the text of the AU name
+m.na.initial.map   = 28995   // Frame number for map of Britain
+
+// Values for variables
+
+m.na.name      = 1           // format
+m.na.grid      = 0
+m.na.unknown   = -1          // Initial value for variables
+
+// Word offsets into context data in G.na.buff
+
+m.na.vid.req       = m.na.frame       // Video should be switched on
+m.na.format        = m.na.frame +  1  // Grid or name/type
+m.na.box           = m.na.frame +  2  // Current box or unknown
+m.na.screen.state  = m.na.frame +  3  // 1,2 or 3 (or unknown)
+m.na.other.box     = m.na.frame +  4  // The other one
+m.na.entered.box   = m.na.frame +  5  // The other one
+m.na.country       = m.na.frame +  6  // 'W' -> Wales, 'N' -> Northern I
+m.na.gbuff         = m.na.frame +  7  // For reading 48 bytes of a gazetteer record
+m.na.auname        = m.na.frame + 31  // Buffer for AU name (32 bytes)
+m.na.autype        = m.na.frame + 47  // Buffer for AU type (32 bytes)
+m.na.gr1           = m.na.frame + 63  // Buffer for Grid Ref 1 (12 bytes)
+m.na.gr2           = m.na.frame + 69  // Buffer for Grid Ref 2 (12 bytes)
+m.na.scr           = m.na.frame + 75  // Scratch grid refs
+m.na.icon          = m.na.frame + 79  // Icon grif refs
+m.na.restore.bar   = m.na.frame + 81  // Flag used to restore menu bar
+$)

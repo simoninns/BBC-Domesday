@@ -1,0 +1,4 @@
+*| link AES NE overlay                                    
+*dir c
+Join natinit ntext1 ntext2 ntext3 ntext4 ntext5 ntext6 -to $.ARC.l.text
+*back

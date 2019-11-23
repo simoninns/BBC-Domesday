@@ -1,0 +1,446 @@
+//  PUK SOURCE  7.87
+
+
+/**
+         NT.NT3 - Contents Global Routines
+         ---------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         r.contents
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         07.03.86    1     EAJ      Initial version
+         18.06.86    2     EAJ      Change value of invalid
+                                       textpointer
+         25.06.86    3     EAJ      More manifests
+         16.07.86    4     PAC      Change 'pict' to 'pic.'
+         24.7.86     5     PAC      'pointer on' calls out
+         30.9.86     6     NRY      Change 'data' to 'maps'
+         *****************************
+         5.6.87      7     DNH      CHANGES FOR UNI
+         15.6.87     8     DNH      fix align length: '1 + ...'
+         *****************************
+         24.7.87     9     MH       CHANGES FOR PUK
+          4.8.87    10     MH       update for G.nt.item.data
+         21.8.87    11     MH       delete reference to m.wplan/walk/film
+
+         GLOBALS DEFINED:
+         g.nt.show.terms
+         g.nt.show.items
+         g.nt.show.xrefs
+         g.nt.show.xref.page
+**/
+
+section "nt3"
+
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.GH.glNThd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.sihd"        // words for 'type.name'
+get ":4.ARC.H.nthd"
+
+/**
+         proc SHOW.HEADER ()
+              -----------
+
+         Sets up the screen and displays the heading of this
+         essay.
+
+         PROGRAM DESIGN LANGUAGE:
+
+            clear screen
+            select cyan display colour
+            get record title and level number
+            display them
+            (special for level 0)
+         RETURN
+**/
+
+LET show.header () be
+$(
+   // clear display
+   g.sc.clear (m.sd.display)
+
+   test g.nt.thes.data%m.nt.level = 0 then
+   $(
+      // display heading: special at Level 0: top level
+      g.sc.movea (m.sd.display,m.sd.disXtex,m.sd.disYtex - (m.sd.linw*2) )
+      g.sc.odrop ("*S*S*S*S*S*S*S*S*S*S*S*SBRITISH LIFE IN THE 1980s")
+
+      g.sc.selcol (m.sd.cyan)
+      g.sc.movea (m.sd.display,m.sd.disXtex,m.sd.disYtex -(m.sd.linw*6))
+      g.sc.ofstr ("Contents")
+      g.sc.movea (m.sd.display,m.sd.disXtex+(m.sd.disw - 10*m.sd.charwidth),
+                           m.sd.disYtex - (m.sd.linw*6))
+      g.sc.ofstr ("Level 1")
+
+      // set up to display terms list: 8 lines down
+      g.sc.movea (m.sd.display, m.sd.disXtex, m.sd.disYtex - (m.sd.linw*8) )
+   $)
+   else           // ordinary version
+   $(
+      let tbuff = vec m.nt.title.size/bytesperword
+
+      // show the the title
+      g.sc.selcol (m.sd.cyan)
+      g.sc.movea (m.sd.display, m.sd.disXtex, m.sd.disYtex)
+      g.sc.ofstr ( g.ut.align (g.nt.thes.data, m.nt.title, tbuff,
+                                               1 + g.nt.thes.data%m.nt.title) )
+      // show the rest of the heading
+      g.sc.movea (m.sd.display, m.sd.disXtex+(m.sd.disw - (9*m.sd.charwidth)),
+                                                                  m.sd.disYtex)
+      g.sc.ofstr ("Level  %i1", g.nt.thes.data%m.nt.level + 1)
+      g.sc.movea (m.sd.display, m.sd.disXtex, m.sd.disYtex - (m.sd.linw*2))
+   $)
+
+   g.sc.high (0, 0, FALSE, 100)     // dummy highlight call
+   g.sc.selcol (m.sd.cyan)          // reselect cyan after high
+   g.nt.s!m.nt.check.menu := TRUE   // new screen: will need to check menu bar
+$)
+
+
+/**
+         proc G.NT.SHOW.TERMS (read.flag)
+              ---------------
+
+         Display list of descendant thesaurus terms.
+         The terms are displayed as a list with item numbers,
+         using the kernel routine 'g.sc.oplist'.
+         Contiguous records are read as one large disc access,
+         since the VFS access is the rate limiting step, and in
+         general the descendents really are contiguous.
+
+         Note that the record for the current term must be in the
+         first thesaurus record slot before the routine is
+         called.
+
+         If the 'read.flag' is set then the descendent records
+         are physically read, otherwise they are assumed to be
+         already in store, following on from the heading record.
+         This ability to prevent reading of records avoids
+         unnecessary rereading of records that were cached and
+         are still valid.
+
+         At level 2 only of the thesaurus there may be a 'node
+         essay' - a text item pointed to by a 32 bit value in the
+         thesaurus record.  If it exists (ie. its pointer is not
+         nill = #XFFFFFFFF) then it has the same name as the
+         title of the page and appears as the first list item of
+         the descendent list with an item number of one.
+**/
+
+AND g.nt.show.terms (read.flag) be
+$(
+   let s = g.nt.thes.data        // word pointer to thes. record
+   let hdp.offset = m.nt.HDPs    // offset from 's' to first HDP
+   let doff = m.nt.thes.rec.size // put first descendent after its parent
+   let lineno = 1                // line number of list item
+
+   show.header ()                // show the heading for this term & level
+   g.nt.s!m.nt.in.xref := FALSE
+
+   // if at level 2 & textpointer is non-zero, show header term as text item
+   if s%m.nt.level = 2 & ~g.nt.is.nill32 (s, m.nt.text) do
+   $(
+      list.line (lineno, "Text", s, m.nt.title)
+      lineno := lineno + 1
+   $)
+
+   // display hierarchy descendent list
+   while lineno <= m.nt.max.items do
+   $(
+      // read and return the number of contiguous terms
+      let contig.terms = find.contig.terms (s, hdp.offset, doff, read.flag)
+      if contig.terms = 0  BREAK       // no more terms; get out
+
+      hdp.offset := hdp.offset + contig.terms * m.nt.HDPsize
+
+      // output the term title from the descendent record
+      while contig.terms > 0 do
+      $(
+         list.line (lineno, "*S*S*S*S", s, doff + m.nt.title)
+         doff := doff + m.nt.thes.rec.size
+         lineno := lineno + 1
+         if lineno > m.nt.max.items  BREAK      // important check
+         contig.terms := contig.terms - 1
+      $)
+   $)
+
+   // set number of highlightable lines on screen
+   g.nt.s!m.nt.num.lines := lineno - 1
+$)
+
+
+/*
+         function FIND.CONTIG.TERMS (s, soff, doff, read flag)
+                  -----------------
+         Returns the number of contiguous records it has read
+         given the place 's%soff' in the HDP list and the
+         destination for the records, 's%doff'.  If 'read flag'
+         is TRUE then a physical read is performed.
+*/
+
+and find.contig.terms (s, soff, doff, read.flag) = valof
+$(
+   let start32 = vec 1        // unpacked start pointer
+   let hdp32 = vec 1          // next unpacked descendent pointer
+   let recsize32 = vec 1      // size of a thes. record
+   let t32 = vec 1
+   let terms = 0              // none so far
+
+   g.ut.set32 (m.nt.thes.rec.size, 0, recsize32)
+
+   g.ut.unpack32 (s, soff, hdp32)   // pointer to start
+   g.ut.mov32 (hdp32, start32)
+   g.ut.mov32 (hdp32, t32)
+
+   until g.nt.is.nill32 (hdp32, 0) do
+   $(
+      terms := terms + 1                  // got one
+      soff := soff + m.nt.HDPsize         // next HDP
+      g.ut.unpack32 (s, soff, hdp32)      // unpack this one
+      g.ut.add32 (recsize32, t32)         // add recsize to last one
+
+      if g.ut.cmp32 (t32, hdp32) ~= m.eq do     // check contiguity
+         BREAK                            // that's all
+   $)
+
+   // only do the read if necessary
+   if terms > 0 & read.flag = m.nt.must.read.data do
+      g.nt.read.thes.recs (start32, s, doff, terms)
+
+   RESULTIS terms
+$)
+
+
+/**
+         proc G.NT.SHOW.ITEMS (read.flag)
+              ---------------
+
+         Display a page of item names from the bottom level of
+         the thesaurus as a list with item numbers.  Item records
+         are read one at a time and their titles output as a set
+         of list lines numbering from 1.
+
+         The routine has much the same structure as
+         'g.nt.show.terms' but since item records are unlikely to
+         be contiguous in the Item Names File no attempt is made
+         to read them in blocks.
+**/
+
+
+AND g.nt.show.items (read.flag) be
+$(
+   let s = g.nt.thes.data        // word pointer to thesaurus record
+   let d = g.nt.item.data        // word pointer to item record area
+   let hdp.offset = m.nt.HDPs    // offset from 's' to first HDP
+   let hdp32 = vec 1             // unpacked names file record number
+   let lineno = 1                // line number of list item
+
+   // call highlighting routine using dummy parameters (so new value
+   // returned is different to old one)
+   show.header ()              // show the heading for this term & level
+   g.nt.s!m.nt.in.xref := FALSE
+
+   g.ut.unpack32 (s, hdp.offset, hdp32)   // unpack first item record number
+   // display hierarchy descendent list
+   while ~g.nt.is.nill32 (hdp32, 0) & lineno <= m.nt.max.items do
+   $(
+      // calculate where the next descendent item record is read to
+      let doff = (lineno - 1) * m.nt.NAMES.rec.size //MH 4.8.87
+      let type = ?         // item type
+
+      // only do the read if necessary
+      if read.flag = m.nt.must.read.data do
+         g.nt.read.item.rec (hdp32, d, doff)   // read record
+
+      type := d % (doff + m.nt.itemtype)
+
+      // output the title from the descendent record with its type name
+      list.line (lineno, type.name (type), d, doff + m.nt.itemname)
+      lineno := lineno + 1
+
+      hdp.offset := hdp.offset + m.nt.HDPsize   // next HDP
+      g.ut.unpack32 (s, hdp.offset, hdp32)      // unpack it
+   $)
+
+   // set number of items for this thes. term
+   g.nt.s!m.nt.num.items := lineno - 1
+
+   // set number of highlightable lines on screen
+   g.nt.s!m.nt.num.lines := lineno - 1
+$)
+
+
+/**
+         proc G.NT.SHOW.XREFS (read.flag)
+              ---------------
+
+         Reads the xref records, a set of Item Names File record
+         numbers, regardless of 'read.flag' and then displays the
+         first page of cross reference items.  Beware of the
+         buffer-sharing activities of this routine, specifically
+         the definition of m.nt.xrefpos: see the header 'nthdr'.
+**/
+
+
+AND g.nt.show.xrefs (read.flag) be
+$(
+   if read.flag do
+   $(
+      let p32 = vec 1      // for unpacked xref list offset
+                           // NB!! m.nt.xrefpos must be a word multiple
+      let read.to = g.nt.thes.data + m.nt.xrefpos/bytesperword
+      let bytes.to.read = ?
+
+      // determine address of xref list
+      g.ut.unpack32 (g.nt.thes.data, m.nt.xref, p32)
+
+      // read length of xref list into memory and check for oversize
+      g.dh.read (g.nt.thes.handle, p32, read.to, 2)
+      g.nt.s!m.nt.num.xrefs := g.ut.unpack16 (read.to, 0)
+
+      if g.nt.s!m.nt.num.xrefs > m.nt.maxxrefs do
+      $(
+         $<DEBUG
+         g.sc.ermess ("WARNING %N xrefs: limit is %N",
+                                         g.nt.s!m.nt.num.xrefs, m.nt.maxxrefs)
+         $>DEBUG
+         g.nt.s!m.nt.num.xrefs := m.nt.maxxrefs
+      $)
+
+      bytes.to.read := 2 + g.nt.s!m.nt.num.xrefs * m.nt.xref.rec.size
+
+      // read list of xref item record numbers into memory
+      g.dh.read (g.nt.thes.handle, p32, read.to, bytes.to.read)
+   $)
+
+   // show first page
+   g.nt.s!m.nt.xref.page.no := 1
+   g.nt.show.xref.page (read.flag)
+$)
+
+
+/**
+         proc G.NT.SHOW.XREF.PAGE (read.flag)
+              -------------------
+
+         Much the same as 'g.nt.show.items', but with the
+         following special features:
+         * displays the page of cross refs specified by local
+         static 'm.nt.xref.page.no';
+         * bases its line numbers on the number of items in the
+         REAL bottom level items screen, as seen just before
+         'Cross Ref' was selected from the menu bar.
+**/
+
+AND g.nt.show.xref.page (read.flag) be
+$(
+   let s = g.nt.thes.data
+   let soff = ?
+
+   let d = g.nt.item.data
+   let doff = 0
+
+   let first.xref = ?   // first of page: 0, max.items, max.items*2,...
+   let last.xref = ?    // last of page
+
+   let xref.list.base = m.nt.xrefpos + 2     // skip 2-byte length
+   let lineno = ?       // actual number to be shown
+                        // based on number of non-xref items for this term
+
+   show.header ()                   // show the heading for this term & level
+   g.nt.s!m.nt.in.xref := TRUE
+
+   first.xref := (g.nt.s!m.nt.xref.page.no - 1) * m.nt.max.items
+   last.xref := g.nt.min (first.xref + m.nt.max.items,
+                                             g.nt.s!m.nt.num.xrefs) - 1
+   soff := xref.list.base + first.xref * m.nt.xref.rec.size
+   lineno := g.nt.s!m.nt.num.items + 1 + first.xref
+
+   // identify addresses of item records; read records; display titles
+   for item = first.xref to last.xref do
+   $(
+      let type = ?
+      let recno32 = vec 1
+
+      // only read the record if it is not there already
+      if read.flag = m.nt.must.read.data do
+      $(
+         g.ut.unpack32 (s, soff, recno32)       // unpack item rec number
+         g.nt.read.item.rec (recno32, d, doff)  // read the record
+      $)
+
+      type := d % (doff + m.nt.itemtype)
+
+      // output the title from the item record with its type name
+      list.line (lineno, type.name (type), d, doff + m.nt.itemname)
+      lineno := lineno + 1
+
+      soff := soff + m.nt.xref.rec.size
+      doff := doff + m.nt.NAMES.rec.size
+   $)
+
+   // set number of highlightable lines on screen
+   g.nt.s!m.nt.num.lines := last.xref - first.xref + 1
+$)
+
+
+/*
+         function TYPE.NAME (type)
+                  ---------
+
+         Returns a pointer to the corresponding string according
+         to value of 'type', which must be a Domesday Item Type
+         (see Videodisc Structures spec)
+
+         NB. the caller must NOT modify the returned string.
+         It may be examined or copied but not modded.
+*/
+
+AND type.name (type) = VALOF switchon type into
+$(
+   case 1 : RESULTIS "Gmap"
+//   case 2 :
+   case 3 : RESULTIS "Amap"
+   case 4 : RESULTIS G.menuwords+m.wData
+//   case 5 : RESULTIS G.menuwords+m.wPlan
+   case 6 :
+   case 7 : RESULTIS G.menuwords+m.wText
+   case 8 : RESULTIS "Pic."
+//   case 9 : RESULTIS G.menuwords+m.wWalk
+//   case 10: RESULTIS G.menuwords+m.wFilm
+   default: RESULTIS "**?@!"
+$)
+
+
+/*
+         proc LIST.LINE (line num, name tag, s, soff)
+              ---------
+
+         Constructs and outputs an 'oplist' line using the line
+         number 'lineno', the 'name tag' for this particular
+         item, eg. 'Film' for a video item or all spaces for a
+         thesaurus term, and the item name string starting at
+         s%soff.
+
+         Note that 'name tag' must be a BCPL string of 4
+         characters; s%soff must start a BCPL string, but does
+         not have to be word-aligned.
+*/
+
+and list.line (lineno, header, s, soff) be
+$(
+   let tbuff = vec m.nt.title.size/bytesperword
+
+   tbuff%0 := header%0 + 1 + s%soff
+   g.ut.movebytes (header, 1, tbuff, 1, header%0)
+   tbuff%(header%0+1) := '*S'
+   g.ut.movebytes (s, soff+1, tbuff, header%0+2, s%soff)
+   g.sc.oplist (lineno, tbuff)
+$)
+.

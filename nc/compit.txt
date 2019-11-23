@@ -1,0 +1,465 @@
+c comp
+*| compile the Chart overlay
+co chart0
+ARM BCPL Version 2.1
+Section chart0
+Tree size 7279
+Warning near line 208: value of VALOF block may be undefined
+ARM CodeGenerator 2.13
+Section chart0 size 2492 bytes
+Program size = 2492 bytes
+co chart1
+ARM BCPL Version 2.1
+Section Chart1
+Tree size 8830
+Warning near line 363: value of VALOF block may be undefined
+Warning near line 449: value of VALOF block may be undefined
+ARM CodeGenerator 2.13
+Section Chart1 size 6428 bytes
+Program size = 6428 bytes
+co chart2
+ARM BCPL Version 2.1
+Section chart2
+Tree size 6473
+ARM CodeGenerator 2.13
+Section chart2 size 2640 bytes
+Program size = 2640 bytes
+co chart3
+ARM BCPL Version 2.1
+Section chart3
+Tree size 8852
+ARM CodeGenerator 2.13
+Section chart3 size 7096 bytes
+Program size = 7096 bytes
+co chart4
+ARM BCPL Version 2.1
+Section chart4
+Tree size 8360
+Warning near line 376: value of VALOF block may be undefined
+ARM CodeGenerator 2.13
+
+*** Error: compiler error: op = 48
+
+*** Error: compiler error: op = 71
+
+Prefetch Abort at 02E00DF4
+Backtrace called
+
+Root stack:
+
+Stack-frame     Function    Arg 1     Arg 2     Arg 3     .....
+035710/00D5C4:  Abort       002(   2) 02E00DF4  
+035648/00D592:  StindOr     065( 101) 005(   5) 004(   4) 000(   0) 000(   0) 
+                            002(   2) 00004000  006(   6) 000(   0) 000(   0) 
+                            005(   5) Stack     00035648  0000F594  A0011584  
+                            006(   6) 005(   5) 00035684  0001FDD0  A001F558  
+                            007(   7) FFF(  -1) DeleteL   00035698  00023E44  
+                            A0022608  007(   7) FFF(  -1) 0000D3FB  000(   0) 
+                            000(   0) 004(   4) GenF2     0003569C  00023E44  
+                            800239CC  04100000  005(   5) 004(   4) 000(   0) 
+                            000(   0) GenF2M    000356D8  00017D18  60016BA4  
+                            04100000  
+035630/00D58C:  Scan        FFF(  -1) 000(   0) 
+035608/00D582:  bcpl.cg     -> Arg 2  0000E8BB  0000E5D0  00E(  14) 00E(  14) 
+                            0000E8BC  
+0355C4/00D571:  Start       0000E58B  -> Arg 3  0000E5CF  0000E5D0  004(   4) 
+                            004(   4) 0000E5D4  -> Arg 9  0000E5CF  0000E5D0  
+                            00A(  10) 00A(  10) 00010FAF  
+Base of stack
+
+End of backtrace
+
+Mapstore called
+Program code
+
+008004  Section SysLib    version 1.2
+    compiled on 21 Jan 86 at 16:38:29
+  008038: Initial  0082BC: ErrHand  00830C: EvHandl  00837C: CBHandl
+  008418: SetEven  0084AC: Stop     00851C: OSCLI    0086F0: Call   
+  008854: TKRErr   008890: OSByte   0088B8: OSWord   008900: OSArgs 
+  008928: OSFind   0089C8: OSFile   008A18: OSWrCh   008A30: OSRdCh 
+  008A54: OSBPut   008A74: OSBGet   008A98: ReadByt  008B04: WriteBy
+  008B4C: MulDiv   008C44: GetVec   008CE4: FreeVec  008D4C: Level  
+  008D60: LongJum  008DE0: Aptovec  008E10: GetByte  008E24: PutByte
+  008E38: GBytes   008E60: PBytes   008E84: MoveWor  008EAC: FillWor
+  008ECC: CoWait   008F14: CreateC  008F88: DeleteC  008FF8: CallCo 
+  009040: ResumeC
+
+009294  Section StringSt
+    compiled on 03-Feb-87 at 18:44:40 using CG version 2.10
+  0092C8: BufferR  009318: BufferW  0093B8: MakeStr  009434: StringW
+  009488: FindStr  0094A8: StringF  009598: CopyStr  0095F0: FindFil
+  00964C: FileEnd  00969C: FileUnr  00980C: FindFil  009858: FileEnd
+
+009A30  Section DecodeAr
+    compiled on 19-Mar-86 at 11:42:09 using CG version 2.5
+  009A64: RdArgs   009E1C: RdItem   00A05C: FindArg
+
+00A1FC  Section BCPLIB (  version 1.5
+    compiled on 03-Feb-87 at 18:27:13 using CG version 2.10
+  00A230: FindStr  00A378: MakeSer  00A3D4: SerialS  00A3F8: SerialW
+  00A474: MakePri  00A4AC: Printer  00A518: Printer  00A558: Printer
+  00A5B8: Printer  00A620: Makefil  00A668: FileEnd  00A714: MakeNew
+  00A74C: hcdr     00A784: NextRdC  00A914: ErrorRd  00A950: ErrorWr
+  00A990: EndStre  00AA14: NastyEr  00AAFC: NullRea  00AB18: MakePer
+  00ABD8: NotMuch  00AC04: VduRead  00AD8C: VduWrit  00AE00: VduAgai
+  00AEB0: Lib.Ini  00AF5C: Lib.Ter  00AFD8: SelectI  00B094: SelectO
+  00B150: FindInp  00B16C: FindOut  00B188: RdCh     00B250: RdBin  
+  00B264: WrCh     00B2BC: WrBin    00B314: EndRead  00B34C: EndWrit
+  00B384: UnRdCh   00B3A0: Read.Of  00B400: Set.Off  00B454: Extent 
+  00B4A8: CheckFi  00B500: MaxVec   00B59C: Time     00B5E8: Date   
+  00B5FC: TimeOfD  00B624: date.an  00B664: Plant    00B9DC: Random 
+  00BA2C: Nothing  00BA40: Fault    00BAF8: UnpackS  00BB58: PackStr
+  00BC28: Input    00BC40: Output   00BC58: ReadN    00BD64: NewLine
+  00BD7C: NewPage  00BD94: WriteD   00BEC8: WriteN   00BEE0: WriteHe
+  00BF3C: WriteOc  00BF8C: WriteS   00BFFC: WriteT   00C074: WriteU 
+  00C0F0: WriteF   00C2DC: Capital  00C310: CompCh   00C354: CompStr
+
+00CA88  Section map  version 1.3
+    compiled on 27-Aug-86 at 14:39:12 using CG version 2.8
+  00CABC: BackTra  00CD3C: WriteFN  00CD80: writear  00CE74: MapStor
+  00CFFC: Describ  00D3C0: Abort  
+
+00D898  Section CGA  version 1.8
+    compiled on <unset> at <unset> using CG version 2.13
+  00D8CC: IgnoreN  00D934: Discard  00D984: ReadNam  00D998: WriteNa
+  00D9AC: GenStor  00DC8C: CGDebug  00DD08: Scan     00F338: LabelIn
+  00F428: OffsetO  00F480: LoadLab
+
+00F8A0  Section CGB  version 1.7
+    compiled on <unset> at <unset> using CG version 2.13
+  00F8D4: CGSwitc  00FAA4: LabVecS  00FC70: BinTree  00FDA0: CaseCom
+  00FDFC: CGEntry  0101EC: CGSave   010494: CheckRL  010558: CGApply
+
+011130  Section CGC  version 1.19
+    compiled on <unset> at <unset> using CG version 2.13
+  011164: CGStind  0111C8: CGAssOp  0112D0: StindOr  01175C: CGStCar
+  0118D0: CGShift  011A6C: CGLogop  011DE4: CGRelop  011DFC: CGRelop
+  011FC8: Conditi  011FE0: Conditi  012564: MaskFor  012698: Reverse
+  012778: Complem  01285C: CGSlctS  013070: CGByteA
+
+013624  Section CGD  version 1.4
+    compiled on <unset> at <unset> using CG version 2.13
+  013658: Initial  013694: Termina  0136BC: CountWr  0136FC: TabTo  
+  0137A4: Registe  0138E4: ShiftNa  013960: MaskNam  013ADC: OpCodeN
+  013C5C: F4Type   013CE0: PrintRe  013D90: RotateR  013DCC: PrintNu
+  013E40: StartCo  013E74: PrintF2  013F40: PrintIn  014878: FConst 
+  014934: PrintCP  014A4C: FPRegNa  014B0C: CPRTFop  014BE8: CPDOFop
+  014F24: WriteDe
+
+01553C  Section CGE  version 1.7
+    compiled on <unset> at <unset> using CG version 2.13
+  015570: InitPen  0155A8: AddPend  015614: PlantIn  0157E0: PlantCo
+  015820: SameIns  015958: CommonS  015A08: LabelIn  015A7C: FirstPe
+  015B6C: FlushPe  016114: SetLabe  016144: ShiftVa  016184: LogBase
+  0161B8: F5Inst   01624C: F4Inst   016278: F4InstM  016320: F2Inst 
+  016468: PackUp   01658C: F1Inst   016698: GenF1K   0167B4: Compare
+  016AC8: GenRR    016B14: GenF2    016BB4: GenF2M   016D94: CallSub
+  016DEC: SetRtoR  016EC4: SetRtoR  016F0C: SetRToR  016FEC: SetRtoR
+  017164: SetRtoK  017378: GenF     017398: GenFDS   017544: InsertC
+  01759C: EightBi  017684: ShiftRe  0176D4: ShiftRe  017724: MaskOut
+  017778: Transfe  0177D4: Jump     0178A0: CondJum  0178B8: CondJum
+  0179E8: F5InstL  017B34: F5InstL  017BBC: CheckDe  017C10: GlobalC
+
+018024  Section CGF  version 1.7
+    compiled on <unset> at <unset> using CG version 2.13
+  018058: PutWord  0180B8: PutStri  01816C: Address  0181F8: ReadWor
+  018240: WriteWo  018288: FindSto  01832C: FlagLab  018368: LabelFl
+  0183AC: FindLab  018484: ValueOf  0184CC: AreaOfL  018510: LabelWi
+  018598: RealSet  018BC4: BranchI  018C44: UsesOrU  018CC0: AddRef 
+  018D70: GetArea  018E04: SetArea  018E98: InitDat  018F74: GetData
+  018FD8: AddData  0190D0: fdata    0191DC: sdata    019238: data   
+  019264: CGStrin  0194C8: GenData  01955C: AddRelo  01959C: AddXRel
+  0195E4: AddXSym  0196F4: InternS  019784: CGGloba  019CD4: Printin
+  019D04: PrintHe  019DD0: CGEnd    01A0E0: WriteTa  01A140: WriteOb
+  01A1F4: OutputS  01A340: RoundUp  01A750: OutArea  01A884: OutByte
+  01A89C: BinWord
+
+01AEC4  Section CGG  version 1.12
+    compiled on <unset> at <unset> using CG version 2.13
+  01AEF8: FreeReg  01AF98: FreeWit  01B058: MovetoR  01B088: LoadArg
+  01B140: MoveToR  01B850: TypeOfF  01B8B8: GenOpTo  01B8F4: GenOpTo
+  01BAF4: Compile  01C354: CGVecSt  01C3C4: CGVecap  01C4B0: CGVecap
+
+01C92C  Section CGH  version 1.13
+    compiled on <unset> at <unset> using CG version 2.13
+  01C960: Initial  01CA1C: Argumen  01CA40: RegEntr  01CAA0: HasSlav
+  01CAF4: Discard  01CB84: Discard  01CC3C: Discard  01CC68: Discard
+  01CC94: IsNonLo  01CCC4: IsNonCo  01CCE8: Discard  01CD68: Discard
+  01CE8C: LoadAdd  01D054: LoadCar  01D1AC: MoveSto  01D1EC: MoveRto
+  01D258: StoreR   01D2CC: AddRegI  01D328: Discard  01D348: Discard
+  01D438: PrintRe  01D458: PrintR   01D5D4: IsInaRe  01D628: LookFor
+  01D654: LookFor  01D6D0: LocInRe  01D704: TurnInd  01D7A4: RemoveF
+  01D804: LookFor  01D9BC: NotAddr  01D9E0: Shifted  01DA04: IsaCar 
+  01DA28: LookFor  01DB14: Lock     01DBC0: Unlock   01DC84: Locked 
+  01DCC8: AddLocT  01DD14: CopySL   01DD6C: Discard  01DDB4: DelLocF
+  01DE50: PrintRe  01DFE8: SaveReg  01E004: CopyIn   01E198: Restore
+  01E1B8: CopyBac  01E2F8: Interse  01E554: FindSav  01E5B8: SaveSta
+  01E678: MoveToA  01E6B0: MoveToA  01E848: MoveToA  01E880: MoveToA
+  01E8F4: MoveToA  01E92C: MoveToA  01E944: MoveAux  01EC40: Using  
+  01EC94: NextR    01ECC4: FindReg  01ED28: IsItFre  01F014: FindR  
+  01F118: Lose     01F210: LoseR    01F264: PrintSi  01F320: SSEntry
+  01F384: InitSta  01F458: Load     01F4CC: SwapSS   01F534: Stack  
+  01F6B4: Store    01F730: StoreT   01FA30: IsSimpl  01FA98: IsInThe
+  01FAEC: Class    01FBE8: IsConst
+
+0202A8  Section CGI  version 1.6
+    compiled on <unset> at <unset> using CG version 2.13
+  0202DC: LowBit   0202FC: DivByPo  020374: DivByPo  0203EC: IsPower
+  020438: IsSimpl  020490: FindSou  020630: DoTwoSi  0206A0: FRandSh
+  020708: Multipl  02078C: TwoInst  0208F8: IsSumOr  02098C: IsSumOf
+  020A5C: IsDiffe  020B2C: SimpleM  020C58: CGMult   0210C4: CallAri
+  02121C: CGMinus  021320: CGPlus   021534: CGDiv    0217CC: CGRem  
+
+021BF4  Section CGJ  version 1.6
+    compiled on <unset> at <unset> using CG version 2.13
+  021C28: Reverse  021C64: LastInL  021C98: DeleteF  021D18: DeleteL
+  021D5C: CopyOfL  021E10: LengthO  021E44: Assoc    021E84: Nth    
+  021ECC: InsertI  021F4C: PrintLi  022040: TraceIt  0220DC: ExitTra
+  022168: ClearAs  0221E4: Dedicat  02222C: Registe  02226C: LocHeld
+  0222AC: AddToPe  02234C: DelSloc  022418: DelRegF  0224B8: SlocInL
+  0224F8: OffsetI  022564: RegInPe  02258C: PrintPe  0225D0: DelLocs
+  022640: DeleteL  0226F8: CopyOfL  0227A0: FlushPe  02287C: FlushPe
+  0228E4: DelLocs  022A6C: FlushPe  022B1C: FlushPe  022B88: FlushPe
+  022C0C: FlushPe  022C8C: F4RegOr  022CF8: FlushPe  0233D0: AddToPe
+  023464: FlushPe  0234E4: FlushPe  023558: FlushPe  0235CC: FlushPe
+  02363C: FlushPe  023680: FlushPe  023AD8: FlushPe
+
+0240E8  Section CGK  version 1.4
+    compiled on <unset> at <unset> using CG version 2.13
+  02411C: CGFloat  024188: CGFix    0241F0: CGFop    024380: CGFUnop
+  02441C: CGFComp  0244C8: UsingFR  024514: MoveToA  02458C: MoveToA
+  0245A4: MoveFAu  0246C4: NextFR   024700: IsItFre  0248C4: FreeFR 
+  02492C: CheckFP  024980: MoveToF  024D88: SmallFl  024E08: StoreFR
+  024E64: MoveRto  024EC4: MoveFRt  024F24: GenCPRT  024F4C: GenCPDO
+  024F94: GenCPDT  024FD0: PackFPN
+
+025418  Section CGM  version 1.7
+    compiled on <unset> at <unset> using CG version 2.13
+  02544C: bcpl.cg  025928: ReadByt  0259FC: ReadByt  025A8C: PeekN  
+  025AC0: ReadL    025B14: ReadGN   025B48: NextLab  025B74: CGError
+  025C28: Collaps  025C68: WriteBy  025CF4: WriteBy  025D68: DelNonA
+  025E00: Copy     025EB8: PreScan  025EDC: AddTran  0268E0: PreJump
+  02694C: PreScan  02711C: ReadStr
+
+027910  Section BCPL  version 1.2
+    compiled on 23-Jun-86 at 16:26:59 using CG version 2.8
+  027944: Start    027F80: SmallNu  027FAC: Exit     028024: Complai
+  028060: Abandon  0280B8: GetVect  028138: GetWith  028198: FreeVec
+  02822C: GetBlk   0282E4: MarkHea  028318: ResetHe  0283B4: FreeBlk
+  02842C: FillBlk  0284A4: Open     028510: Close    02863C: LookUpT
+
+028AF0  Section Args
+    compiled on 23-Jun-86 at 16:27:05 using CG version 2.8
+  028B24: bcpl.ar  028F44: rdn      029024: BadOpt   029548: OpenStr
+  0295C8: NewStri  029650: ReadCod  0297B4: GetTag 
+
+029B70  Section Lex  version 1.2
+    compiled on 23-Jun-86 at 16:27:20 using CG version 2.8
+  029BA4: initial  029BD4: NextSym  029BF4: BasicSy  02A650: multich
+  02A6EC: LookUpW  02A7B0: CString  02A998: conditi  02ABB0: get.ccs
+  02ABF4: DeclSys  02AC94: d        02AD5C: RCh      02ADCC: RdTag  
+  02AE80: Perform  02B118: find.he  02B32C: ReadNum  02B3C0: ReadFlo
+  02B504: value    02B560: RdStrCh  02B848: ReadOct
+
+02BFD4  Section Syn  version 1.2
+    compiled on 23-Jun-86 at 16:27:34 using CG version 2.8
+  02C008: bcpl.sy  02C118: RProg    02C240: List1    02C27C: List2  
+  02C2B8: List3    02C2F4: List4    02C330: List5    02C36C: List6  
+  02C3C0: GetList  02C420: InsertI  02C4B8: MakeLis  02C60C: SynRepo
+  02CA7C: WrChBuf  02CB0C: RdBlock  02CD18: RdSeq    02CDD8: RdCDefs
+  02CF5C: RdSect   02CFF4: RNameli  02D094: RName    02D0CC: Ignore 
+  02D0F0: CheckFo  02D12C: RbExp    02D5EC: RExp     02DAC4: RExpLis
+  02DB6C: RDef     02DD68: RbCom    02E364: rcom   
+
+02EEA0  Section TrnA  version 1.1
+    compiled on 23-Jun-86 at 16:27:52 using CG version 2.8
+  02EED4: bcpl.tr  02F168: NextPar  02F18C: CompEnt  02F248: CompJum
+  02F268: EndOcod  02F2A8: DeclExt  02F394: Trans    02FFBC: CheckCo
+  0300B8: Declnam  0301AC: DeclDyn  0302A4: DeclSta  0303BC: DeclLab
+  0303F8: CheckDi  0304B4: AddName  030574: Name     0305E0: FindCel
+  03064C: FindNam  03067C: ScanLab  030830: TransDe  0308A8: TransDy
+  03099C: TransSt  030BF8: StatDef  030C74: JumpCon  030E10: TransSw
+  031000: TransFo
+
+031600  Section TrnB  version 1.4
+    compiled on 23-Jun-86 at 16:28:05 using CG version 2.8
+  031634: Load     031E68: LoadLV   031FD8: LoadZer  032014: LoadLis
+  0320FC: EvalCon  0325E8: Assign   032B0C: TransNa  032CCC: define.
+  032D1C: define.  033040: CheckLa  033130: CompLab  033188: CompDat
+  0331BC: OutStri  033238: OutOp    033290: Out1     03339C: PByte  
+  03342C: wrpn     033478: Out2     0334A8: wrc      033504: TransRe
+
+034078  Section PTree  version 1.2
+    compiled on 23-Jun-86 at 16:28:15 using CG version 2.8
+  0340AC: bcpl.pt  0340C8: PList  
+
+796 globals allocated
+
+Values set in Global Vector (00D24D/034934):
+G  0: 31C( 796)    G  1: Start        G  2: 041(  65)    G 13: 000(   0)    
+G 14: PutByte      G 15: GetByte      G 16: MulDiv       G 17: 0000E56B     
+G 18: WriteS       G 19: WriteF       G 20: Capital      G 21: CompCh       
+G 22: CompStr      G 23: NewLine      G 24: RdCh         G 25: UnRdCh       
+G 26: WrCh         G 27: Input        G 28: Output       G 29: SelectI      
+G 30: SelectO      G 31: 0000E6BA     G 32: 0000E58B     G 35: Stop         
+G 36: NewPage      G 37: GBytes       G 38: PBytes       G 40: 0000D56B     
+G 41: Level        G 42: LongJum      G 43: Aptovec      G 44: RdBin        
+G 45: WrBin        G 46: FindInp      G 47: FindOut      G 48: CreateC      
+G 49: DeleteC      G 50: CallCo       G 51: ResumeC      G 52: CoWait       
+G 54: GetVec       G 55: FreeVec      G 56: MaxVec       G 57: 0000D56A     
+G 59: Read.Of      G 60: Set.Off      G 61: Extent       G 63: Abort        
+G 64: BackTra      G 65: MapStor      G 66: ReadByt      G 67: WriteBy      
+G 69: PackStr      G 70: UnpackS      G 76: EndRead      G 77: EndWrit      
+G 78: ReadN        G 79: WriteD       G 80: WriteN       G 81: WriteHe      
+G 82: WriteOc      G 83: RdArgs       G 84: RdItem       G 85: FindArg      
+G 90: Random       G 95: Fault        G 96: OSArgs       G 97: OSBGet       
+G 98: OSBPut       G 99: OSFind       G100: OSFile       G101: OSCLI        
+G102: OSWrCh       G103: OSRdCh       G104: OSByte       G105: OSWord       
+G106: TKRErr       G108: Time         G109: TimeOfD      G110: Date         
+G111: Lib.Ini      G112: SetEven      G134: FindStr      G135: MakeNew      
+G136: EndStre      G137: FindFil      G138: FindFil      G139: StringF      
+G140: MoveWor      G141: FillWor      G142: 00002001     G143: Lib.Ter      
+G144: 0000E58B     G145: 0000E5A7     G146: 0000E6BA     G148: 001D0000     
+G150: 00A(  10)    G151: 000(   0)    G152: 0000E58B     G153: 000(   0)    
+G155: 000(   0)    G156: 0000E699     G158: 00035608     G159: 0002F140     
+G160: 000(   0)    G162: 0000E5D7     G163: 0000E5D4     G164: 000(   0)    
+G165: Complai      G166: Abandon      G167: 0000E6D7     G168: Open         
+G169: Close        G170: 0000F4AD     G171: 0000F4AE     G172: 048(  72)    
+G173: 29E( 670)    G174: MarkHea      G175: ResetHe      G176: GetVect      
+G177: GetWith      G178: FreeVec      G179: GetBlk       G180: FillBlk      
+G181: FreeBlk      G182: LookUpT      G183: 0000E5D0     G184: 0000E5DA     
+G185: bcpl.ar      G186: bcpl.sy      G187: bcpl.tr      G188: bcpl.pt      
+G189: bcpl.cg      G190: 0000E5C3     G196: 000(   0)    G197: 004(   4)    
+G198: FFF(  -1)    G199: 000(   0)    G201: FFF(  -1)    G202: 0000EA9C     
+G204: 0000EA9C     G205: 000(   0)    G206: 000(   0)    G207: 000(   0)    
+G208: 000(   0)    G209: 000(   0)    G210: FFF(  -1)    G211: FFF(  -1)    
+G212: 000(   0)    G213: 001(   1)    G214: 000(   0)    G230: NextSym      
+G231: initial      G232: SynRepo      G240: TransRe      G241: NextPar      
+G242: Trans        G243: DeclLab      G244: FindNam      G245: FindCel      
+G246: Name         G247: JumpCon      G248: Load         G249: LoadLis      
+G250: EvalCon      G251: CheckCo      G252: Assign       G253: CompLab      
+G254: CompDat      G255: Out1         G256: Out2         G257: OutStri      
+G258: CheckLa      G259: OutOp        G260: 000(   0)    G261: 000(   0)    
+G262: 000(   0)    G263: 0000E6BA     G264: 00A(  10)    G265: 1BE( 446)    
+G266: 0000E814     G267: 0000E5DE     G268: SmallNu      G269: 000(   0)    
+G270: 1BB( 443)    G271: 00002710     G272: 020(  32)    G273: 01B(  27)    
+G274: 016(  22)    G275: 01F(  31)    G276: 003FFFFF     G300: 05A(  90)    
+G302: 0000FFFF     G303: 0000E7DD     G304: 0000E74B     G305: 0000E70B     
+G306: 0000C300     G307: FFF(  -1)    G308: 0000E7DD     G309: 0000E78B     
+G310: 000(   0)    G311: 0000E6DC     G312: 00035608     G313: 0002C0FC     
+G315: 0000EF3F     G316: 000(   0)    G317: 000(   0)    G320: 004(   4)    
+G330: 088( 136)    G331: 004(   4)    G333: 00010F91     G335: 0000E6DC     
+G336: 000(   0)    G337: 001(   1)    G338: 000(   0)    G339: 003(   3)    
+G340: 00010FBA     G341: 000(   0)    G345: FFF(  -1)    G346: FFF(  -1)    
+G347: 000(   0)    G348: 000(   0)    G349: FFF(  -1)    G350: 000(   0)    
+G351: 000(   0)    G352: 000(   0)    G353: 000(   0)    G354: 1BB( 443)    
+G370: 000(   0)    G376: 000(   0)    G377: 00800000     G378: 004(   4)    
+G380: 0000E75E     G381: 0000E826     G382: 0000E768     G383: 0000E763     
+G384: 007(   7)    G385: FFF(  -1)    G386: 006(   6)    G389: 000(   0)    
+G392: 001(   1)    G393: 190( 400)    G394: 0000E918     G395: 0000E6DC     
+G396: 076( 118)    G398: FFF(  -1)    G400: 000(   0)    G401: 0000F118     
+G402: 065( 101)    G404: 000(   0)    G408: 0000E8BC     G409: 000(   0)    
+G410: 000(   0)    G413: 000(   0)    G415: 00001FFE     G416: 000(   0)    
+G417: 0000E8DC     G418: 0000E8DC     G419: 00001FFF     G420: 000(   0)    
+G421: 0000E8EE     G422: 0000E8EE     G423: 00001FFC     G424: 00001FFB     
+G425: 00001FFA     G427: FFF(  -1)    G428: C0000000     G429: 0000F4F0     
+G430: 000(   0)    G431: FFF(  -1)    G433: 00001FF7     G434: 00001FF8     
+G439: 000(   0)    G440: FFF(  -1)    G441: 0000F340     G442: FFF(  -1)    
+G443: 0000E680     G445: 059(  89)    G446: 0000F030     G447: 00001FF9     
+G448: 00001FFD     G452: 0000E900     G453: 0000E900     G454: 00001FF6     
+G455: 000(   0)    G456: 000(   0)    G457: 000(   0)    G460: 000(   0)    
+G468: 000(   0)    G469: 000(   0)    G471: ReadByt      G472: ReadByt      
+G473: ReadGN       G474: ReadL        G475: NextLab      G476: CGError      
+G478: PeekN        G479: WriteBy      G489: ReadStr      G490: Scan         
+G491: IgnoreN      G492: Discard      G493: LabelIn      G494: OffsetO      
+G495: GenStor      G496: CGDebug      G505: CGSwitc      G506: CGEntry      
+G507: CGSave       G508: CGApply      G509: CheckRL      G520: CGStCar      
+G521: CGStind      G522: CGAssOp      G523: CGRelop      G524: CGLogop      
+G525: CGShift      G526: CGSlctS      G527: CGByteA      G528: Conditi      
+G529: Complem      G545: Initial      G546: Termina      G547: RotateR      
+G548: PrintIn      G549: StartCo      G570: F1Inst       G571: F2Inst       
+G572: F4Inst       G573: F5Inst       G574: GenF1K       G575: GenRR        
+G576: GenF2        G577: SetRtoR      G578: SetRtoR      G579: SetRtoK      
+G580: EightBi      G581: ShiftRe      G582: ShiftRe      G583: MaskOut      
+G584: Jump         G585: CondJum      G586: F5InstL      G587: CheckDe      
+G588: GenF         G589: GenFDS       G590: InsertC      G591: LogBase      
+G592: CallSub      G593: GlobalC      G594: PackUp       G595: FlushPe      
+G596: Transfe      G597: InitPen      G599: SetRToR      G600: GenF2M       
+G601: Compare      G610: PutWord      G611: PutStri      G612: AddRef       
+G613: SetLabe      G614: ValueOf      G615: Address      G616: CGStrin      
+G617: InitDat      G618: data         G619: sdata        G620: fdata        
+G621: OutputS      G622: CGGloba      G623: CGEnd        G624: LabelWi      
+G625: FindLab      G626: LabelFl      G627: FlagLab      G628: GenData      
+G629: GetData      G630: AddRelo      G631: RealSet      G632: AddXSym      
+G633: AddXRel      G634: InternS      G640: FreeReg      G641: MovetoR      
+G642: MoveToR      G644: Compile      G645: TypeOfF      G646: GenOpTo      
+G647: CGVecap      G648: CGVecSt      G649: LoadArg      G660: Discard      
+G661: Discard      G662: Discard      G663: Discard      G664: LoadAdd      
+G665: LoadCar      G666: MoveSto      G667: MoveRto      G668: StoreR       
+G669: Discard      G670: LookFor      G671: NotAddr      G672: Shifted      
+G673: IsaCar       G674: Lock         G675: Unlock       G676: Locked       
+G677: MoveToA      G678: MoveToA      G679: MoveToA      G680: MoveToA      
+G681: Using        G682: NextR        G683: Lose         G684: InitSta      
+G685: Load         G686: Stack        G687: Store        G688: StoreT       
+G689: Class        G690: IsConst      G691: PrintRe      G692: PrintSi      
+G693: IsSimpl      G694: IsInaRe      G695: SaveReg      G696: Restore      
+G697: Interse      G698: FindSav      G699: SaveSta      G700: PrintRe      
+G701: IsInThe      G702: Argumen      G703: MoveToA      G704: MoveToA      
+G705: AddRegI      G706: LookFor      G707: LookFor      G708: LocInRe      
+G709: TurnInd      G710: SwapSS       G711: RemoveF      G712: LoseR        
+G713: SSEntry      G714: Initial      G715: LookFor      G716: HasSlav      
+G725: CGMult       G726: CGDiv        G727: CGRem        G728: CGMinus      
+G729: CGPlus       G730: FindSou      G745: LastInL      G746: Reverse      
+G747: Assoc        G748: PrintLi      G749: Nth          G750: DeleteF      
+G751: LengthO      G752: CopyOfL      G753: AddToPe      G754: FlushPe      
+G755: FlushPe      G756: FlushPe      G757: DelRegF      G758: DelSloc      
+G759: RegInPe      G760: SlocInL      G761: PrintPe      G762: DelLocs      
+G763: DelLocs      G765: AddToPe      G766: FlushPe      G767: FlushPe      
+G768: FlushPe      G769: FlushPe      G770: Dedicat      G771: Registe      
+G772: LocHeld      G773: ClearAs      G774: FlushPe      G775: FlushPe      
+G776: FlushPe      G777: FlushPe      G778: DeleteL      G779: InsertI      
+G785: CGFloat      G786: CGFix        G787: CGFop        G788: CGFUnop      
+G789: CGFComp      G790: MoveToA      G791: GenCPDT      G792: MoveFRt      
+G793: StoreFR      G794: PackFPN      G795: NextFR       G796: MoveRto      
+End of mapstore
+co chart5
+ARM BCPL Version 2.1
+Section chart5
+Tree size 8935
+Warning near line 534: value of VALOF block may be undefined
+ARM CodeGenerator 2.13
+Section chart5 size 7328 bytes
+Program size = 7328 bytes
+co chart6
+ARM BCPL Version 2.1
+Section Chart6
+Tree size 8181
+Warning near line 468: value of VALOF block may be undefined
+Warning near line 474: value of VALOF block may be undefined
+Warning near line 490: value of VALOF block may be undefined
+Warning near line 493: value of VALOF block may be undefined
+ARM CodeGenerator 2.13
+Section Chart6 size 5348 bytes
+Program size = 5348 bytes
+co chart7
+ARM BCPL Version 2.1
+Section Chart7
+Tree size 7042
+Warning near line 116: value of VALOF block may be undefined
+Warning near line 162: value of VALOF block may be undefined
+ARM CodeGenerator 2.13
+Section Chart7 size 4044 bytes
+Program size = 4044 bytes
+co chart8
+ARM BCPL Version 2.1
+Section chart8
+Tree size 8346
+Warning near line 66: value of VALOF block may be undefined
+Warning near line 334: value of VALOF block may be undefined
+Warning near line 423: value of VALOF block may be undefined
+ARM CodeGenerator 2.13
+Section chart8 size 5940 bytes
+Program size = 5940 bytes
+*spool
+

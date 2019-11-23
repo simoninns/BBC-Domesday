@@ -1,0 +1,382 @@
+//  PUK SOURCE  6.87
+//$$diag   //mark areas included
+//$$diag1  //shows values retrieved
+//$$diag2  //introduce extra delay
+/**
+         NM.RETR4 - RETRIEVE SUB-OPERATION FOR MAPPABLE DATA
+         ---------------------------------------------------
+
+         NAME OF FILE CONTAINING RUNNABLE CODE:
+
+         cnmRETR
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR   DETAILS OF CHANGE
+         14.04.86 1        D.R.Freed   Initial version
+         ********************************
+         3.7.87      2     DNH      CHANGES FOR UNI
+
+         13.7.87     3     DNH      set32 for widen
+         29.9.87     4     SRY      Fix uniform retrieve
+         ********************************
+         09.6.88     5     SA       CHANGES FOR COUNTRYSIDE
+                                    total function (case1)
+         17.06.88    6     SA       final version for total function
+
+         g.nm.retrieve.values
+**/
+
+section "nmretr4"
+get "libhdr"
+get ":4.ARC.GH.glhd"
+get ":4.ARC.gH.glNMhd"
+get ":4.ARC.H.sdhd"
+get ":4.ARC.H.nmhd"
+get ":4.ARC.H.nmrehd"
+
+STATIC$( str = 0 $)
+
+/**
+         G.NM.RETRIEVE.VALUES - RETRIEVE VALUES FROM DATA
+         ------------------------------------------------
+
+         Unpacks and retrieves values within the area
+         described by the given grid references.
+
+         The results are all placed in statics used privately by
+         the Retrieve sub-operation.
+
+         INPUTS:
+
+         Bottom left east grid reference
+         Bottom left north grid reference
+         Top right east grid reference (inclusive)
+         Top right north grid reference (inclusive)
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         g.nm.s!m.sum.total
+         g.nm.s!m.missing
+         g.nm.s!m.area.no
+
+         SPECIAL NOTES FOR CALLERS:
+
+         Only to be used in child overlay cnmRETR
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.retrieve.values [bleast, blnorth, treast, trnorth]
+         --------------------
+
+         increment top treast and trnorth to include them
+         define a temporary area of interest corresponding to
+            bottom left and adjusted top right
+         process the variable over this area using drivers which
+            retrieve the data into g.nm.s statics
+         restore the real area of interest
+**/
+
+let g.nm.retrieve.values (bleast, blnorth, treast, trnorth) be
+$(
+   let   top.bit  = treast & #X8000
+   and   const32  =  vec 1
+   and   gr32     =  vec 1
+
+   str := "."
+
+   // increment the easting by the current resolution, to give a reference
+   // which falls in the next grid square and includes the specified
+   // top right reference
+
+   treast := ((treast & #x7fff) + g.context!m.resolution) | top.bit
+
+   // increment the northing - handle it using 32-bit arithmetic in
+   // case of real top bit
+
+   g.ut.set32 (g.context!m.resolution, 0, const32)
+   g.ut.set32 (trnorth, 0, gr32)
+   g.ut.add32 (const32, gr32)
+   trnorth := g.ut.get32 (gr32, @top.bit) // top.bit used as spare
+
+   // define a temporary area of interest
+   g.nm.init.processor (bleast, blnorth, treast, trnorth)
+
+   // process the variable over this AOI to retrieve the values of the
+   // grid squares in sum.total
+   g.nm.process.variable (uniform.retrieve, fine.retrieve)
+
+   // restore the real area of interest
+   g.nm.init.processor (g.context!m.grbleast, g.context!m.grblnorth,
+                        g.context!m.grtreast, g.context!m.grtrnorth)
+$)
+
+
+/*    Retrieval routines to be used by g.nm.process.variable follow    */
+
+
+/*
+      uniform.retrieve
+
+         retrieves and sums values in a block whose values are
+         all the same, due to index level compression
+
+         for areal data, puts the area number in static
+
+         clears missing flag if non-missing data is encountered
+*/
+
+and uniform.retrieve (record.number, offset, east, north, block.size) be
+$(
+   let value = vec 1
+   and missing32 = vec 1
+   and num.e, num.n  =  ?, ?
+
+$<diag
+   str := "u"
+$>diag
+
+   if record.number = m.nm.uniform.missing return
+
+   test g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data then
+   $(
+      g.nm.s!m.area.no := - record.number
+
+      TEST g.nm.s!m.nm.mask.black.sqrs
+      THEN
+         TEST record.number = 0
+         THEN
+            g.ut.set32( 0, m.nm.max.neg.high, value )
+         ELSE
+            g.ut.set32( - record.number, 0, value )
+      ELSE
+         g.ut.mov32 (g.nm.areal - record.number * m.nm.max.data.size, value)
+
+$<diag1
+      g.sc.mess("record.no %n, value store %n", record.number, !value )
+$>diag1
+$<diag2
+      g.ut.wait( 150 )
+$>diag2
+   $)
+   else
+      test g.nm.dual.data.type (g.nm.s!m.nm.raster.data.type) then
+         g.ut.set32 (offset, 0, value)
+      else
+         g.ut.set32 ( - record.number, 0, value)
+
+   g.ut.set32 (0, m.nm.max.neg.high, missing32)
+
+   // sum values if not missing
+   if g.ut.cmp32 (value, missing32) ~= m.eq then
+      test g.nm.s!m.nm.mask.black.sqrs  //miss out all squares plotted
+      then                              //in black (total case1). SA 09.6.88
+      $(
+         //set up the values vector for a fine uniform block
+         g.ut.movebytes( value, 0, g.nm.values, 0,
+                         m.nm.max.data.size*BYTESPERWORD )
+         MOVE( g.nm.values, g.nm.values+m.nm.max.data.size,
+               m.nm.fine.blocksize*m.nm.fine.blocksize*m.nm.max.data.size )
+
+         //set flag to indicate values vector must be unpacked again
+         //before re-use
+         g.nm.init.values.buffer()
+
+         // break a coarse uniform block down into 16 fine ones; a
+         // fine block will cause just one iteration
+         for e = 0 to (block.size - m.nm.fine.blocksize) by
+                                     m.nm.fine.blocksize do
+            if (east + e < g.nm.s!m.nm.grid.sq.top.e) &
+               (east + e + m.nm.fine.blocksize >
+                                          g.nm.s!m.nm.grid.sq.low.e)
+            then
+               for n = 0 to (block.size - m.nm.fine.blocksize) by
+                                           m.nm.fine.blocksize do
+                  if ( (north + n) < g.nm.s!m.nm.grid.sq.top.n) &
+                        ( (north + n + m.nm.fine.blocksize) >
+                                    g.nm.s!m.nm.grid.sq.low.n)
+                  then
+                     fine.retrieve(east + e, north + n)
+      $)
+      else
+      $(
+         g.nm.s!m.missing := FALSE
+
+         // calculate the number of squares that actually lie within the
+         // area of interest
+
+         num.e :=
+            g.nm.min (east + block.size, g.nm.s!m.nm.grid.sq.top.e) -
+                                 g.nm.max (east, g.nm.s!m.nm.grid.sq.low.e)
+
+         num.n :=
+            g.nm.min (north + block.size, g.nm.s!m.nm.grid.sq.top.n) -
+                                 g.nm.max (north, g.nm.s!m.nm.grid.sq.low.n)
+         // sum values within AOI
+         for i = 1 to g.nm.max (num.e, 0) * g.nm.max (num.n, 0) do
+            g.nm.mpadd (value, g.nm.s + m.sum.total)
+      $)
+
+$<diag
+   str := "."
+$>diag
+$)
+
+
+/*
+      fine.retrieve
+
+         retrieves and sums values in the specified fine block
+
+         for areal data, puts the area number in static
+
+         clears missing flag if non-missing data is encountered
+*/
+
+and fine.retrieve (start.east, start.north) be
+$(
+   let areal.data = g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data
+   and curr.e, curr.n, area, index =  ?, ?, ?, ?
+   and value = vec m.nm.max.data.size
+   and missing32 = vec 1
+
+   g.ut.set32 (0, m.nm.max.neg.high, missing32)
+
+   // process block
+
+   for north = 1 to m.nm.fine.blocksize do
+
+    for east = 1 to m.nm.fine.blocksize do
+
+    $(square
+
+      curr.e := start.east + east - 1
+      curr.n := start.north + north - 1
+
+      // see if this square is within area of interest;
+
+      if ( (curr.e >= g.nm.s!m.nm.grid.sq.low.e) &
+           (curr.e < g.nm.s!m.nm.grid.sq.top.e) &
+           (curr.n >= g.nm.s!m.nm.grid.sq.low.n) &
+           (curr.n < g.nm.s!m.nm.grid.sq.top.n) )   then
+      $(inside
+         index := ((north-1) * m.nm.fine.blocksize + east) * m.nm.max.data.size
+
+         test areal.data then
+         $(areal
+            // NOTE g.nm.values contains boundary values which are used to
+            //      index areal vector and area names records - all
+            //      boundary values fit into lsw
+
+            g.nm.s!m.area.no := g.nm.values!index
+
+            MOVE (g.nm.areal + g.nm.values!index * m.nm.max.data.size,
+                  value, m.nm.max.data.size)
+
+$<diag1
+            g.sc.mess( "i %n; a %n; v %n",
+                       index, g.nm.s!m.area.no, !value)
+            display.sum( g.nm.s + m.sum.total )
+$>diag1
+         $)areal
+
+         else
+
+         $(gridsquare
+            MOVE (g.nm.values + index, value, m.nm.max.data.size)
+         $)gridsquare
+
+         //miss out grid squares plotted in black if required to do so
+         //SA 09.06.88
+         IF g.ut.cmp32 (value, missing32) ~= m.eq
+         THEN
+            TEST g.nm.s!m.nm.mask.black.sqrs
+            THEN
+               UNLESS black.grid.square( curr.e, curr.n )
+               $(
+                  g.nm.s!m.missing := FALSE
+                  g.nm.mpadd (value, g.nm.s + m.sum.total)
+   
+                  //for areal data, set record value to zero so that
+                  //it is added only once
+                  IF areal.data
+                  THEN
+                  $(
+                     LET areal.record = g.nm.areal + 
+                                        g.nm.values!index * m.nm.max.data.size
+   
+                     IF g.nm.s!m.nm.mask.black.sqrs
+                     THEN FOR word = 0 TO (m.nm.max.data.size - 1)
+                             areal.record!word := 0
+                  $)
+   $<diag
+                  g.sc.selcol( m.sd.white2 )
+                  writef( str )
+   $>diag
+   $<diag2
+                  g.ut.wait( 150 )
+   $>diag2
+               $)
+            ELSE 
+            $(
+               g.nm.s!m.missing := FALSE
+               g.nm.mpadd (value, g.nm.s + m.sum.total)
+            $)
+      $)inside
+   $)square
+$)
+
+//utilities for total function  SA 17.06.88
+AND black.grid.square( grid.sq.east, grid.sq.north ) = VALOF
+$(
+   LET x = (grid.sq.east - g.nm.s!m.nm.grid.sq.low.e) *
+               g.nm.s!m.nm.x.graph.per.grid.sq +
+                  g.nm.s!m.nm.x.graph.start
+
+   LET y = (grid.sq.north - g.nm.s!m.nm.grid.sq.low.n) *
+               g.nm.s!m.nm.y.graph.per.grid.sq +
+                  g.nm.s!m.nm.y.graph.start
+
+   LET dx = g.nm.s!m.nm.x.graph.per.grid.sq - m.nm.x.pixels.to.graphics
+   LET dy = g.nm.s!m.nm.y.graph.per.grid.sq - m.nm.y.pixels.to.graphics
+
+   //check all four corners of the grid square
+   IF ( m.sd.black2 = grid.sq.colour(x,y) )  //bottom left
+   THEN 
+      IF ( m.sd.black2 = grid.sq.colour(x+dx,y) )  //bottom right
+      THEN
+         IF ( m.sd.black2 = grid.sq.colour(x,y+dy) )  //top left
+         THEN
+            IF ( m.sd.black2 = grid.sq.colour(x+dx,y+dy) )  //top right
+            THEN
+               RESULTIS TRUE
+
+   RESULTIS FALSE
+$)
+
+and grid.sq.colour( x1, y1 ) = VALOF
+$(
+   IF (x1 < 0) THEN x1 := 0
+   IF (x1 > (0 + m.sd.disw - 10) ) RESULTIS m.sd.black2
+   IF (y1 <= 0)                    RESULTIS m.sd.black2
+   IF (y1 > (m.sd.dish-10)) THEN y1 := m.sd.dish-10
+
+   g.sc.movea (m.sd.display, x1, y1)
+
+   RESULTIS g.sc.pixcol ()
+$)
+
+$<diag1
+AND display.sum( sum ) BE
+$(
+   g.sc.movea (m.sd.message, m.sd.mesXtex+32*26, m.sd.mesYtex)
+   g.sc.ofstr(";s")
+   g.sc.movea (m.sd.message, m.sd.mesXtex+32*28+16, m.sd.mesYtex)
+   g.nm.mpdisp( sum, g.nm.s!m.nm.primary.norm.factor )
+$)
+$>diag1
+.

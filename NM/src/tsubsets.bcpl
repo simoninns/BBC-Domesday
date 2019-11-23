@@ -1,0 +1,84 @@
+/**
+      Tests the routines in NM.SUBSETS
+
+         g.nm.num.of.subsets
+         g.nm.look.for.subset
+         g.nm.find.subset
+**/
+
+section "tsubset"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.dhhd"
+get ":5.h.nmhd"
+
+
+let start() be
+$(
+   let ch, rec.num, offset, posn = ?, ?, ?, ?
+
+   g.ut.errorstream := 0
+
+   get.globals ()
+
+   writes ("*n     Tests for NM.SUBSETS *n")
+
+   writes ("Insert disc DATA1 in drive 4 and hit any key... *n")
+   ch := rdch()   // throwaway char in buffer
+   ch := rdch()
+
+   runprog ("**adfs")
+   runprog ("**dir :4")
+
+   g.nm.init.frame.buffer()
+
+   // set up globals with location of index on disc
+   g.nm.s!m.nm.sub.dataset.index.record.number := 4
+   g.nm.s!m.nm.sub.dataset.index.offset := 0
+
+   writef ("*n Number of entries in index = %n *n", g.nm.num.of.subsets() )
+
+   writes ("*n Finding subset by position... *n*n")
+
+   for i = 0 to g.nm.num.of.subsets() - 1 do
+      $(
+         g.nm.find.subset (i, @rec.num, @offset)
+         writef ("Position=%n  Rec.num=%n  Offset=%n *n", i, rec.num, offset)
+      $)
+
+   writes ("*n*n Looking for subset by key... *n*n")
+
+   for i = 1 to 10 do
+      $(
+         g.nm.look.for.subset (i, @posn)
+         writef ("Key=%n  Position=%n *n", i, posn)
+      $)
+
+   g.nm.look.for.subset (19, @posn)
+   writef ("Key=%n  Position=%n *n", 19, posn)
+
+   g.nm.look.for.subset (-1, @posn)
+   writef ("Key=%n  Position=%n *n", -1, posn)
+$)
+
+and get.globals() be
+$(
+   g.nm.frame := getvec (m.nm.frame.size - 1)
+   g.nm.areal := getvec (m.nm.max.num.areas * m.nm.max.data.size)
+   g.nm.values := getvec (m.nm.fine.blocksize * m.nm.fine.blocksize *
+                                                            m.nm.max.data.size)
+   g.nm.class.upb := getvec (m.nm.num.of.class.intervals * m.nm.max.data.size)
+   g.nm.class.colour := getvec (m.nm.num.of.class.intervals)
+
+   g.nm.s := getvec (m.nm.global.statics.size)
+$)
+
+.
+
+
+
+
+
+
+
