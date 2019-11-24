@@ -1,10 +1,10 @@
 *| sublink CText, then link the PHTX overlay
 *|
 *dir c
-Join gentext1 gentext2 ctext1 ctext2 ctext3 ctext4 -to $.ARC.l.sctext
-Join aatext1 aatext2 aatext3 aatext4 -to $.ARC.l.aatext
+Join gentext1 gentext2 ctext1 ctext2 ctext3 ctext4 -to <$ROOTDIR>.l.sctext
+Join aatext1 aatext2 aatext3 aatext4 -to <$ROOTDIR>.l.aatext
 *back
 *|
-*dir $.ARC.l
+*dir <$ROOTDIR>.l
 Join cphoto aatext sctext -to phtx
 *back

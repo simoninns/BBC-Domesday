@@ -25,12 +25,12 @@ section "nv2"
 **/
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNVhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.vhhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNVhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.vhhd"
 
-get ":4.ARC.H.nvhd"
+get "<$ROOTDIR>.H.nvhd"
 
 static
 $(

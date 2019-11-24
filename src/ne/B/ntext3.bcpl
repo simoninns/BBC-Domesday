@@ -19,10 +19,10 @@ SECTION "NText3"
 
 get "libhdr"    
 
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNEhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.nehd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNEhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.nehd"
 
 /**
          G.NE.LOOKFORFIG - routine to determine if a figure has been selected

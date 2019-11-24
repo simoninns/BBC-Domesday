@@ -2,7 +2,7 @@
 *|
 *| do everything
 *time
-*dir $.ARC.utils
+*dir <$ROOTDIR>.utils
 c compsys
 c linksys
 *time

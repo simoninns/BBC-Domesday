@@ -27,13 +27,13 @@
 SECTION "Area3"
 
 GET "libhdr"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.GH.glNAhd"
-GET ":4.ARC.H.sdhd"
-GET ":4.ARC.H.dhhd"
-GET ":4.ARC.H.nmhd"
-GET ":4.ARC.H.nahd"
-GET ":4.ARC.H.vhhd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.GH.glNAhd"
+GET "<$ROOTDIR>.H.sdhd"
+GET "<$ROOTDIR>.H.dhhd"
+GET "<$ROOTDIR>.H.nmhd"
+GET "<$ROOTDIR>.H.nahd"
+GET "<$ROOTDIR>.H.vhhd"
 
 /**
          G.NA.DISPLAY.MAP - FIND UNDERLAY MAP & DISPLAY

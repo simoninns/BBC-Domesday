@@ -27,10 +27,10 @@
 
 section "nmvalid"
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNMhd"
-get ":4.ARC.H.grhd"
-get ":4.ARC.H.nmhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.H.grhd"
+get "<$ROOTDIR>.H.nmhd"
 
 manifest
 $(

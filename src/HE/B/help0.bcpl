@@ -30,13 +30,13 @@ SECTION "b.help0"
 
 GET"LIBHDR"
 
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glHEhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.dhhd"
-get ":4.ARC.H.hehd"
-get ":4.ARC.H.grhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glHEhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.dhhd"
+get "<$ROOTDIR>.H.hehd"
+get "<$ROOTDIR>.H.grhd"
 
 /**
          G.HE.HELPINI - INITIALISE ROUTINE FOR HELP

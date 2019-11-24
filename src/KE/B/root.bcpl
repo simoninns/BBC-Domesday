@@ -30,17 +30,17 @@
 SECTION "root"
 
 GET"LIBHDR"
-GET":4.ARC.GH.glhd"
-GET":4.ARC.GH.gldyhd"
-GET":4.ARC.H.sthd"
-GET":4.ARC.H.st2hd"
-GET":4.ARC.H.sdhd"
-GET":4.ARC.H.kdhd"
-GET":4.ARC.H.vhhd"
-GET":4.ARC.H.dhhd"
-GET":4.ARC.H.ovhd"
-GET":4.ARC.H.uthd"  
-GET":4.ARC.H.iophd"
+GET"<$ROOTDIR>.GH.glhd"
+GET"<$ROOTDIR>.GH.gldyhd"
+GET"<$ROOTDIR>.H.sthd"
+GET"<$ROOTDIR>.H.st2hd"
+GET"<$ROOTDIR>.H.sdhd"
+GET"<$ROOTDIR>.H.kdhd"
+GET"<$ROOTDIR>.H.vhhd"
+GET"<$ROOTDIR>.H.dhhd"
+GET"<$ROOTDIR>.H.ovhd"
+GET"<$ROOTDIR>.H.uthd"  
+GET"<$ROOTDIR>.H.iophd"
 
 
 /**

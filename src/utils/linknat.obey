@@ -3,26 +3,26 @@
 *|          
 *spool $.tmp.linkNAT    
 *time
-*dir $.ARC.NA    
+*dir <$ROOTDIR>.NA    
 c linc
-*dir $.ARC.NC         
+*dir <$ROOTDIR>.NC         
 c linc
-*dir $.ARC.NE         
+*dir <$ROOTDIR>.NE         
 c linc
-*dir $.ARC.NF         
+*dir <$ROOTDIR>.NF         
 c linc
-*dir $.ARC.NM         
+*dir <$ROOTDIR>.NM         
 c linc
-*dir $.ARC.NN         
+*dir <$ROOTDIR>.NN         
 c linc
-*dir $.ARC.NP         
+*dir <$ROOTDIR>.NP         
 c linc
-*dir $.ARC.NT         
+*dir <$ROOTDIR>.NT         
 c linc
-*dir $.ARC.NV         
+*dir <$ROOTDIR>.NV         
 c linc
-*dir $.ARC.NW         
+*dir <$ROOTDIR>.NW         
 c linc
 *time
 *spool
-*dir $.ARC.utils   
+*dir <$ROOTDIR>.utils   

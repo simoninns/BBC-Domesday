@@ -20,11 +20,11 @@
 SECTION "sram"
 
 GET"LIBHDR"
-GET":4.ARC.GH.glhd"
-GET":4.ARC.H.dhhd"
-GET":4.ARC.H.iohd"
-GET":4.ARC.H.iophd"
-GET":4.ARC.H.uthd"
+GET"<$ROOTDIR>.GH.glhd"
+GET"<$ROOTDIR>.H.dhhd"
+GET"<$ROOTDIR>.H.iohd"
+GET"<$ROOTDIR>.H.iophd"
+GET"<$ROOTDIR>.H.uthd"
 
 
 /**

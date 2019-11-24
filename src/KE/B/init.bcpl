@@ -32,13 +32,13 @@
 SECTION "b.Init"
 
 GET "LIBHDR"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.GH.gldyhd"
-GET ":4.ARC.H.sdhd"
-GET ":4.ARC.H.sdphd"
-GET ":4.ARC.H.kdhd"
-GET ":4.ARC.H.uthd"
-GET ":4.ARC.H.iophd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.GH.gldyhd"
+GET "<$ROOTDIR>.H.sdhd"
+GET "<$ROOTDIR>.H.sdphd"
+GET "<$ROOTDIR>.H.kdhd"
+GET "<$ROOTDIR>.H.uthd"
+GET "<$ROOTDIR>.H.iophd"
 
 LET G.IN.dy.init() BE
 $(    

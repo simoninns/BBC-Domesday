@@ -34,11 +34,11 @@
 section "chart8"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.gH.glNChd"
-get ":4.ARC.gH.glNMhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.nchd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.gH.glNChd"
+get "<$ROOTDIR>.gH.glNMhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.nchd"
 
 static $( vals=? $)
 

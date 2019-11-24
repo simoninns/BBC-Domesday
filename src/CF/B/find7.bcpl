@@ -31,13 +31,13 @@
 section "find7"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCFhd"
-get ":4.ARC.GH.gldyhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.cfhd"
-get ":4.ARC.H.iohd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCFhd"
+get "<$ROOTDIR>.GH.gldyhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.cfhd"
+get "<$ROOTDIR>.H.iohd"
 
 /**
          There are two special count boxes in  find, the

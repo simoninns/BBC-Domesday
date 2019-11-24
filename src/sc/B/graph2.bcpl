@@ -46,9 +46,9 @@ SECTION "sc.graph2" // graphics package
 
 GET "LIBHDR"
 GET "SYSHDR"
-GET ":4.ARC.GH.glHD"   // globals
-GET ":4.ARC.H.SDHD"   // manifests header
-GET ":4.ARC.H.SDPHD"  // private manifests
+GET "<$ROOTDIR>.GH.glHD"   // globals
+GET "<$ROOTDIR>.H.SDHD"   // manifests header
+GET "<$ROOTDIR>.H.SDPHD"  // private manifests
 
 /**
          G.SC.DTOB - CONVERT DOMESDAY TO BBC CO-ORDINATES

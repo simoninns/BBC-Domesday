@@ -40,11 +40,11 @@ SECTION "utils1"
 
 GET "LIBHDR"
 GET "SYSHDR"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.H.kdhd"
-GET ":4.ARC.H.sdhd"
-GET ":4.ARC.H.uthd"
-GET ":4.ARC.H.vhhd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.H.kdhd"
+GET "<$ROOTDIR>.H.sdhd"
+GET "<$ROOTDIR>.H.uthd"
+GET "<$ROOTDIR>.H.vhhd"
 
 /**
          G.UT.VIDEODISC.ERROR - Handle Fatal Error in DH or VH

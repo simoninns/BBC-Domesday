@@ -19,16 +19,16 @@ SECTION "HelpText1"
 
 get "libhdr"
 
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glHEhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.kdhd"
-get ":4.ARC.H.dhhd"
-get ":4.ARC.H.nehd"
-get ":4.ARC.H.uthd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.hehd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glHEhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.kdhd"
+get "<$ROOTDIR>.H.dhhd"
+get "<$ROOTDIR>.H.nehd"
+get "<$ROOTDIR>.H.uthd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.hehd"
 
 /**
          G.HE.TEXTINI - Initialization routine for Help Text

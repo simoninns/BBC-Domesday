@@ -23,13 +23,13 @@
 SECTION "aatext1"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCPhd"
-get ":4.ARC.H.kdhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.sihd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.cphd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCPhd"
+get "<$ROOTDIR>.H.kdhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sihd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.cphd"
 
 
 /**

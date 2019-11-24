@@ -25,14 +25,14 @@
 SECTION "Area1"
 
 GET "libhdr"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.GH.glNAhd"
-GET ":4.ARC.H.sdhd"
-GET ":4.ARC.H.kdhd"
-GET ":4.ARC.H.nahd"
-GET ":4.ARC.H.vhhd"
-GET ":4.ARC.H.uthd"
-GET ":4.ARC.H.sthd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.GH.glNAhd"
+GET "<$ROOTDIR>.H.sdhd"
+GET "<$ROOTDIR>.H.kdhd"
+GET "<$ROOTDIR>.H.nahd"
+GET "<$ROOTDIR>.H.vhhd"
+GET "<$ROOTDIR>.H.uthd"
+GET "<$ROOTDIR>.H.sthd"
 
 STATIC
 $( s.box=? // Communication between legal.highlight & main

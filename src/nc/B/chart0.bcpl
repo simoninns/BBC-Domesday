@@ -25,13 +25,13 @@
 section "chart0"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.gH.glNChd"
-get ":4.ARC.GH.glDYhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.iohd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.nchd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.gH.glNChd"
+get "<$ROOTDIR>.GH.glDYhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.iohd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.nchd"
 
 /**
          G.NC.DY.INIT - OVERLAY INITIALISATION

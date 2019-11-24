@@ -23,13 +23,13 @@
 section "nmrank2"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNMhd"
-get ":4.ARC.H.iohd"
-get ":4.ARC.h.sdhd"
-get ":4.ARC.h.vhhd"
-get ":4.ARC.H.nmhd"
-get ":4.ARC.h.nmrehd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.H.iohd"
+get "<$ROOTDIR>.h.sdhd"
+get "<$ROOTDIR>.h.vhhd"
+get "<$ROOTDIR>.H.nmhd"
+get "<$ROOTDIR>.h.nmrehd"
 
 /**
          G.NM.INIT.RANK - DO THE RANK SORT

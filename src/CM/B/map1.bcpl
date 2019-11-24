@@ -42,13 +42,13 @@ section "map1"
 **/
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCMhd"
-get ":4.ARC.H.dhhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.uthd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.cmhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCMhd"
+get "<$ROOTDIR>.H.dhhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.uthd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.cmhd"
 
 
 /**

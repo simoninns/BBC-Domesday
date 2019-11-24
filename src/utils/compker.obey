@@ -3,7 +3,7 @@
 *| system kernel and Help
 *|
 *time
-*dir $.ARC.KE
+*dir <$ROOTDIR>.KE
 c comp
 *dir ^.DH
 c comp
@@ -17,6 +17,6 @@ c comp
 c comp
 *dir ^.HE
 c comp
-*dir $.ARC.utils
+*dir <$ROOTDIR>.utils
 *time 
 *spool

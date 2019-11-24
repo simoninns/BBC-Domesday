@@ -31,11 +31,11 @@ NEEDS "VDU"
 
 GET "LIBHDR"
 GET "SYSHDR"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.H.sdhd"
-GET ":4.ARC.H.sdphd"
-GET ":4.ARC.H.kdhd"
-GET ":4.ARC.H.uthd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.H.sdhd"
+GET "<$ROOTDIR>.H.sdphd"
+GET "<$ROOTDIR>.H.kdhd"
+GET "<$ROOTDIR>.H.uthd"
 
 MANIFEST $( m.unset  =  0   // modes of operation
             m.normal = 'N'

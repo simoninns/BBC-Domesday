@@ -28,13 +28,13 @@
 
 section "nmwrite"
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.gH.glNMhd"
-get ":4.ARC.H.uthd"
-get ":4.ARC.H.grhd"
-get ":4.ARC.H.nmhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.gH.glNMhd"
+get "<$ROOTDIR>.H.uthd"
+get "<$ROOTDIR>.H.grhd"
+get "<$ROOTDIR>.H.nmhd"
 
-get ":4.ARC.H.nmrehd"
+get "<$ROOTDIR>.H.nmrehd"
 
 /**
          G.NM.WRITE.DATA - WRITE DATA TO DISC

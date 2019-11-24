@@ -28,14 +28,14 @@ section "mapopt8"
 
 get "libhdr"
 // get "fphdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCMhd"
-get ":4.ARC.H.kdhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.cmhd"
-get ":4.ARC.H.cm2hd"
-get ":4.ARC.H.cm3hd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCMhd"
+get "<$ROOTDIR>.H.kdhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.cmhd"
+get "<$ROOTDIR>.H.cm2hd"
+get "<$ROOTDIR>.H.cm3hd"
 
 
 /**

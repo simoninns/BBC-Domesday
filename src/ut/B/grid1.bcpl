@@ -44,8 +44,8 @@ section "utgrid1"
 **/
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.H.grhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.H.grhd"
 
 /**
          G.UT.GRID.REGION - Obtains the Level 1 map region

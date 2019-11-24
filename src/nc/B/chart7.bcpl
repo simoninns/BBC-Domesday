@@ -25,11 +25,11 @@ SECTION "Chart7"
 
 
 GET "libhdr"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.gH.glNChd"
-GET ":4.ARC.gH.glNMhd"
-GET ":4.ARC.H.sdhd"
-GET ":4.ARC.H.nchd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.gH.glNChd"
+GET "<$ROOTDIR>.gH.glNMhd"
+GET "<$ROOTDIR>.H.sdhd"
+GET "<$ROOTDIR>.H.nchd"
 
 STATIC
 $( byteinset=? vstart=? vcats=? dataset=? size=? signed=?

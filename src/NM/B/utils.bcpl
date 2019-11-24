@@ -58,11 +58,11 @@
 
 section "nmutils"
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.gH.glNMhd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.dhhd"
-get ":4.ARC.H.nmhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.gH.glNMhd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.dhhd"
+get "<$ROOTDIR>.H.nmhd"
 
 
 /**

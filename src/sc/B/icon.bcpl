@@ -19,8 +19,8 @@
 SECTION "icon"
 
 GET "LIBHDR"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.H.sdhd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.H.sdhd"
 
 /**
          G.SC.ICON - DISPLAY SPECIFIED ICON

@@ -1,7 +1,7 @@
 *| LINKSYS AES Version 1 10.6.87
 *|
 *| link everything
-*dir $.ARC.utils
+*dir <$ROOTDIR>.utils
 c linkmods
 c linkcom
 c linknat

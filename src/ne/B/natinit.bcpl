@@ -18,12 +18,12 @@ SECTION "natinit"
 
 get "libhdr"
 
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.gldyhd"
-get ":4.ARC.GH.glNEhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.nehd"
-get ":4.ARC.H.iohd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.gldyhd"
+get "<$ROOTDIR>.GH.glNEhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.nehd"
+get "<$ROOTDIR>.H.iohd"
 
 /**
          G.NE.DY.INIT - routine called on entry to National Essay

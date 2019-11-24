@@ -1,11 +1,11 @@
 section "test"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNMhd"
-get ":4.ARC.h.sdhd"
-get ":4.ARC.H.uthd"
-get ":4.ARC.H.nmhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.h.sdhd"
+get "<$ROOTDIR>.H.uthd"
+get "<$ROOTDIR>.H.nmhd"
 
 let start () be
 $( let num.data.values = ?

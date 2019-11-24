@@ -19,10 +19,10 @@ section "Rhe"
 
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glHEhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.stphd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glHEhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.stphd"
 
 
 

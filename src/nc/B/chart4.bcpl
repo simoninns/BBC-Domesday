@@ -30,12 +30,12 @@
 section "chart4"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNChd"
-get ":4.ARC.GH.glNMhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.nchd"
-get ":4.ARC.H.uthd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNChd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.nchd"
+get "<$ROOTDIR>.H.uthd"
 
 static $( bcount=? byteinset=? dataset=? size=? signed=? offset=? buffer=?
           datasize=? small.length=? lsize=? read.cell=? value=? buff=?

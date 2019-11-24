@@ -30,9 +30,9 @@ get "libhdr"
 $<RCP
 get "fphdr"
 $>RCP
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNMhd"
-get ":4.ARC.H.nmhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.H.nmhd"
 
 
 /**

@@ -29,15 +29,15 @@ section "map3"
 **/
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCMhd"
-get ":4.ARC.H.dhhd"
-get ":4.ARC.H.grhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.cmhd"
-get ":4.ARC.H.cm2hd"
-get ":4.ARC.H.cm3hd"
-get ":4.ARC.H.kdhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCMhd"
+get "<$ROOTDIR>.H.dhhd"
+get "<$ROOTDIR>.H.grhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.cmhd"
+get "<$ROOTDIR>.H.cm2hd"
+get "<$ROOTDIR>.H.cm3hd"
+get "<$ROOTDIR>.H.kdhd"
 
 manifest
 $(  zs = L0.south+6

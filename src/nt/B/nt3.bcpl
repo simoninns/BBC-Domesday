@@ -37,11 +37,11 @@
 section "nt3"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNThd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.sihd"        // words for 'type.name'
-get ":4.ARC.H.nthd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNThd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sihd"        // words for 'type.name'
+get "<$ROOTDIR>.H.nthd"
 
 /**
          proc SHOW.HEADER ()

@@ -20,13 +20,13 @@
 
 section "nmkey2"
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNMhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.uthd"
-get ":4.ARC.H.nmhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.uthd"
+get "<$ROOTDIR>.H.nmhd"
 
-get ":4.ARC.H.nmcphd"
+get "<$ROOTDIR>.H.nmcphd"
 
 // manifests local to this module
 

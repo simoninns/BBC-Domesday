@@ -21,8 +21,8 @@
 section "find5"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNFhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNFhd"
 
 static $( p = 0; k = 0; k0 = 0; j = 0 $)
 

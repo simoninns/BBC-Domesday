@@ -32,8 +32,8 @@ section "utgrid2"
 **/
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.H.grhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.H.grhd"
 
 /**
          G.UT.GRID.LETTER.CODE - Obtain Letter Code from GR

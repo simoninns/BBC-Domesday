@@ -18,13 +18,13 @@
 **/
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNWhd"
-get ":4.ARC.H.kdhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.nwhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNWhd"
+get "<$ROOTDIR>.H.kdhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.nwhd"
 
 static $( direction = ?; plan = ? $)
 let r(d) = g.ut.unpack16.signed(g.nw,d+d)

@@ -32,13 +32,13 @@
 SECTION "compho1"
 
 GET"LIBHDR"
-GET":4.ARC.GH.glhd"
-GET":4.ARC.GH.glCPhd"
-GET":4.ARC.H.sdhd"
-GET":4.ARC.H.sihd" // for menu bar words
-GET":4.ARC.H.kdhd"
-GET":4.ARC.H.cphd"
-GET":4.ARC.H.vhhd"
+GET"<$ROOTDIR>.GH.glhd"
+GET"<$ROOTDIR>.GH.glCPhd"
+GET"<$ROOTDIR>.H.sdhd"
+GET"<$ROOTDIR>.H.sihd" // for menu bar words
+GET"<$ROOTDIR>.H.kdhd"
+GET"<$ROOTDIR>.H.cphd"
+GET"<$ROOTDIR>.H.vhhd"
 
 
 /**

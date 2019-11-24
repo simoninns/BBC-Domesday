@@ -1,9 +1,9 @@
 *| sublink CM Options, then link Map
-*remove $.ARC.l.mapopt
-*remove $.ARC.r.map
+*remove <$ROOTDIR>.l.mapopt
+*remove <$ROOTDIR>.r.map
 *dir c
-Join mapopt1 mapopt2 mapopt3 mapopt4 mapopt5 mapopt6 mapopt7 mapopt8 -to $.ARC.l.mapopt
+Join mapopt1 mapopt2 mapopt3 mapopt4 mapopt5 mapopt6 mapopt7 mapopt8 -to <$ROOTDIR>.l.mapopt
 *back
-*dir $.ARC.l
+*dir <$ROOTDIR>.l
 Join mapopt map -to mapoverlay
 *back

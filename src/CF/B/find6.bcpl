@@ -30,10 +30,10 @@
 section "find6"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCFhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.cfhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCFhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.cfhd"
 
 /**
          When a word, x, is looked up in the gazetteer, a

@@ -23,6 +23,6 @@ c comp
 c comp
 *dir ^.NW         
 c comp
-*dir $.ARC.utils
+*dir <$ROOTDIR>.utils
 *time
 *spool

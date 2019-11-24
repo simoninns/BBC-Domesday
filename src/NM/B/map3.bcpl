@@ -26,13 +26,13 @@
 
 section "nmmap3"
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.gH.glNMhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.h.sdhd"
-get ":4.ARC.H.nmhd"
-get ":4.ARC.H.nmcohd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.gH.glNMhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.h.sdhd"
+get "<$ROOTDIR>.H.nmhd"
+get "<$ROOTDIR>.H.nmcohd"
 
 
 /*

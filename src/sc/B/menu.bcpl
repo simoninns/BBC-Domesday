@@ -21,9 +21,9 @@
 Section "menu"
 
 GET"libhdr"
-GET":4.ARC.GH.glhd"
-GET":4.ARC.H.sdhd"
-GET":4.ARC.H.sthd"
+GET"<$ROOTDIR>.GH.glhd"
+GET"<$ROOTDIR>.H.sdhd"
+GET"<$ROOTDIR>.H.sthd"
 
 /**
          G.SC.MENU - DRAW MENU BAR

@@ -20,9 +20,9 @@ Section "help.links"
 
 GET"LIBHDR"
 
-get ":4.ARC.GH.glhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.kdhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.kdhd"
 
 ///////////////////////////////////////////////////////////////
 //        the two routines below are machine specific        //

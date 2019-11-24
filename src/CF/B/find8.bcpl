@@ -33,14 +33,14 @@
 section "find8"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCFhd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.kdhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.iohd"
-get ":4.ARC.H.cfhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCFhd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.kdhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.iohd"
+get "<$ROOTDIR>.H.cfhd"
 
 let trap.(n,val,low,high) be g.ut.trap("CF",80+n,true,3,val,low,high)
 

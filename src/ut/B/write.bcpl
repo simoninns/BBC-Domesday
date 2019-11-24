@@ -47,9 +47,9 @@ STATIC $( s.vec = 0 ; s.off = 0  $) // used for redefined WRCH
 
 GET "LIBHDR"
 GET "SYSHDR"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.H.sdhd"
-GET ":4.ARC.H.uthd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.H.sdhd"
+GET "<$ROOTDIR>.H.uthd"
 
 /**
          G.UT.OPEN.FILE - OPEN A FILE FOR 'WRITE'

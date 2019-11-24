@@ -27,12 +27,12 @@
 SECTION "Chart1"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.gH.glNChd"
-get ":4.ARC.H.kdhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.nchd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.gH.glNChd"
+get "<$ROOTDIR>.H.kdhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.nchd"
 
 static $( sv=? s.a=? bv=? cv=? c.r=? cc=? n.v=? o.nm=? buff=?
           u.s=? u.s1=?

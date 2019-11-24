@@ -20,10 +20,10 @@ section "SNM"
 
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.stphd"
-get ":4.ARC.H.sihd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.stphd"
+get "<$ROOTDIR>.H.sihd"
 
 
 let g.st.snm () be

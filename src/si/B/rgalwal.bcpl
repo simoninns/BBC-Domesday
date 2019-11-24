@@ -19,14 +19,14 @@ section "Rgalwal"
 
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glHEhd"
-get ":4.ARC.GH.glNAhd"
-get ":4.ARC.GH.glNFhd"
-get ":4.ARC.GH.glNThd"
-get ":4.ARC.GH.glNWhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.stphd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glHEhd"
+get "<$ROOTDIR>.GH.glNAhd"
+get "<$ROOTDIR>.GH.glNFhd"
+get "<$ROOTDIR>.GH.glNThd"
+get "<$ROOTDIR>.GH.glNWhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.stphd"
 
 
 let g.st.Rgalwal () be

@@ -37,11 +37,11 @@ section "mapopt2"
 **/
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCMhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.cmhd"
-get ":4.ARC.H.grhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCMhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.cmhd"
+get "<$ROOTDIR>.H.grhd"
 
 /**
          G.CM.SHOW.GRID.BANNER () - Displays the message area

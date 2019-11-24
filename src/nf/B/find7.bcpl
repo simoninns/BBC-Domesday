@@ -22,9 +22,9 @@
 section "find7"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNFhd"
-get ":4.ARC.H.sdhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNFhd"
+get "<$ROOTDIR>.H.sdhd"
 
 /**
           See CF.FIND7 for comments

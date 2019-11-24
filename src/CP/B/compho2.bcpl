@@ -26,14 +26,14 @@
 SECTION "com.photo2"
 
 GET"LIBHDR"
-GET":4.ARC.GH.glhd"
-GET":4.ARC.GH.glCPhd"
-GET":4.ARC.H.sdhd"
-GET":4.ARC.H.sihd"
-GET":4.ARC.H.kdhd"
-GET":4.ARC.H.cphd"
-GET":4.ARC.H.uthd"
-GET":4.ARC.H.vhhd"
+GET"<$ROOTDIR>.GH.glhd"
+GET"<$ROOTDIR>.GH.glCPhd"
+GET"<$ROOTDIR>.H.sdhd"
+GET"<$ROOTDIR>.H.sihd"
+GET"<$ROOTDIR>.H.kdhd"
+GET"<$ROOTDIR>.H.cphd"
+GET"<$ROOTDIR>.H.uthd"
+GET"<$ROOTDIR>.H.vhhd"
 
 /**
          G.CP.OTINI - INITIALISE FOR PHOTO OPTIONS

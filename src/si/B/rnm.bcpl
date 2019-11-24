@@ -19,12 +19,12 @@ section "Rnm"
 
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNMhd"
-get ":4.ARC.GH.glHEhd"
-get ":4.ARC.GH.glNAhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.stphd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.GH.glHEhd"
+get "<$ROOTDIR>.GH.glNAhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.stphd"
 
 let g.st.rnm () be
 $(

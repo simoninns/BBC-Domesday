@@ -28,11 +28,11 @@
 SECTION "Chart6"
 
 GET "libhdr"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.gH.glNChd"
-GET ":4.ARC.H.sdhd"
-GET ":4.ARC.H.kdhd"
-GET ":4.ARC.H.nchd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.gH.glNChd"
+GET "<$ROOTDIR>.H.sdhd"
+GET "<$ROOTDIR>.H.kdhd"
+GET "<$ROOTDIR>.H.nchd"
 
 STATIC
 $( cv=? vp=? cats=? groups=? gno=? ypos=? catno=? type=?

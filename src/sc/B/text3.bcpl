@@ -25,8 +25,8 @@
 Section "text3"
 
 GET "libhdr"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.H.sdhd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.H.sdhd"
 
 static $( s.olditem = m.sd.hinvalid $) // used by G.sc.high
 

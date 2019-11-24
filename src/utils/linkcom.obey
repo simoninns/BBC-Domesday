@@ -3,16 +3,16 @@
 *|
 *SPOOL $.tmp.linkCOM
 *time
-*dir $.ARC.CM
+*dir <$ROOTDIR>.CM
 c linc
-*dir $.ARC.CO
+*dir <$ROOTDIR>.CO
 c linc
-*dir $.ARC.CP
+*dir <$ROOTDIR>.CP
 c linc
-*dir $.ARC.CT
+*dir <$ROOTDIR>.CT
 c linc
-*dir $.ARC.CF
+*dir <$ROOTDIR>.CF
 c linc     
 *time
 *SPOOL
-*dir $.ARC.utils
+*dir <$ROOTDIR>.utils

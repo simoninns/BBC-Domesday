@@ -30,12 +30,12 @@
 SECTION "natinit"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNPhd"
-get ":4.ARC.GH.gldyhd"
-get ":4.ARC.H.iohd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.nphd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNPhd"
+get "<$ROOTDIR>.GH.gldyhd"
+get "<$ROOTDIR>.H.iohd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.nphd"
 
 
 /**

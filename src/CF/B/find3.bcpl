@@ -41,10 +41,10 @@
 section "find3"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCFhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.cfhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCFhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.cfhd"
 
 static $( p = 0; worstmatch = 0; bestmatch = 0; mask = 0 $)
 

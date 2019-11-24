@@ -62,9 +62,9 @@ section "sc.graph1" // graphics package first chunk
 
 GET "LIBHDR"
 GET "SYSHDR"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.H.sdhd"   // manifests header
-GET ":4.ARC.H.sdphd"  // private manifests
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.H.sdhd"   // manifests header
+GET "<$ROOTDIR>.H.sdphd"  // private manifests
 
 // private routine plot takes all the graphics output
 // and switches off the mouse pointer before any o/p

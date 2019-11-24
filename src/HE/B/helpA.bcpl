@@ -24,13 +24,13 @@
 SECTION "helpA"
 
 GET"LIBHDR"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glHEhd"
-get ":4.ARC.H.dhhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.kdhd"
-get ":4.ARC.H.hehd"
-get ":4.ARC.H.nmhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glHEhd"
+get "<$ROOTDIR>.H.dhhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.kdhd"
+get "<$ROOTDIR>.H.hehd"
+get "<$ROOTDIR>.H.nmhd"
 
 STATIC $( s.highmax = 22  // maximum number to highlight
           s.highmin = 1   // minimum number to highlight

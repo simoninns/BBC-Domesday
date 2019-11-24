@@ -25,12 +25,12 @@
 
 section "nmcontext"
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.gH.glNMhd"
-get ":4.ARC.H.iohd"
-get ":4.ARC.H.nmhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.gH.glNMhd"
+get "<$ROOTDIR>.H.iohd"
+get "<$ROOTDIR>.H.nmhd"
 
-get ":4.ARC.H.nmcphd"
+get "<$ROOTDIR>.H.nmcphd"
 
 /**
          G.NM.SAVE.CONTEXT - SAVE A VARIABLE'S CONTEXT

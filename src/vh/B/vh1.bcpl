@@ -55,8 +55,8 @@ section "vh1"
 
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.H.vhhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.H.vhhd"
 
 /**
          g.vh.call.oscli (command string) = valof

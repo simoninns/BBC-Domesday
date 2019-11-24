@@ -3,8 +3,8 @@
 section "word.asc"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.H.vhhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.H.vhhd"
 
 /**
          word.asc (word.value, dest.string)

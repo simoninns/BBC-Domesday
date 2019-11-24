@@ -32,11 +32,11 @@
 section "chart5"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.gH.glNChd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.kdhd"
-get ":4.ARC.H.nchd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.gH.glNChd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.kdhd"
+get "<$ROOTDIR>.H.nchd"
 
 static $( cv=? vp=? cts=? h=? nonadd=? vars=? $)
 

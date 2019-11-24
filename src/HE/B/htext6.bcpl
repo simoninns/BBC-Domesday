@@ -20,14 +20,14 @@ SECTION "HelpText6"
 
 get "libhdr"
 
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glHEhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.sihd"
-get ":4.ARC.H.dhhd"
-get ":4.ARC.H.nehd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.uthd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glHEhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sihd"
+get "<$ROOTDIR>.H.dhhd"
+get "<$ROOTDIR>.H.nehd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.uthd"
 
 /**
          G.HE.DISPLAYPHOTO - Routine to output photopage to screen,

@@ -32,11 +32,11 @@ section "mapopt7"
 
 get "libhdr"
 // get "fphdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glCMhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.cmhd"
-get ":4.ARC.H.cm3hd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glCMhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.cmhd"
+get "<$ROOTDIR>.H.cm3hd"
 
 
 /**

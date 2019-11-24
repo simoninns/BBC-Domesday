@@ -32,10 +32,10 @@
 section "chart2"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNChd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.nchd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNChd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.nchd"
 
 /**
          G.NC.CHARTINI - ENTER CHART AT TOP LEVEL

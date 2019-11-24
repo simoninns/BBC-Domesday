@@ -41,11 +41,11 @@
 
 section "nmload1"
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNMhd"
-get ":4.ARC.H.dhhd"
-get ":4.ARC.H.nmhd"
-get ":4.ARC.H.nmldhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.H.dhhd"
+get "<$ROOTDIR>.H.nmhd"
+get "<$ROOTDIR>.H.nmldhd"
 
 
 /**

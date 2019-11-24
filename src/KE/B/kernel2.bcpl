@@ -31,11 +31,11 @@
 SECTION "b.Kernel2"
 
 GET "LIBHDR"
-GET ":4.ARC.GH.glhd"
-GET ":4.ARC.GH.gldyhd"
-GET ":4.ARC.H.sihd"
-GET ":4.ARC.H.sdhd"
-GET ":4.ARC.H.vhhd"
+GET "<$ROOTDIR>.GH.glhd"
+GET "<$ROOTDIR>.GH.gldyhd"
+GET "<$ROOTDIR>.H.sihd"
+GET "<$ROOTDIR>.H.sdhd"
+GET "<$ROOTDIR>.H.vhhd"
 
 /**
          G.ov.load - LOAD OVERLAY ROUTINE

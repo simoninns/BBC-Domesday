@@ -40,11 +40,11 @@
 section "dh1"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.H.dhhd"        // public header
-get ":4.ARC.H.dhphd"       // private header
-get ":4.ARC.H.uthd"
-get ":4.ARC.H.vhhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.H.dhhd"        // public header
+get "<$ROOTDIR>.H.dhphd"       // private header
+get "<$ROOTDIR>.H.uthd"
+get "<$ROOTDIR>.H.vhhd"
 
 $$adfsnames // to pick up names file from adfs
 

@@ -35,13 +35,13 @@
 section "nt0"
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.gldyhd"
-get ":4.ARC.GH.glNThd"
-get ":4.ARC.H.iohd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.nthd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.gldyhd"
+get "<$ROOTDIR>.GH.glNThd"
+get "<$ROOTDIR>.H.iohd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.nthd"
 
 
 /**

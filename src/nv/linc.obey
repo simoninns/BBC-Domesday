@@ -1,4 +1,4 @@
 *| Link NV (Film)
 *dir c
-Join nv0 nv1 nv2 -to $.ARC.L.film
+Join nv0 nv1 nv2 -to <$ROOTDIR>.L.film
 *back

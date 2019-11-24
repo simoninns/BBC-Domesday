@@ -22,11 +22,11 @@ section "nv0"
 **/
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glDYhd"
-get ":4.ARC.GH.glNVhd"
-get ":4.ARC.H.vhhd"
-get ":4.ARC.H.nvhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glDYhd"
+get "<$ROOTDIR>.GH.glNVhd"
+get "<$ROOTDIR>.H.vhhd"
+get "<$ROOTDIR>.H.nvhd"
 
 
 /**

@@ -18,14 +18,14 @@ section "Rexam"
 
 
 get "libhdr"
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glHEhd"
-get ":4.ARC.GH.glNChd"
-get ":4.ARC.GH.glNEhd"
-get ":4.ARC.GH.glNPhd"
-get ":4.ARC.GH.glNVhd"
-get ":4.ARC.H.sthd"
-get ":4.ARC.H.stphd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glHEhd"
+get "<$ROOTDIR>.GH.glNChd"
+get "<$ROOTDIR>.GH.glNEhd"
+get "<$ROOTDIR>.GH.glNPhd"
+get "<$ROOTDIR>.GH.glNVhd"
+get "<$ROOTDIR>.H.sthd"
+get "<$ROOTDIR>.H.stphd"
 
 
 

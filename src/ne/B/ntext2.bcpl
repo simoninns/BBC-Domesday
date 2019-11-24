@@ -19,14 +19,14 @@ SECTION "NText2"
 
 get "libhdr"    
 
-get ":4.ARC.GH.glhd"
-get ":4.ARC.GH.glNEhd"
-get ":4.ARC.H.sdhd"
-get ":4.ARC.H.sihd"
-get ":4.ARC.H.dhhd"
-get ":4.ARC.H.nehd"
-get ":4.ARC.H.uthd"
-get ":4.ARC.H.vhhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.GH.glNEhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sihd"
+get "<$ROOTDIR>.H.dhhd"
+get "<$ROOTDIR>.H.nehd"
+get "<$ROOTDIR>.H.uthd"
+get "<$ROOTDIR>.H.vhhd"
 
 /**
          G.NE.DISPLAYPAGE - routine to output text page to screen,
