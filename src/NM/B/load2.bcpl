@@ -42,7 +42,7 @@
 section "nmload2"
 get "libhdr"
 get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.gH.glNMhd"
+get "<$ROOTDIR>.GH.glNMhd"
 get "<$ROOTDIR>.H.nmhd"
 get "<$ROOTDIR>.H.nmldhd"
 

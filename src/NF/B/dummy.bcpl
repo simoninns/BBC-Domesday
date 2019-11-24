@@ -20,9 +20,9 @@ Section "FIND.dummy"
 
 GET "LIBHDR"  
     
-GET ":4.DSH.gh.glhd"
-GET ":4.DSH.gh.gldyhd"
-GET ":4.DSH.gh.glnfhd"
+GET ":4.DSH.GH.glhd"
+GET ":4.DSH.GH.gldyhd"
+GET ":4.DSH.GH.glnfhd"
 get ":4.DSH.H.vhhd"
 get ":4.DSH.H.kdhd"
 get ":4.DSH.H.sdhd"

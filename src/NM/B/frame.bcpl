@@ -29,8 +29,8 @@
 section "nmframe"
 get "libhdr"
 get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.gH.glNMhd"
-get "<$ROOTDIR>.h.dhhd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.H.dhhd"
 get "<$ROOTDIR>.H.nmhd"
 
    // Manifests used by this module

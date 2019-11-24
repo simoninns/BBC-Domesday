@@ -51,7 +51,7 @@
 section "nmdy"
 get "libhdr"
 get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.gH.gldyhd"
+get "<$ROOTDIR>.GH.gldyhd"
 get "<$ROOTDIR>.GH.glNMhd"
 get "<$ROOTDIR>.H.iohd"
 get "<$ROOTDIR>.H.kdhd"

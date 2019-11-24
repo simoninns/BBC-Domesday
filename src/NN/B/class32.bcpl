@@ -20,7 +20,7 @@
 section "nmclass32"
 get "libhdr"
 get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.gH.glNMhd"
+get "<$ROOTDIR>.GH.glNMhd"
 get "<$ROOTDIR>.H.sdhd"
 get "<$ROOTDIR>.H.nmhd"
 

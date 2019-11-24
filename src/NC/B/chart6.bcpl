@@ -29,7 +29,7 @@ SECTION "Chart6"
 
 GET "libhdr"
 GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.gH.glNChd"
+GET "<$ROOTDIR>.GH.glNChd"
 GET "<$ROOTDIR>.H.sdhd"
 GET "<$ROOTDIR>.H.kdhd"
 GET "<$ROOTDIR>.H.nchd"

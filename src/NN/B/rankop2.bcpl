@@ -26,10 +26,10 @@ get "libhdr"
 get "<$ROOTDIR>.GH.glhd"
 get "<$ROOTDIR>.GH.glNMhd"
 get "<$ROOTDIR>.H.iohd"
-get "<$ROOTDIR>.h.sdhd"
-get "<$ROOTDIR>.h.vhhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.vhhd"
 get "<$ROOTDIR>.H.nmhd"
-get "<$ROOTDIR>.h.nmrehd"
+get "<$ROOTDIR>.H.nmrehd"
 
 /**
          G.NM.INIT.RANK - DO THE RANK SORT

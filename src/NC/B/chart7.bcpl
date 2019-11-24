@@ -26,8 +26,8 @@ SECTION "Chart7"
 
 GET "libhdr"
 GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.gH.glNChd"
-GET "<$ROOTDIR>.gH.glNMhd"
+GET "<$ROOTDIR>.GH.glNChd"
+GET "<$ROOTDIR>.GH.glNMhd"
 GET "<$ROOTDIR>.H.sdhd"
 GET "<$ROOTDIR>.H.nchd"
 

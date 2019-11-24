@@ -27,10 +27,10 @@
 section "nmmap3"
 get "libhdr"
 get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.gH.glNMhd"
+get "<$ROOTDIR>.GH.glNMhd"
 get "<$ROOTDIR>.H.sthd"
 get "<$ROOTDIR>.H.vhhd"
-get "<$ROOTDIR>.h.sdhd"
+get "<$ROOTDIR>.H.sdhd"
 get "<$ROOTDIR>.H.nmhd"
 get "<$ROOTDIR>.H.nmcohd"
 

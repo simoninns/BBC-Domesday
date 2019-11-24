@@ -3,7 +3,7 @@ section "test"
 get "libhdr"
 get "<$ROOTDIR>.GH.glhd"
 get "<$ROOTDIR>.GH.glNMhd"
-get "<$ROOTDIR>.h.sdhd"
+get "<$ROOTDIR>.H.sdhd"
 get "<$ROOTDIR>.H.uthd"
 get "<$ROOTDIR>.H.nmhd"
 

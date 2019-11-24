@@ -22,10 +22,10 @@
 Section "virtual keyboard"
 
 get "libhdr"
-get "<$ROOTDIR>.gh.glhd"
-get "<$ROOTDIR>.h.sdhd"
-get "<$ROOTDIR>.h.sdphd"
-get "<$ROOTDIR>.h.kdhd"
+get "<$ROOTDIR>.GH.glhd"
+get "<$ROOTDIR>.H.sdhd"
+get "<$ROOTDIR>.H.sdphd"
+get "<$ROOTDIR>.H.kdhd"
 
 manifest $(
    m.vk.inactive = -1

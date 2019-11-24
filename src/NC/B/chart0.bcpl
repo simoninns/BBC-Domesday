@@ -26,7 +26,7 @@ section "chart0"
 
 get "libhdr"
 get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.gH.glNChd"
+get "<$ROOTDIR>.GH.glNChd"
 get "<$ROOTDIR>.GH.glDYhd"
 get "<$ROOTDIR>.H.sdhd"
 get "<$ROOTDIR>.H.iohd"

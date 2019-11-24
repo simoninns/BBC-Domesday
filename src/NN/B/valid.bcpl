@@ -31,8 +31,8 @@
 section "nmvalid"
 get "libhdr"
 get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.gH.glNMhd"
-get "<$ROOTDIR>.h.dhhd"
+get "<$ROOTDIR>.GH.glNMhd"
+get "<$ROOTDIR>.H.dhhd"
 get "<$ROOTDIR>.H.grhd"
 get "<$ROOTDIR>.H.nmhd"
 
