@@ -8,9 +8,10 @@ python3 generate-a440.py
 
 This will create a directory of source under the top-level directory 'ARC'.
 
-The files will be given ',fff' style extensions to indicate the target RISC OS file extension.  Copy the resulting directory to the Archimedes using a utility like !FTPc; this will copy the files and automatically set the file-type on the target machine.
+The files will be given ',fff' style extensions to indicate the target RISC OS file extension.  Copy the resulting directory to the Archimedes using a utility like !FTPc; this will copy the files and automatically set the file-type on the target machine.  Note: You must middle-click in the !FTPc window in RISC OS, go to 'Options' and select the 'add/remove ,hex filetype' option for this to work correctly).
 
-Note that the root paths in both .bcpl get commands and .obey star commands will be set to "IDEFS::Development.$.Domesday.ARC" (to-do: make this a command line option)
+Note that the root paths in both .bcpl get commands and .obey star commands will be set to "IDEFS::Develop.$.Domesday.ARC" (to-do: make this a command line option)
 
 # Compiling the source code
-To be added
+Copy the BCPL directory over to the A440 using !FTPc and double-click on the 'BCPL/!Boot file' to initialise the environment.
+To be continued...

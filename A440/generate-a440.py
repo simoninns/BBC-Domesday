@@ -76,7 +76,7 @@ def find_and_replace(directory, find, replace, filePattern):
                 f.write(s)
 
 # Main program
-target_riscos_dir = "IDEFS::Development.$.Domesday"
+target_riscos_dir = "IDEFS::Develop.$.Domesday"
 
 # Ensure that the target directory exists before copying
 print("Creating top level ARC directory...")
