@@ -1,0 +1,47 @@
+*| >:4.!boot
+*key9co  
+*key8twin 
+*|key7dcol|mblot|m
+*|key1 dir :0|M!boot|M
+*|key2 dir :0|mtwin r.data1|mÅtwinco|M
+RMLoad $.Modules.Wimp
+RMLoad $.Modules.Fonts
+RMLoad $.Modules.Sprites
+RMLoad $.Modules.BigSprite
+RMLoad $.Modules.Debugger
+set file$path ,:4.Alib.,$.Alib.
+set font$prefix $.Fonts
+set root &
+setmacro alias$cd if LEN "%0" = 0 then dir <root> else dir <root>.%0
+*setmacro alias$setdest set alias$cp copy adfs:%%0 <root>.%0.%%0 ~C~VF
+*setmacro alias$chdr copy adfs:h.%0hdr <root>.h.%0hd ~C~VF
+*setmacro alias$cghdr copy adfs:h.%0hdr <root>.gh.%0hd ~C~VF
+*|set alias$cd if LEN "%0" = 0 then dir & else dir &.%0
+set alias$Prolog /%.PrologX %.Zap_Out -G 200000 -t 20000
+*|set alias$Prolog /:4.dsh.r.bicitest
+*|-G 100000
+set alias$BICI *dir &.r|m /BICI|m
+set alias$LoTwin Load adfs:%.Twin 8000|MGO 8000
+*| set alias$Join     /Join %*0 -NotBcpl
+*| set alias$RealJoin /Join %*0 
+*| set alias$j Join $.alib.lib $.arc.l.kernel c.%0 -to r.%0
+set alias$cmd settype %0 &FFE
+set alias$jn Join $.alib.lib c.%0 -to r.%0 
+set alias$pr echo |<2|> |M type %0 |M echo |<12|>|<3|>
+set alias$Mode echo |<22|>|<%0|>
+set alias$scol echo |<19>|<1>|<16>|<%0>|<%1>|<%2>   
+set alias$bcol echo |<19>|<0>|<16>|<%0>|<%0>|<%0>|<19>|<0>|<24>|<%0>|<%0>|<%0>
+set alias$dcol "scol &F0 &C0 0 |M bcol &40"
+set alias$blot echo |<19>|<0>|<4>|<0>|<0>|<0>
+set alias$@RunType_CCC c %*0
+set alias$use set cname %0
+set alias$co BCPL b.%0 -to c.%0
+set alias$c1 go 8000 b.%0 -to c.%0 
+set alias$as Aasm a.%0 -to o.%0 -quit
+setmacro alias$cmp co <cname>
+setmacro alias$asm as <cname>
+*time
+*urd $.DSH
+*|dcol
+*settime
+*|
