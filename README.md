@@ -6,33 +6,35 @@ All BCPL files have been renamed with .bcpl and batch files (containing star com
 Note that the 'ut' directory contains .asm files that form the assembly language drivers for supporting things like VFS on the A500.
 
 # Source code map
-CF - Community Find overlay
-CM - Community Map
-CO - Community Map Options
-CP - Community PHTX overlay
-CT - Community Text parts of PHTX overlay
-DH - Data Handler
-GH - Global Headers
-GHDRS - Global Headers
-H - Headers
-HDRS - Headers
-HE - Help
-KE - Kernel
-na - National Area overlay
-nc - National Chart overlay
-ne - National Essay (text overlay)
-nf - National Find
-NM - National Mappable Analyse
-NN - National Map (description not clear)
-NP - National Photo overlay
-nt - National Text overlay
-nv - National Video
-nw - National Walk
-sc - System Calls (description not clear)
-si - State table initialisation
-ut - Utilities package
-utils - Utilities
-vh - Video Handler
-view - Word list
+Various directories available under the src directory:
+
+* CF - Community Find overlay
+* CM - Community Map
+* CO - Community Map Options
+* CP - Community PHTX overlay
+* CT - Community Text parts of PHTX overlay
+* DH - Data Handler
+* GH - Global Headers
+* GHDRS - Global Headers
+* H - Headers
+* HDRS - Headers
+* HE - Help
+* KE - Kernel
+* na - National Area overlay
+* nc - National Chart overlay
+* ne - National Essay (text overlay)
+* nf - National Find
+* NM - National Mappable Analyse
+* NN - National Map (description not clear)
+* NP - National Photo overlay
+* nt - National Text overlay
+* nv - National Video
+* nw - National Walk
+* sc - System Calls (description not clear)
+* si - State table initialisation
+* ut - Utilities package
+* utils - Utilities
+* vh - Video Handler
+* view - Word list
 
 
