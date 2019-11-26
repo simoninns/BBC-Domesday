@@ -1,7 +1,7 @@
 *| LINKNAT AES Version 1.0 17.6.87
 *| link the national disc overlays
 *|          
-*spool $.tmp.linkNAT    
+*spool <$LOGDIR>.linkNAT    
 *time
 *dir <$ROOTDIR>.NA    
 c linc

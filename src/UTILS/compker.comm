@@ -1,4 +1,4 @@
-*spool :4.tmp.compKER  
+*spool <$LOGDIR>.compKER  
 *| compKER AES Version 1.0 20.5.87
 *| system kernel and Help
 *|

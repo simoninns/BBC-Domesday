@@ -1,7 +1,7 @@
 *| LINKMODS AES Version 1 18.5.87
 *| link the system kernel modules...
 *| ... and make l.kernel   
-*SPOOL $.tmp.LINKMODS
+*SPOOL <$LOGDIR>.linkmods
 *time
 *dir <$ROOTDIR>.KE
 c linc

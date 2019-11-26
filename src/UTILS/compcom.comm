@@ -1,4 +1,4 @@
-*spool :4.tmp.compCOM
+*spool <$LOGDIR>.compCOM
 *| compCOM AES Version 1 20.5.87
 *| community disc overlays
 *|     

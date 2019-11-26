@@ -1,7 +1,7 @@
 *| LINKCOM AES Version 1 10.6.87
 *| link the community disc modules
 *|
-*SPOOL $.tmp.linkCOM
+*SPOOL <$LOGDIR>.linkCOM
 *time
 *dir <$ROOTDIR>.CM
 c linc

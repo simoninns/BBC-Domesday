@@ -83,6 +83,7 @@ def find_and_replace(directory, find, replace, filePattern):
 
 # Main program
 target_riscos_dir = "IDEFS::Develop.$.Domesday"
+target_log_dir = target_riscos_dir + ".log"
 
 # Ensure that the target directory exists before copying
 print("Creating top level ARC directory...")
@@ -99,12 +100,28 @@ print("Removing unwanted files from ARC..")
 remove_unwanted_files("./root/ARC")
 
 # Find and replace the <$ROOTDIR> token in .bcpl files
-print("Setting root directory in .bcpl files...")
+print("Setting root directory in BCPL source files...")
 find_and_replace("./root/ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.bcpl")
 
+# Find and replace the <$ROOTDIR> token in .comm files
+print("Setting root directory in command files...")
+find_and_replace("./root/ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.comm")
+
 # Find and replace the <$ROOTDIR> token in .obey files
-print("Setting root directory in .obey files...")
+print("Setting root directory in obey files...")
 find_and_replace("./root/ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.obey")
+
+# Find and replace the <$LOGDIR> token in .bcpl files
+print("Setting log directory in BCPL source files...")
+find_and_replace("./root/ARC", "<$LOGDIR>", target_log_dir, "*.bcpl")
+
+# Find and replace the <$LOGDIR> token in .comm files
+print("Setting log directory in command files...")
+find_and_replace("./root/ARC", "<$LOGDIR>", target_log_dir, "*.comm")
+
+# Find and replace the <$LOGDIR> token in .obey files
+print("Setting log directory in obey files...")
+find_and_replace("./root/ARC", "<$LOGDIR>", target_log_dir, "*.obey")
 
 # Apply Archimedes file types
 print("Replacing file extensions with RISC OS file types...")
