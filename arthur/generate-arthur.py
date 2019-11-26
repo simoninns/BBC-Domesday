@@ -1,8 +1,8 @@
 #************************************************************************
 #
-#   generate-a440.py
+#   generate-arthur.py
 #
-#   Generate the A440/1 Domesday build environment
+#   Generate the Arthur 1.20 Domesday build environment
 #   Copyright (C) 2019 Simon Inns
 #
 #   This program is free software: you can redistribute it and/or

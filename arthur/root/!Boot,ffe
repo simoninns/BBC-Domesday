@@ -1,3 +1,6 @@
+set file$path ,:4.Alib.,$.Alib.
+set root &
+setmacro alias$cd if LEN "%0" = 0 then dir <root> else dir <root>.%0
 set alias$j Join $.alib.lib $.ads.l.kernel c.%0 -to r.%0
 set alias$jn Join $.alib.lib c.%0 -to ^.r.%0 
 set alias$pr echo |<2|> |M type %0 |M echo |<12|>|<3|>
@@ -6,4 +9,3 @@ set alias$co BCPL b.%0 -to c.%0
 set alias$as c $.assemble %0
 setmacro alias$cmp co <cname>
 setmacro alias$asm as <cname>
-

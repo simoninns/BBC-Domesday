@@ -1,10 +1,10 @@
-# Archimedes A440 build environment
-This directory contains the required scripts to create a Domesday build environment for the Acorn Archimedes A440/1.
+# Arthur 1.20 build environment
+This directory contains the required scripts to create a Domesday build environment for the Acorn Arthur 1.20 OS.
 
 # Instructions
 Run the following command to create the build environment:
 
-python3 generate-a440.py 
+python3 generate-arthur.py 
 
 This will create a directory of source under the top-level directory 'ARC'.
 
