@@ -34,10 +34,10 @@ section "seldisc"
 **/
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.H.dhhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.vhhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.H.dhhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.vhhd"
 
 $<debug
 static $( count = 0 $)

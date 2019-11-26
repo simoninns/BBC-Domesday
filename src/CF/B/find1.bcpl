@@ -25,11 +25,11 @@
 section "find1"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCFhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.cfhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCFhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.cfhd"
 
 static $(  i = 0  // offset down string
            imax = 0 // max val taken by i

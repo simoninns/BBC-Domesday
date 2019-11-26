@@ -28,9 +28,9 @@
 Section "ut.print"
 
 GET "LIBHDR"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.H.uthd"
-GET "<$ROOTDIR>.H.sdhd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.H.uthd"
+GET "<$SRCDIR>.H.sdhd"
 /**
          G.UT.PRINT - PRINT A STRING
          ---------------------------

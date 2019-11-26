@@ -23,9 +23,9 @@
 Section "input"
 
 GET "libhdr"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.H.kdhd"
-GET "<$ROOTDIR>.H.sdhd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.H.kdhd"
+GET "<$SRCDIR>.H.sdhd"
 
 /**
          G.SC.INPUT - GET TEXT INPUT

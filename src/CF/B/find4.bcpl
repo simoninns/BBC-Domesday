@@ -29,10 +29,10 @@
 section "find4"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCFhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.cfhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCFhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.cfhd"
 
 static $( easting = 0; northing = 0 $)
 manifest $( topbit = 1 << 15 $)

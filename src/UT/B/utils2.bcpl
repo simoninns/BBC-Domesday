@@ -49,12 +49,12 @@ SECTION "utils2"
 
 GET "LIBHDR"
 GET "SYSHDR"
-GET "<$ROOTDIR>.GH.glhd" // the globals
-GET "<$ROOTDIR>.H.sdhd"  // screen handler
-GET "<$ROOTDIR>.H.sdphd" // screen handler privates 
-GET "<$ROOTDIR>.H.iohd"  // I/O area definitions, etc.
-GET "<$ROOTDIR>.H.iophd" // I/O memory addresses, etc.
-GET "<$ROOTDIR>.H.uthd"
+GET "<$SRCDIR>.GH.glhd" // the globals
+GET "<$SRCDIR>.H.sdhd"  // screen handler
+GET "<$SRCDIR>.H.sdphd" // screen handler privates 
+GET "<$SRCDIR>.H.iohd"  // I/O area definitions, etc.
+GET "<$SRCDIR>.H.iophd" // I/O memory addresses, etc.
+GET "<$SRCDIR>.H.uthd"
 
 // addresses of lookup tables for cache & restore
 STATIC

@@ -32,12 +32,12 @@
 **/
 
 GET "LIBHDR"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.H.sdhd"
-GET "<$ROOTDIR>.H.sdphd"
-GET "<$ROOTDIR>.H.iohd"
-GET "<$ROOTDIR>.H.iophd"
-GET "<$ROOTDIR>.H.uthd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.H.sdhd"
+GET "<$SRCDIR>.H.sdphd"
+GET "<$SRCDIR>.H.iohd"
+GET "<$SRCDIR>.H.iophd"
+GET "<$SRCDIR>.H.uthd"
 
 STATIC $( s.stream = 0 $) // file handle           
 

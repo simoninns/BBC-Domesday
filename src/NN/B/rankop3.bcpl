@@ -17,11 +17,11 @@
 section "nmrankop3"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNMhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.uthd"
-get "<$ROOTDIR>.H.nmhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNMhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.uthd"
+get "<$SRCDIR>.H.nmhd"
 
 /*
       g.nm.rankop.data

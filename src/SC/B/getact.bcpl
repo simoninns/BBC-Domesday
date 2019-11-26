@@ -25,12 +25,12 @@
 SECTION "getact"
 
 GET "libhdr"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.H.sdhd"
-GET "<$ROOTDIR>.H.sdphd"
-GET "<$ROOTDIR>.H.sthd"
-GET "<$ROOTDIR>.H.kdhd"
-GET "<$ROOTDIR>.H.vhhd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.H.sdhd"
+GET "<$SRCDIR>.H.sdphd"
+GET "<$SRCDIR>.H.sthd"
+GET "<$SRCDIR>.H.kdhd"
+GET "<$SRCDIR>.H.vhhd"
 
 STATIC $( s.key = m.kd.noact $) // save of last key pressed
 

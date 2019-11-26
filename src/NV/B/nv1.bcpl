@@ -26,15 +26,15 @@ section "nv1"
 **/
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNVhd"
-get "<$ROOTDIR>.H.dhhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.sihd"
-get "<$ROOTDIR>.H.vhhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNVhd"
+get "<$SRCDIR>.H.dhhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.sihd"
+get "<$SRCDIR>.H.vhhd"
 
-get "<$ROOTDIR>.H.nvhd"
+get "<$SRCDIR>.H.nvhd"
 
 
 /**

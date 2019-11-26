@@ -25,7 +25,7 @@
 SECTION "b.Kernel1"
 
 GET "LIBHDR"
-GET "<$ROOTDIR>.GH.glhd"
+GET "<$SRCDIR>.GH.glhd"
 
 
 /**

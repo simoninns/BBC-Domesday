@@ -15,7 +15,8 @@
          DATE     VERSION  AUTHOR      DETAILS OF CHANGE
          03/06/86  1       D.R.Freed   Initial version
          ********************************
-         2.7.87     3      DNH      CHANGES FOR UNI   
+         2.7.87     3      DNH      CHANGES FOR UNI
+   
          13.7.87    4      DNH      put in resultis true
          14.7.87    5      DNH      fix au.useable (bug 106)
 
@@ -27,10 +28,10 @@
 
 section "nmvalid"
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNMhd"
-get "<$ROOTDIR>.H.grhd"
-get "<$ROOTDIR>.H.nmhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNMhd"
+get "<$SRCDIR>.H.grhd"
+get "<$SRCDIR>.H.nmhd"
 
 manifest
 $(
@@ -100,7 +101,8 @@ let g.nm.au.usable (gaz.rec.ptr, code, name.ptr, num.areas.ptr,
 $(
    let   gaz.rec  =  vec m.gazetteer.record.length / BYTESPERWORD
    and   boundary32 = vec 1
-   and   zero32 = vec 1     
+   and   zero32 = vec 1
+     
    and   num.areas = ?
 
    g.ut.set32 (0, 0, zero32)
@@ -127,7 +129,8 @@ $(
 
    // ensure that number of areas can be handled and that
    // there is a rasterised boundary dataset for the area of interest
-                     
+
+                     
    num.areas := g.ut.unpack16 (gaz.rec, m.num.areas)
 
    test ( (num.areas <= m.nm.max.num.areas) &
@@ -198,12 +201,14 @@ $)
              IF Gazetteer record is referenced in
                                  sub-dataset index THEN
                 enter record offset into control list of 
-                     used records                                          
+                     used records
+                                          
                 increment control 
              ENDIF
              next record
          UNTIL all sub-dataset index entries have been done OR
-                  have reached end of Gazetteer records    
+                  have reached end of Gazetteer records
+    
          mark end of list with '-1'
          free temporary vector
          RETURN base of control information vector
@@ -262,14 +267,17 @@ $(
             frame.ptr := frame.ptr + m.gazetteer.record.length
          $)
 
-      g.ut.add32 (const32, byte.offset)     // + 30 recordsworth
+      g.ut.add32 (const32, byte.offset)
+     // + 30 recordsworth
    $)
       repeatuntil end.found      // (should never need to repeat)
-  
+
+  
    // set base of control vector to half way up the frame buffer
    control.base := g.nm.frame + m.nm.frame.size / 2
    control := control.base
-   frame.ptr := 0        // start of gazetteer records in frame buffer
+   frame.ptr := 0
+        // start of gazetteer records in frame buffer
 
    $(      // (repeat)
       let found = FALSE
@@ -566,7 +574,8 @@ $(
       $)
 
    !xpix.pgs.ptr := x.map
-   !ypix.pgs.ptr := x.map * 2 
+   !ypix.pgs.ptr := x.map * 2
+ 
 
    RESULTIS TRUE
 $)

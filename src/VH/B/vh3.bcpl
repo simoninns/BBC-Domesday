@@ -29,10 +29,10 @@ section "vh3"
 
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.H.dhhd"
-get "<$ROOTDIR>.H.dhphd"
-get "<$ROOTDIR>.H.vhhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.H.dhhd"
+get "<$SRCDIR>.H.dhphd"
+get "<$SRCDIR>.H.vhhd"
 
 
 /**

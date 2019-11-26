@@ -27,12 +27,12 @@
 
 section "nmdetail2"
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNMhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.sihd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.nmhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNMhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.sihd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.nmhd"
 
 manifest
 $(

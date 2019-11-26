@@ -11,7 +11,7 @@
 //       23.12.87 2        MH      Numbered marks / ARC
 // **/
 
-GET"<$ROOTDIR>.h.iohd"  // for m.io.flagsize
+GET"<$SRCDIR>.h.iohd"  // for m.io.flagsize
 
 MANIFEST $(
 

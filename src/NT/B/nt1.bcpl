@@ -38,12 +38,12 @@
 section "nt1"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNThd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.nthd"
-get "<$ROOTDIR>.H.vhhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNThd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.nthd"
+get "<$SRCDIR>.H.vhhd"
 
 
 /**

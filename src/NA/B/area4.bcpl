@@ -25,8 +25,8 @@ section "Area4"
 
 get "libhdr"
 get "syshdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNAhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNAhd"
 
 static $( easting = ? northing = ? $)
 manifest $( topbit = 1 << 15 $)

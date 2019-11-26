@@ -22,10 +22,10 @@ section "Stinit"
 
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.H.sthd"
-get "<$ROOTDIR>.H.stphd"
-get "<$ROOTDIR>.H.st2hd"       // offset defin's for state tables
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.H.sthd"
+get "<$SRCDIR>.H.stphd"
+get "<$SRCDIR>.H.st2hd"       // offset defin's for state tables
 
 /**
          START is not part of the retrieval software but defines
@@ -80,13 +80,13 @@ $(
    g.st.snm ()
    g.st.ssear ()
 
-//   VECTOFILE (p, "/f.<$ROOTDIR>.R.states")    
+//   VECTOFILE (p, "/f.<$SRCDIR>.R.states")    
               
    st := (p+2) * bytesperword  // hardware address of start of data
                                 // start, end addresses
    pb!0, pb!1, pb!2, pb!3 := 0, 0, st, st+p!1 
 
-   Osfile( 0, "<$ROOTDIR>.R.states", pb )
+   Osfile( 0, "<$SRCDIR>.R.states", pb )
 
    STOP (0)
 $)

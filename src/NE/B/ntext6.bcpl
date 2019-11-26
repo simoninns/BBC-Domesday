@@ -18,14 +18,14 @@ SECTION "NText6"
 
 get "libhdr"
 
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNEhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.sihd"
-get "<$ROOTDIR>.H.dhhd"
-get "<$ROOTDIR>.H.nehd"
-get "<$ROOTDIR>.H.vhhd"
-get "<$ROOTDIR>.H.uthd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNEhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.sihd"
+get "<$SRCDIR>.H.dhhd"
+get "<$SRCDIR>.H.nehd"
+get "<$SRCDIR>.H.vhhd"
+get "<$SRCDIR>.H.uthd"
 
 /**
          G.NE.DISPLAYPHOTO - Routine to output photopage to screen,

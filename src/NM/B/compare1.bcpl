@@ -23,15 +23,15 @@
 
 section "nmcomp1"
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNMhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.uthd"
-get "<$ROOTDIR>.H.iohd"
-get "<$ROOTDIR>.H.nmhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNMhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.uthd"
+get "<$SRCDIR>.H.iohd"
+get "<$SRCDIR>.H.nmhd"
 
-get "<$ROOTDIR>.H.nmcphd"
+get "<$SRCDIR>.H.nmcphd"
 
 
 /**

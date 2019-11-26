@@ -39,7 +39,7 @@
 SECTION "utils3"
 
 GET "LIBHDR"
-GET "<$ROOTDIR>.GH.glhd"
+GET "<$SRCDIR>.GH.glhd"
 
 
 /**

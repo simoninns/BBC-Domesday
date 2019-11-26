@@ -3,26 +3,26 @@
 *| ... and make l.kernel   
 *SPOOL <$LOGDIR>.linkmods
 *time
-*dir <$ROOTDIR>.KE
+*dir <$SRCDIR>.KE
 c linc
-*dir <$ROOTDIR>.UT
+*dir <$SRCDIR>.UT
 c linc
-*dir <$ROOTDIR>.SC
+*dir <$SRCDIR>.SC
 c linc
-*dir <$ROOTDIR>.DH
+*dir <$SRCDIR>.DH
 c linc
-*dir <$ROOTDIR>.VH
+*dir <$SRCDIR>.VH
 c linc     
 *| make the state tables
-*dir <$ROOTDIR>.SI
+*dir <$SRCDIR>.SI
 c linc        
-*dir <$ROOTDIR>.HE
+*dir <$SRCDIR>.HE
 c linc
 *| now make l.kernel - all but the KE package
-*dir <$ROOTDIR>                                                       
+*dir <$SRCDIR>                                                       
 *remove l.kernel
 Join DH.c.kernel SC.c.kernel UT.c.kernel VH.c.kernel -to l.kernel
 *ex l
 *time
 *SPOOL
-*dir <$ROOTDIR>.utils
+*dir <$SRCDIR>.utils

@@ -23,11 +23,11 @@
 section "find1"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNFhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.nfhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNFhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.nfhd"
 
 /**
          See CF.FIND1 for comments

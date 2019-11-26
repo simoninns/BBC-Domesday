@@ -2,7 +2,7 @@
 *|
 *| do everything
 *time
-*dir <$ROOTDIR>.utils
+*dir <$SRCDIR>.utils
 c compsys
 c linksys
 *time

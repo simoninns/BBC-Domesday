@@ -26,14 +26,14 @@
 SECTION "general"
 
 GET"LIBHDR"
-GET"<$ROOTDIR>.GH.glhd"
-GET"<$ROOTDIR>.H.sthd"
-GET"<$ROOTDIR>.H.sdhd"
-GET"<$ROOTDIR>.H.kdhd"
-GET"<$ROOTDIR>.H.dhhd"
-GET"<$ROOTDIR>.H.ovhd"
-GET"<$ROOTDIR>.H.uthd"
-GET"<$ROOTDIR>.H.vhhd"
+GET"<$SRCDIR>.GH.glhd"
+GET"<$SRCDIR>.H.sthd"
+GET"<$SRCDIR>.H.sdhd"
+GET"<$SRCDIR>.H.kdhd"
+GET"<$SRCDIR>.H.dhhd"
+GET"<$SRCDIR>.H.ovhd"
+GET"<$SRCDIR>.H.uthd"
+GET"<$SRCDIR>.H.vhhd"
 
 
 /**

@@ -25,13 +25,13 @@ get "libhdr"
 $<RCP
 get "fphdr"
 $>RCP
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNMhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.iohd"
-get "<$ROOTDIR>.H.nmhd"
-get "<$ROOTDIR>.H.nmrehd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNMhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.iohd"
+get "<$SRCDIR>.H.nmhd"
+get "<$SRCDIR>.H.nmrehd"
 
 /**
          G.NM.RANK - ACTION ROUTINE FOR RANK OPERATION

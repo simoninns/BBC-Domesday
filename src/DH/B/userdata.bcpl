@@ -19,9 +19,9 @@
 section "userdata"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.H.dhhd"        // public header
-get "<$ROOTDIR>.H.dhphd"       // private header
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.H.dhhd"        // public header
+get "<$SRCDIR>.H.dhphd"       // private header
 
 /**
          G.ud.open (filename)

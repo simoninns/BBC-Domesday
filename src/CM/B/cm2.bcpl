@@ -25,14 +25,14 @@ section "cm2"
 **/
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCMhd"
-get "<$ROOTDIR>.H.grhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.vhhd"
-get "<$ROOTDIR>.H.cmhd"
-get "<$ROOTDIR>.H.cm2hd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCMhd"
+get "<$SRCDIR>.H.grhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.vhhd"
+get "<$SRCDIR>.H.cmhd"
+get "<$SRCDIR>.H.cm2hd"
 
 /**
          procedure g.cm.mapwal () is the main action routine for

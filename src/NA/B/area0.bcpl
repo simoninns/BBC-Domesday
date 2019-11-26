@@ -25,12 +25,12 @@ SECTION "Area0"
 
 GET "libhdr"
 GET "syshdr"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.GH.gldyhd"
-GET "<$ROOTDIR>.GH.glNAhd"
-GET "<$ROOTDIR>.H.sdhd"
-GET "<$ROOTDIR>.H.iohd"
-GET "<$ROOTDIR>.H.nahd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.GH.gldyhd"
+GET "<$SRCDIR>.GH.glNAhd"
+GET "<$SRCDIR>.H.sdhd"
+GET "<$SRCDIR>.H.iohd"
+GET "<$SRCDIR>.H.nahd"
 
 /**
          G.NA.DY.INIT - OVERLAY INITIALISATION

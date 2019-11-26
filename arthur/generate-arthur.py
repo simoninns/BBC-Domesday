@@ -82,14 +82,29 @@ def find_and_replace(directory, find, replace, filePattern):
                 f.write(s)
 
 # Main program
-target_riscos_dir = "IDEFS::Develop.$.Domesday"
-target_log_dir = target_riscos_dir + ".log"
+target_root_dir = "IDEFS::Develop.$.Domesday"
+target_src_dir = target_root_dir + ".ARC"
+target_log_dir = target_root_dir + ".log"
+target_tools_dir = target_root_dir + ".tools"
 
-# Ensure that the target directory exists before copying
-print("Creating top level ARC directory...")
+# Ensure that the target directories exists before copying
+print("Creating source directory...")
 if os.path.exists("./root/ARC"):
-    # If the directory already exists, remove it and recreate it
+    # If the directory already exists, remove it (it is recreated by the copy below)
     shutil.rmtree("./root/ARC")
+
+print("Creating tools directory...")
+if os.path.exists("./root/tools"):
+    # If the directory already exists, remove it (it is recreated by the copy below)
+    shutil.rmtree("./root/tools")
+
+print("Creating log directory...")
+if os.path.exists("./root/log"):
+    # If the directory already exists, remove it and recreate it
+    shutil.rmtree("./root/log")
+    os.mkdir("./root/log")
+else:
+    os.mkdir("./root/log")
 
 # Make a copy of the source code in the target directory
 print("Copying source files to ARC...")
@@ -99,32 +114,60 @@ copy_recursively("../src", "./root/ARC")
 print("Removing unwanted files from ARC..")
 remove_unwanted_files("./root/ARC")
 
+# Make a copy of the tools in the target directory
+print("Copying tools files to tools...")
+copy_recursively("./tools", "./root/tools")
+
 # Find and replace the <$ROOTDIR> token in .bcpl files
 print("Setting root directory in BCPL source files...")
-find_and_replace("./root/ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.bcpl")
+find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.bcpl")
 
 # Find and replace the <$ROOTDIR> token in .comm files
 print("Setting root directory in command files...")
-find_and_replace("./root/ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.comm")
+find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.comm")
 
-# Find and replace the <$ROOTDIR> token in .obey files
+# Find and replace the <$SRCDIR> token in .obey files
 print("Setting root directory in obey files...")
-find_and_replace("./root/ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.obey")
+find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.obey")
+
+# Find and replace the <$SRCDIR> token in .bcpl files
+print("Setting source directory in BCPL source files...")
+find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.bcpl")
+
+# Find and replace the <$SRCDIR> token in .comm files
+print("Setting source directory in command files...")
+find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.comm")
+
+# Find and replace the <$SRCDIR> token in .obey files
+print("Setting source directory in obey files...")
+find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.obey")
 
 # Find and replace the <$LOGDIR> token in .bcpl files
 print("Setting log directory in BCPL source files...")
-find_and_replace("./root/ARC", "<$LOGDIR>", target_log_dir, "*.bcpl")
+find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.bcpl")
 
 # Find and replace the <$LOGDIR> token in .comm files
 print("Setting log directory in command files...")
-find_and_replace("./root/ARC", "<$LOGDIR>", target_log_dir, "*.comm")
+find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.comm")
 
 # Find and replace the <$LOGDIR> token in .obey files
 print("Setting log directory in obey files...")
-find_and_replace("./root/ARC", "<$LOGDIR>", target_log_dir, "*.obey")
+find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.obey")
+
+# Find and replace the <$TOOLSDIR> token in .bcpl files
+print("Setting tools directory in BCPL source files...")
+find_and_replace("./root", "<$TOOLSDIR>", target_log_dir, "*.bcpl")
+
+# Find and replace the <$TOOLSDIR> token in .comm files
+print("Setting tools directory in command files...")
+find_and_replace("./root", "<$TOOLSDIR>", target_log_dir, "*.comm")
+
+# Find and replace the <$TOOLSDIR> token in .obey files
+print("Setting tools directory in obey files...")
+find_and_replace("./root", "<$TOOLSDIR>", target_log_dir, "*.obey")
 
 # Apply Archimedes file types
 print("Replacing file extensions with RISC OS file types...")
-apply_filetypes("./root/ARC")
+apply_filetypes("./root")
 
 print("Done")

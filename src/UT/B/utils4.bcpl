@@ -34,7 +34,7 @@
 SECTION "utils4"
 
 GET "LIBHDR"
-GET "<$ROOTDIR>.GH.glhd"
+GET "<$SRCDIR>.GH.glhd"
 
 
 /**

@@ -30,9 +30,9 @@ Section "ud.write"
 
 GET "LIBHDR"
 GET "SYSHDR"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.H.sdhd"
-GET "<$ROOTDIR>.H.uthd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.H.sdhd"
+GET "<$SRCDIR>.H.uthd"
 
 /**
          G.UD.OPEN.FILE - OPEN A FILE FOR 'WRITE'

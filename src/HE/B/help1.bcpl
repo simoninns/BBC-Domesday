@@ -29,11 +29,11 @@ SECTION "b.help1"
 
 GET"LIBHDR"
 
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glHEhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.hehd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glHEhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.hehd"
 
 /**
          G.HE.HELP - ACTION ROUTINE FOR HELP

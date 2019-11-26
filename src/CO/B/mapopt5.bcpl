@@ -33,11 +33,11 @@ section "mapopt5"
 
 get "libhdr"
 // get "fphdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCMhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.cmhd"
-get "<$ROOTDIR>.H.cm3hd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCMhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.cmhd"
+get "<$SRCDIR>.H.cm3hd"
 
 /**
          G.CO.SHOW.VALUE - Display the current value for Distance

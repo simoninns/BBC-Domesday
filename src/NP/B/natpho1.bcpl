@@ -29,12 +29,12 @@
 SECTION "Natpho1"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNPhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.vhhd"
-get "<$ROOTDIR>.H.nphd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNPhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.vhhd"
+get "<$SRCDIR>.H.nphd"
 
 /**
          proc G.NP.PHOTO ()

@@ -24,9 +24,9 @@
 
 section "nmtreesort"
 GET "libhdr"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.GH.glNMhd"
-GET "<$ROOTDIR>.H.nmhd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.GH.glNMhd"
+GET "<$SRCDIR>.H.nmhd"
 
 /**
          G.NM.SORT - SORT 32-BIT VALUES INTO ASCENDING ORDER

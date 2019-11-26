@@ -19,13 +19,13 @@ section "rcom"
 
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCFhd"
-get "<$ROOTDIR>.GH.glCMhd"
-get "<$ROOTDIR>.GH.glCPhd"
-get "<$ROOTDIR>.GH.glHEhd"
-get "<$ROOTDIR>.H.sthd"
-get "<$ROOTDIR>.H.stphd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCFhd"
+get "<$SRCDIR>.GH.glCMhd"
+get "<$SRCDIR>.GH.glCPhd"
+get "<$SRCDIR>.GH.glHEhd"
+get "<$SRCDIR>.H.sthd"
+get "<$SRCDIR>.H.stphd"
 
 
 let g.st.rcom () be

@@ -3,7 +3,7 @@
 *| national disc overlays
 *|     
 *time
-*dir :4.ARC.NA    
+*dir ^.NA    
 c comp
 *dir ^.NC         
 c comp
@@ -23,6 +23,6 @@ c comp
 c comp
 *dir ^.NW         
 c comp
-*dir <$ROOTDIR>.utils
+*dir <$SRCDIR>.utils
 *time
 *spool

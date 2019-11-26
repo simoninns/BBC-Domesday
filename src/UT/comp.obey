@@ -15,5 +15,5 @@ co RCPlib
 co FPlib
 co Debug
 co download
-c $.assemble VFSlib
-c $.assemble graflib
+c <$TOOLSDIR>.assemble VFSlib
+c <$TOOLSDIR>.assemble graflib

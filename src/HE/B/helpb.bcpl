@@ -23,13 +23,13 @@ SECTION "HELPB"
 
 GET"LIBHDR"
 
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.gH.glHEhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.kdhd"
-// get "<$ROOTDIR>.H.dhhd"
-get "<$ROOTDIR>.H.hehd"
-get "<$ROOTDIR>.H.uthd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.gH.glHEhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.kdhd"
+// get "<$SRCDIR>.H.dhhd"
+get "<$SRCDIR>.H.hehd"
+get "<$SRCDIR>.H.uthd"
 
 STATIC $( s.i = 0 // counter for line. routine
           s.string = ?

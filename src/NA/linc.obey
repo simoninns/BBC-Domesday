@@ -1,4 +1,4 @@
 *| link the area overlay
 *dir c
-Join area0 area area2 area3 area4 -to <$ROOTDIR>.l.area
+Join area0 area area2 area3 area4 -to <$SRCDIR>.l.area
 *back

@@ -8,13 +8,13 @@ Join retr1 retr2 retr3 retr4 sortrank tiefactor treesort valid window -to X4
 Join rankop1 rankop2 rankop4 -to X5
 *| write
 *|
-Join X1 X2 X3 X4 X5 -to  <$ROOTDIR>.L.nn
+Join X1 X2 X3 X4 X5 -to  <$SRCDIR>.L.nn
 *rem. X1
 *rem. X2
 *rem. X3
 *rem. X4
 *rem. X5
 *|
-Join <$ROOTDIR>.L.nm <$ROOTDIR>.L.nn  -to  <$ROOTDIR>.L.mapproc
+Join <$SRCDIR>.L.nm <$SRCDIR>.L.nn  -to  <$SRCDIR>.L.mapproc
 *|
 *dir ^

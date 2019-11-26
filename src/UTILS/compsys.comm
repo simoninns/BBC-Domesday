@@ -1,7 +1,7 @@
 *| COMPSYS AES Version 1 20.5.87
 *|
 *| compile everything
-*dir <$ROOTDIR>.utils
+*dir <$SRCDIR>.utils
 c compker
 c compcom
 c compnat

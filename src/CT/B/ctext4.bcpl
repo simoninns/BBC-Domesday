@@ -20,13 +20,13 @@
 SECTION "ctext4"
 
 get"libhdr"
-get"<$ROOTDIR>.GH.glhd"
-get"<$ROOTDIR>.GH.glCPhd"
-get"<$ROOTDIR>.H.sdhd"
-get"<$ROOTDIR>.H.sihd"
-get"<$ROOTDIR>.H.kdhd"
-get"<$ROOTDIR>.H.uthd"
-get"<$ROOTDIR>.H.cphd"
+get"<$SRCDIR>.GH.glhd"
+get"<$SRCDIR>.GH.glCPhd"
+get"<$SRCDIR>.H.sdhd"
+get"<$SRCDIR>.H.sihd"
+get"<$SRCDIR>.H.kdhd"
+get"<$SRCDIR>.H.uthd"
+get"<$SRCDIR>.H.cphd"
 
 
 /**

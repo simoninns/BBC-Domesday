@@ -25,10 +25,10 @@
 Section "text.lnk"
 
 GET "libhdr"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.H.sdhd"
-GET "<$ROOTDIR>.H.sdphd"
-GET "<$ROOTDIR>.H.uthd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.H.sdhd"
+GET "<$SRCDIR>.H.sdphd"
+GET "<$SRCDIR>.H.uthd"
 
 static $( s.olditem = m.sd.hinvalid $) // used by G.sc.2high
 

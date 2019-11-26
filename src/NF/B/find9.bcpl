@@ -48,15 +48,15 @@
 section "find9"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNFhd"
-get "<$ROOTDIR>.GH.glDYhd"
-get "<$ROOTDIR>.H.vhhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.sthd"
-get "<$ROOTDIR>.H.iohd"
-get "<$ROOTDIR>.H.nfhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNFhd"
+get "<$SRCDIR>.GH.glDYhd"
+get "<$SRCDIR>.H.vhhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.sthd"
+get "<$SRCDIR>.H.iohd"
+get "<$SRCDIR>.H.nfhd"
 
 /**
          See Community Find for comments on this section, which

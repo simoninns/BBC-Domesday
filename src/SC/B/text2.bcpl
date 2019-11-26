@@ -27,9 +27,9 @@
 Section "text2"
 
 GET "libhdr"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.H.sdhd"
-GET "<$ROOTDIR>.H.sdphd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.H.sdhd"
+GET "<$SRCDIR>.H.sdphd"
 
 /**
          G.SC.MESS - OUTPUT A MESSAGE

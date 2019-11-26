@@ -3,16 +3,16 @@
 *|
 *SPOOL <$LOGDIR>.linkCOM
 *time
-*dir <$ROOTDIR>.CM
+*dir <$SRCDIR>.CM
 c linc
-*dir <$ROOTDIR>.CO
+*dir <$SRCDIR>.CO
 c linc
-*dir <$ROOTDIR>.CP
+*dir <$SRCDIR>.CP
 c linc
-*dir <$ROOTDIR>.CT
+*dir <$SRCDIR>.CT
 c linc
-*dir <$ROOTDIR>.CF
+*dir <$SRCDIR>.CF
 c linc     
 *time
 *SPOOL
-*dir <$ROOTDIR>.utils
+*dir <$SRCDIR>.utils

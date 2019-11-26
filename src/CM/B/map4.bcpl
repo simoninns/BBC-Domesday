@@ -26,12 +26,12 @@ section "map4"
 **/
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCMhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.dhhd"
-get "<$ROOTDIR>.H.cmhd"
-get "<$ROOTDIR>.H.cm2hd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCMhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.dhhd"
+get "<$SRCDIR>.H.cmhd"
+get "<$SRCDIR>.H.cm2hd"
 
 /**
          function submapindex (m,n,a,b) returns the submap index

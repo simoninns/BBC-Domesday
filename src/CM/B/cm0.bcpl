@@ -36,17 +36,17 @@ section "cm0"
 **/
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.gldyhd"
-get "<$ROOTDIR>.GH.glCMhd"
-get "<$ROOTDIR>.H.dhhd"
-get "<$ROOTDIR>.H.grhd"
-get "<$ROOTDIR>.H.iohd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.vhhd"
-get "<$ROOTDIR>.H.cmhd"
-get "<$ROOTDIR>.H.cm2hd"
-get "<$ROOTDIR>.H.cm3hd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.gldyhd"
+get "<$SRCDIR>.GH.glCMhd"
+get "<$SRCDIR>.H.dhhd"
+get "<$SRCDIR>.H.grhd"
+get "<$SRCDIR>.H.iohd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.vhhd"
+get "<$SRCDIR>.H.cmhd"
+get "<$SRCDIR>.H.cm2hd"
+get "<$SRCDIR>.H.cm3hd"
 
 
 $<DEBUG

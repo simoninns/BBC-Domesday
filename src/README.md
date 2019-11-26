@@ -7,6 +7,7 @@ In order to preserve file-types within git the following extensions are used:
 * .bcpl - A BCPL source file
 * .asm - An ARM assembly file
 * .obey - A RISC OS 'Obey' file (list of star commands)
+* .comm - A RISC OS 'Command' file (list of commands)
 * .txt - An ASCII text file
 
 # RISC OS File type mapping
@@ -15,6 +16,7 @@ The following mappings should be used to convert file extensions to RISC OS file
 * .bcpl = &fff (ASCII text)
 * .asm = &fff
 * .obey = &feb (Obey command file)
+* .comm = &ffe (Command file)
 * .txt = &fff
 
 # Build order

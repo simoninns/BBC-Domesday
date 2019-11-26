@@ -23,11 +23,11 @@
 SECTION "Area2"
 
 GET "libhdr"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.GH.glNAhd"
-GET "<$ROOTDIR>.H.sdhd"
-GET "<$ROOTDIR>.H.nahd"
-GET "<$ROOTDIR>.H.vhhd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.GH.glNAhd"
+GET "<$SRCDIR>.H.sdhd"
+GET "<$SRCDIR>.H.nahd"
+GET "<$SRCDIR>.H.vhhd"
 
 STATIC
 $( ble = ? bln = ? tre = ? trn = ?

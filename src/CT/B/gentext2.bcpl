@@ -25,12 +25,12 @@
 SECTION "gentext"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCPhd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.uthd"
-get "<$ROOTDIR>.H.cphd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCPhd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.uthd"
+get "<$SRCDIR>.H.cphd"
 
 
 /**

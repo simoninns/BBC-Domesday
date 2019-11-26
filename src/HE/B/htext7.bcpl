@@ -43,11 +43,11 @@ SECTION "HelpText7"
 STATIC $( s.addresses = 0 $)
 
 GET "LIBHDR"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.GH.glHEhd"
-GET "<$ROOTDIR>.H.sdhd"
-GET "<$ROOTDIR>.H.sthd"
-GET "<$ROOTDIR>.H.hehd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.GH.glHEhd"
+GET "<$SRCDIR>.H.sdhd"
+GET "<$SRCDIR>.H.sthd"
+GET "<$SRCDIR>.H.hehd"
 
 MANIFEST
 $(

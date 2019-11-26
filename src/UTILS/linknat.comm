@@ -3,26 +3,26 @@
 *|          
 *spool <$LOGDIR>.linkNAT    
 *time
-*dir <$ROOTDIR>.NA    
+*dir <$SRCDIR>.NA    
 c linc
-*dir <$ROOTDIR>.NC         
+*dir <$SRCDIR>.NC         
 c linc
-*dir <$ROOTDIR>.NE         
+*dir <$SRCDIR>.NE         
 c linc
-*dir <$ROOTDIR>.NF         
+*dir <$SRCDIR>.NF         
 c linc
-*dir <$ROOTDIR>.NM         
+*dir <$SRCDIR>.NM         
 c linc
-*dir <$ROOTDIR>.NN         
+*dir <$SRCDIR>.NN         
 c linc
-*dir <$ROOTDIR>.NP         
+*dir <$SRCDIR>.NP         
 c linc
-*dir <$ROOTDIR>.NT         
+*dir <$SRCDIR>.NT         
 c linc
-*dir <$ROOTDIR>.NV         
+*dir <$SRCDIR>.NV         
 c linc
-*dir <$ROOTDIR>.NW         
+*dir <$SRCDIR>.NW         
 c linc
 *time
 *spool
-*dir <$ROOTDIR>.utils   
+*dir <$SRCDIR>.utils   

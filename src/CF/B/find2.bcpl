@@ -28,11 +28,11 @@
 section "find2"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCFhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.sthd"
-get "<$ROOTDIR>.H.cfhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCFhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.sthd"
+get "<$SRCDIR>.H.cfhd"
 
 let trap.(n,val,low,high) be g.ut.trap("CF",20+n,true,3,val,low,high)
 

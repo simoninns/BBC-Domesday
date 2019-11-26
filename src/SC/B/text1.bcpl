@@ -56,8 +56,8 @@ STATIC $( s.oldWRCH   = 0
        $)
 
 GET "libhdr"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.H.sdhd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.H.sdhd"
 
 // check.string replaces non-printing characters with #'s
 // N.B. check.string doesn't check for carriage returns/line feeds

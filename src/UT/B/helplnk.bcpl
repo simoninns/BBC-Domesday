@@ -20,9 +20,9 @@ Section "help.links"
 
 GET"LIBHDR"
 
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.kdhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.kdhd"
 
 ///////////////////////////////////////////////////////////////
 //        the two routines below are machine specific        //
@@ -115,7 +115,8 @@ LET G.ut.set.text.window() BE VDU("28,0,28,39,3,4,30,5")
 
 **/
 AND G.ut.send.to.OS( string ) BE
-$(                                        
+$(
+                                        
   LET fault = FALSE
 
    VDU("4,17,%",m.sd.cyan)  // set text colour to cyan and unlink cursors

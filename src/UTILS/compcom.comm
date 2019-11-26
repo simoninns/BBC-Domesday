@@ -3,7 +3,7 @@
 *| community disc overlays
 *|     
 *time
-*dir <$ROOTDIR>.CO
+*dir <$SRCDIR>.CO
 c comp
 *dir ^.CM
 c comp
@@ -13,6 +13,6 @@ c comp
 c comp
 *dir ^.CF
 c comp
-*dir <$ROOTDIR>.utils
+*dir <$SRCDIR>.utils
 *time
 *spool    

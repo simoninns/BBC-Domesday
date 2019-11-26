@@ -25,16 +25,16 @@
 **/
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNWhd"
-get "<$ROOTDIR>.GH.gldyhd"
-get "<$ROOTDIR>.H.iohd"
-get "<$ROOTDIR>.H.kdhd"
-get "<$ROOTDIR>.H.ovhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.sthd"
-get "<$ROOTDIR>.H.vhhd"
-get "<$ROOTDIR>.H.nwhd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNWhd"
+get "<$SRCDIR>.GH.gldyhd"
+get "<$SRCDIR>.H.iohd"
+get "<$SRCDIR>.H.kdhd"
+get "<$SRCDIR>.H.ovhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.sthd"
+get "<$SRCDIR>.H.vhhd"
+get "<$SRCDIR>.H.nwhd"
 
 let r(d) = g.ut.unpack16.signed(g.nw,d+d)
 and ru(d) = g.ut.unpack16(g.nw,d+d)

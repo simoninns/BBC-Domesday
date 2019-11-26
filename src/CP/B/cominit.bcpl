@@ -30,16 +30,16 @@
 SECTION "cominit"
 
 GET"LIBHDR"
-GET"<$ROOTDIR>.GH.glhd"
-GET"<$ROOTDIR>.GH.gldyhd"
-GET"<$ROOTDIR>.GH.glCPhd"
-GET"<$ROOTDIR>.H.sdhd"
-GET"<$ROOTDIR>.H.sihd"
-GET"<$ROOTDIR>.H.cphd"
-GET"<$ROOTDIR>.H.iohd"
+GET"<$SRCDIR>.GH.glhd"
+GET"<$SRCDIR>.GH.gldyhd"
+GET"<$SRCDIR>.GH.glCPhd"
+GET"<$SRCDIR>.H.sdhd"
+GET"<$SRCDIR>.H.sihd"
+GET"<$SRCDIR>.H.cphd"
+GET"<$SRCDIR>.H.iohd"
 
 $<DEBUG
-GET"<$ROOTDIR>.H.dhhd"
+GET"<$SRCDIR>.H.dhhd"
 
 STATIC
 $( // ******** FOR TESTBED ONLY **************

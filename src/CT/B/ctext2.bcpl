@@ -22,14 +22,14 @@
 SECTION "ctext2"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCPhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.sihd"
-get "<$ROOTDIR>.H.uthd"
-get "<$ROOTDIR>.H.dhhd"
-get "<$ROOTDIR>.H.grhd"
-get "<$ROOTDIR>.H.cphd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCPhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.sihd"
+get "<$SRCDIR>.H.uthd"
+get "<$SRCDIR>.H.dhhd"
+get "<$SRCDIR>.H.grhd"
+get "<$SRCDIR>.H.cphd"
 
 /**
          G.CT.DISPLAY.INDEX - routine to output schools index to screen,

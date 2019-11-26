@@ -21,14 +21,14 @@ SECTION "HelpText5"
 
 get "libhdr"
 
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glHEhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.sihd"
-get "<$ROOTDIR>.H.dhhd"
-get "<$ROOTDIR>.H.nehd"
-get "<$ROOTDIR>.H.hehd"
-get "<$ROOTDIR>.H.uthd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glHEhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.sihd"
+get "<$SRCDIR>.H.dhhd"
+get "<$SRCDIR>.H.nehd"
+get "<$SRCDIR>.H.hehd"
+get "<$SRCDIR>.H.uthd"
 
 /**
          G.he.TRYTOPAGE - routine to page through essay

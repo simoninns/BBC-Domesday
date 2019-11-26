@@ -23,8 +23,8 @@
 
 SECTION"setfont"
 GET"libhdr"
-GET"<$ROOTDIR>.GH.glhd"
-GET"<$ROOTDIR>.H.sdhd"
+GET"<$SRCDIR>.GH.glhd"
+GET"<$SRCDIR>.H.sdhd"
 
 /**
          G.SC.SETFONT - SET UP SPECIAL FONT

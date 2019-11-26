@@ -1,8 +1,8 @@
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.sdphd"  
-get "<$ROOTDIR>.H.uthd"  
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.sdphd"  
+get "<$SRCDIR>.H.uthd"  
 
 
 Let start() be

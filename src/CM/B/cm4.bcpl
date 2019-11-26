@@ -23,11 +23,11 @@ section "cm4"
 **/
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glCMhd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.cmhd"
-get "<$ROOTDIR>.H.cm2hd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glCMhd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.cmhd"
+get "<$SRCDIR>.H.cm2hd"
 
 /**
          procedure g.cm.expand.frame.from (x1,y1, x2,y2) displays

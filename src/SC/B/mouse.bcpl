@@ -33,10 +33,10 @@ SECTION "mouse"
 
 GET "LIBHDR"
 GET "SYSHDR"
-GET "<$ROOTDIR>.GH.glhd"
-GET "<$ROOTDIR>.H.sdhd"
-GET "<$ROOTDIR>.H.sdphd"
-GET "<$ROOTDIR>.H.kdhd"
+GET "<$SRCDIR>.GH.glhd"
+GET "<$SRCDIR>.H.sdhd"
+GET "<$SRCDIR>.H.sdphd"
+GET "<$SRCDIR>.H.kdhd"
 
 // mouse pointer is initially OFF
 STATIC $( s.ptrstatus = m.sd.off 

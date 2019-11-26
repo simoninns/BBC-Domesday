@@ -30,8 +30,8 @@
 section "calc32b"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.H.uthd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.H.uthd"
 
 /**
          G.UT.ADD32 - Add 2 32-bit numbers

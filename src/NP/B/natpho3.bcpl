@@ -22,12 +22,12 @@
 SECTION "natpho3"
 
 get "libhdr"
-get "<$ROOTDIR>.GH.glhd"
-get "<$ROOTDIR>.GH.glNPhd"
-get "<$ROOTDIR>.GH.gldyhd"
-get "<$ROOTDIR>.H.iohd"
-get "<$ROOTDIR>.H.sdhd"
-get "<$ROOTDIR>.H.nphd"
+get "<$SRCDIR>.GH.glhd"
+get "<$SRCDIR>.GH.glNPhd"
+get "<$SRCDIR>.GH.gldyhd"
+get "<$SRCDIR>.H.iohd"
+get "<$SRCDIR>.H.sdhd"
+get "<$SRCDIR>.H.nphd"
 
 
 /**

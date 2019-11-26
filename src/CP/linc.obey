@@ -1,7 +1,7 @@
 *| sublink Photo, then link the PHTX overlay
 *|
-Join c.cominit c.compho1 c.compho2 -to <$ROOTDIR>.l.cphoto   
+Join c.cominit c.compho1 c.compho2 -to <$SRCDIR>.l.cphoto   
 *|   
-*dir <$ROOTDIR>.l
+*dir <$SRCDIR>.l
 Join cphoto sctext aatext -to phtx
 *back  
