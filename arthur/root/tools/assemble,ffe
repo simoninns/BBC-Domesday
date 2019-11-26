@@ -1,3 +1,0 @@
-. Command file to assemble an ARM program
-.key file/a 
-Aasm a.<file> -to o.<file> -quit
