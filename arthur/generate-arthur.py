@@ -88,6 +88,14 @@ target_log_dir = target_root_dir + ".log"
 target_tools_dir = target_root_dir + ".tools"
 
 # Ensure that the target directories exists before copying
+print("Creating root directory...")
+if os.path.exists("./root"):
+    # If the directory already exists, remove it and recreate it
+    shutil.rmtree("./root")
+    os.mkdir("./root")
+else:
+    os.mkdir("./root")
+
 print("Creating source directory...")
 if os.path.exists("./root/ARC"):
     # If the directory already exists, remove it (it is recreated by the copy below)
