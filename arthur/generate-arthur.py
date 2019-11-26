@@ -164,15 +164,15 @@ find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.obey")
 
 # Find and replace the <$TOOLSDIR> token in .bcpl files
 print("Setting tools directory in BCPL source files...")
-find_and_replace("./root", "<$TOOLSDIR>", target_log_dir, "*.bcpl")
+find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.bcpl")
 
 # Find and replace the <$TOOLSDIR> token in .comm files
 print("Setting tools directory in command files...")
-find_and_replace("./root", "<$TOOLSDIR>", target_log_dir, "*.comm")
+find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.comm")
 
 # Find and replace the <$TOOLSDIR> token in .obey files
 print("Setting tools directory in obey files...")
-find_and_replace("./root", "<$TOOLSDIR>", target_log_dir, "*.obey")
+find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.obey")
 
 # Apply Archimedes file types
 print("Replacing file extensions with RISC OS file types...")
