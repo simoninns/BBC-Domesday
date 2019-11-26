@@ -13,5 +13,5 @@ The files will be given ',fff' style extensions to indicate the target RISC OS f
 Note that the root paths in both .bcpl get commands and .obey star commands will be set to "IDEFS::Develop.$.Domesday.ARC" (to-do: make this a command line option)
 
 # Compiling the source code
-Copy the BCPL directory over to the A440 using !FTPc and double-click on the 'BCPL/!Boot file' to initialise the environment.
+Copy the root directory over to the Archimedes using !FTPc and double-click on the 'root/!Boot file' to initialise the environment.
 To be continued...

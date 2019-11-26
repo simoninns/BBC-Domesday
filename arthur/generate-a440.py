@@ -40,7 +40,7 @@ def copy_recursively(src, dst):
 def remove_unwanted_files(path):
     for root, dirs, files in os.walk(path):
         for currentFile in files:
-            exts = ('.bcpl', '.obey')
+            exts = ('.bcpl', '.obey', '.comm')
             if not currentFile.lower().endswith(exts):
                 os.remove(os.path.join(root, currentFile))
 
@@ -64,6 +64,12 @@ def apply_filetypes(directory):
                 dst = os.path.join(subdir, filename.replace(".obey",",feb"))
                 os.rename(src, dst) # Rename the file
 
+            # .comm files should have type &ffe
+            if filename.find('.comm') > 0:
+                src = os.path.join(subdir, filename)
+                dst = os.path.join(subdir, filename.replace(".comm",",ffe"))
+                os.rename(src, dst) # Rename the file
+
 # Find and replace tokens recursively in files
 def find_and_replace(directory, find, replace, filePattern):
     for path, dirs, files in os.walk(os.path.abspath(directory)):
@@ -80,28 +86,28 @@ target_riscos_dir = "IDEFS::Develop.$.Domesday"
 
 # Ensure that the target directory exists before copying
 print("Creating top level ARC directory...")
-if os.path.exists("./ARC"):
+if os.path.exists("./root/ARC"):
     # If the directory already exists, remove it and recreate it
-    shutil.rmtree("./ARC")
+    shutil.rmtree("./root/ARC")
 
 # Make a copy of the source code in the target directory
 print("Copying source files to ARC...")
-copy_recursively("../src", "./ARC")
+copy_recursively("../src", "./root/ARC")
 
 # Remove any source files we don't need
 print("Removing unwanted files from ARC..")
-remove_unwanted_files("./ARC")
+remove_unwanted_files("./root/ARC")
 
 # Find and replace the <$ROOTDIR> token in .bcpl files
 print("Setting root directory in .bcpl files...")
-find_and_replace("./ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.bcpl")
+find_and_replace("./root/ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.bcpl")
 
 # Find and replace the <$ROOTDIR> token in .obey files
 print("Setting root directory in .obey files...")
-find_and_replace("./ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.obey")
+find_and_replace("./root/ARC", "<$ROOTDIR>", target_riscos_dir + ".ARC", "*.obey")
 
 # Apply Archimedes file types
 print("Replacing file extensions with RISC OS file types...")
-apply_filetypes("./ARC")
+apply_filetypes("./root/ARC")
 
 print("Done")
