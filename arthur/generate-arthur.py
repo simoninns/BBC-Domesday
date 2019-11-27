@@ -82,7 +82,7 @@ def find_and_replace(directory, find, replace, filePattern):
                 f.write(s)
 
 # Main program
-target_root_dir = "IDEFS::Develop.$.Domesday"
+target_root_dir = "ADFS::4.$.Domesday"
 target_src_dir = target_root_dir + ".ARC"
 target_log_dir = target_root_dir + ".log"
 target_tools_dir = target_root_dir + ".tools"
