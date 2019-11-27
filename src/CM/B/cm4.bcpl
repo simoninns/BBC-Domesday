@@ -22,7 +22,7 @@ section "cm4"
          g.cm.moving.arrow
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glCMhd"
 get "<$SRCDIR>.H.sdhd"

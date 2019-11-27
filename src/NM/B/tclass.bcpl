@@ -10,7 +10,7 @@
 **/
 
 section "tclass"
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get ":0.h.glhd"
 get ":0.h.dhhd"
 get ":5.h.nmhd"

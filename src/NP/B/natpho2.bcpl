@@ -20,7 +20,7 @@
 
 SECTION "Natpho2"
 
-GET "libhdr"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glNPhd"
 GET "<$SRCDIR>.H.sdhd"

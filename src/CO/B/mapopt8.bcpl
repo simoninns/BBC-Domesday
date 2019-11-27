@@ -26,7 +26,7 @@ section "mapopt8"
 // needs "flconv"
 // needs "flsqrt"
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 // get "fphdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glCMhd"

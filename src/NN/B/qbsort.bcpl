@@ -14,7 +14,7 @@
 **/
 
 section "nmqbsort"
-GET "libhdr"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET ":0.h.glhd"
 GET ":0.h.gl2hd"
 GET ":0.h.uthd"

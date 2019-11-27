@@ -38,7 +38,7 @@
 
 SECTION "utils3"
 
-GET "LIBHDR"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 
 

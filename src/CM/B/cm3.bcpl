@@ -18,7 +18,7 @@ section "cm3"
          g.cm.direction
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glCMhd"
 get "<$SRCDIR>.H.sdhd"

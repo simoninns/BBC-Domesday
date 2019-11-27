@@ -18,7 +18,7 @@
 **/
 
 section "nmclass32"
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glNMhd"
 get "<$SRCDIR>.H.sdhd"

@@ -29,7 +29,7 @@ SECTION "Super.Mouse"
 
 NEEDS "VDU"
 
-GET "LIBHDR"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "SYSHDR"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.sdhd"

@@ -16,7 +16,7 @@
 
 SECTION "natinit"
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.gldyhd"

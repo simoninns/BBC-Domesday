@@ -36,7 +36,7 @@ section "mapopt2"
             g.cm.show.grid.ref ()
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glCMhd"
 get "<$SRCDIR>.H.sdhd"

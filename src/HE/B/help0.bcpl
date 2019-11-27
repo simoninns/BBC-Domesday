@@ -28,7 +28,7 @@
 
 SECTION "b.help0"
 
-GET"LIBHDR"
+GET"<$SRCDIR>.LIBHDR.libhdr"
 
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glHEhd"

@@ -18,7 +18,7 @@
 
 SECTION "icon"
 
-GET "LIBHDR"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.sdhd"
 

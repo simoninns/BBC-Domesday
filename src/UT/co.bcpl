@@ -28,7 +28,7 @@
 
 Section "ud.write"
 
-GET "LIBHDR"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "SYSHDR"
 GET "<$SRCDIR>.gh.glhd"
 GET "<$SRCDIR>.h.sdhd"

@@ -21,7 +21,7 @@
 
 section "find7"
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glNFhd"
 get "<$SRCDIR>.H.sdhd"

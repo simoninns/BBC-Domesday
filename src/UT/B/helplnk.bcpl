@@ -18,7 +18,7 @@
 
 Section "help.links"
 
-GET"LIBHDR"
+GET"<$SRCDIR>.LIBHDR.libhdr"
 
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.H.sdhd"

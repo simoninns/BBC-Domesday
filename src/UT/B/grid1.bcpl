@@ -43,7 +43,7 @@ section "utgrid1"
             g.ut.grid.mixed
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.H.grhd"
 

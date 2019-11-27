@@ -25,7 +25,7 @@
 
 SECTION "general"
 
-GET"LIBHDR"
+GET"<$SRCDIR>.LIBHDR.libhdr"
 GET"<$SRCDIR>.GH.glhd"
 GET"<$SRCDIR>.H.sthd"
 GET"<$SRCDIR>.H.sdhd"

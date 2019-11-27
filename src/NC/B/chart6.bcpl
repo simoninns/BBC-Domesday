@@ -27,7 +27,7 @@
 
 SECTION "Chart6"
 
-GET "libhdr"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.GH.glNChd"
 GET "<$SRCDIR>.H.sdhd"

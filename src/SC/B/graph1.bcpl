@@ -60,7 +60,7 @@
 
 section "sc.graph1" // graphics package first chunk
 
-GET "LIBHDR"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "SYSHDR"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.sdhd"   // manifests header

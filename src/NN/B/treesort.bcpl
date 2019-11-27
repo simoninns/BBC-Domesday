@@ -23,7 +23,7 @@
 **/
 
 section "nmtreesort"
-GET "libhdr"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.GH.glNMhd"
 GET "<$SRCDIR>.H.nmhd"

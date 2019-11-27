@@ -28,7 +28,7 @@ section "map3"
                                        frame is shown
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glCMhd"
 get "<$SRCDIR>.H.dhhd"

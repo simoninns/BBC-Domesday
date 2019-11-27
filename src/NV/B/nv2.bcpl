@@ -24,7 +24,7 @@ section "nv2"
             g.nv.show.film.list
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glNVhd"
 get "<$SRCDIR>.H.sdhd"

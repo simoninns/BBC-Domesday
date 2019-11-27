@@ -24,7 +24,7 @@ needs "FLAR1"
 needs "FLCONV"
 $>RCP
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 $<RCP
 get "fphdr"
 $>RCP

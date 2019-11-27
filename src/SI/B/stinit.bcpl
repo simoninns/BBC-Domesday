@@ -21,7 +21,7 @@ section "Stinit"
 **/
 
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.H.sthd"
 get "<$SRCDIR>.H.stphd"

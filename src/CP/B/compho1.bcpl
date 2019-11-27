@@ -31,7 +31,7 @@
 
 SECTION "compho1"
 
-GET"LIBHDR"
+GET"<$SRCDIR>.LIBHDR.libhdr"
 GET"<$SRCDIR>.GH.glhd"
 GET"<$SRCDIR>.GH.glCPhd"
 GET"<$SRCDIR>.H.sdhd"

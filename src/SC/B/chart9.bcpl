@@ -30,7 +30,7 @@
 **/                                                                   
 SECTION "Chart9"
 
-GET "libhdr"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.sdhd"
 

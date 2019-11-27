@@ -25,7 +25,7 @@
 **/
 
 section "nmframe"
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get ":0.UNI.GH.glhd"
 get ":0.UNI.GH.glNMhd"
 get ":0.UNI.H.nmhd"

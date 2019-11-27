@@ -47,7 +47,7 @@
 
 SECTION "utils2"
 
-GET "LIBHDR"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "SYSHDR"
 GET "<$SRCDIR>.GH.glhd" // the globals
 GET "<$SRCDIR>.H.sdhd"  // screen handler

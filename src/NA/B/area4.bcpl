@@ -23,7 +23,7 @@
 
 section "Area4"
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "syshdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glNAhd"

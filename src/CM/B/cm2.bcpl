@@ -24,7 +24,7 @@ section "cm2"
          g.cm.cmpw
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glCMhd"
 get "<$SRCDIR>.H.grhd"

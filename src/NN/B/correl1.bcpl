@@ -21,7 +21,7 @@
 
 section "nmcorrel1"
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 $<RCP
 get "fphdr"
 $>RCP

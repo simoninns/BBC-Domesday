@@ -29,7 +29,7 @@
 
 SECTION "root"
 
-GET"LIBHDR"
+GET"<$SRCDIR>.LIBHDR.libhdr"
 GET"<$SRCDIR>.GH.glhd"
 GET"<$SRCDIR>.GH.gldyhd"
 GET"<$SRCDIR>.H.sthd"

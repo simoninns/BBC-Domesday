@@ -28,7 +28,7 @@
                                        G.nw.showframe.
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glNWhd"
 get "<$SRCDIR>.GH.gldyhd"

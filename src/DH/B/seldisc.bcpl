@@ -33,7 +33,7 @@ section "seldisc"
          g.dh.select.disc
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.H.dhhd"
 get "<$SRCDIR>.H.sdhd"

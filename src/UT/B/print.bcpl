@@ -27,7 +27,7 @@
 
 Section "ut.print"
 
-GET "LIBHDR"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.uthd"
 GET "<$SRCDIR>.H.sdhd"

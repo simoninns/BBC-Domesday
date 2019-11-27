@@ -31,7 +31,7 @@ section "utgrid2"
             g.ut.grid.trim
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.H.grhd"
 

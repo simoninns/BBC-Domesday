@@ -1,6 +1,6 @@
 
 section "tmap"
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get ":0.h.glhd"
 get ":0.h.gl2hd"
 

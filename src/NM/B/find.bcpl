@@ -4,7 +4,7 @@
 */
 
 SECTION"b.dumfind"
-GET"LIBHDR"
+GET"<$SRCDIR>.LIBHDR.libhdr"
 GET":0.h.glhd"
 GET":0.h.sdhd"
 get":0.h.sthd"

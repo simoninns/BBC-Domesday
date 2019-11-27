@@ -21,7 +21,7 @@ section "nv0"
          g.nv.dy.free
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glDYhd"
 get "<$SRCDIR>.GH.glNVhd"

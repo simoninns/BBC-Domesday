@@ -52,7 +52,7 @@
                    
 Section "FPlib"
 
-GET "libhdr"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 
 STATIC $( s = 0; i = 0; ch = 0 $) // used by flit, etc.
 

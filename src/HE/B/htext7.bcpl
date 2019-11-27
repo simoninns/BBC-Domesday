@@ -42,7 +42,7 @@ SECTION "HelpText7"
 
 STATIC $( s.addresses = 0 $)
 
-GET "LIBHDR"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.GH.glHEhd"
 GET "<$SRCDIR>.H.sdhd"

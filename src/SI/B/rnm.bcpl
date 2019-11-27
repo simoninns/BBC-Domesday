@@ -18,7 +18,7 @@ section "Rnm"
 **/
 
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glNMhd"
 get "<$SRCDIR>.GH.glHEhd"

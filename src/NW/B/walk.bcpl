@@ -24,7 +24,7 @@
          8.6.87   15       MFP         CHANGES FOR UNI
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glNWhd"
 get "<$SRCDIR>.GH.gldyhd"

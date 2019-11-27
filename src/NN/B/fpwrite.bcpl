@@ -28,7 +28,7 @@ needs "FLCONV"
 needs "FLIO2"
 $>RCP
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 $<RCP
 get "fphdr"
 $>RCP

@@ -18,7 +18,7 @@
 
 Section "FIND.dummy"
 
-GET "LIBHDR"  
+GET "<$SRCDIR>.LIBHDR.libhdr"  
     
 GET ":4.DSH.GH.glhd"
 GET ":4.DSH.GH.gldyhd"

@@ -30,7 +30,7 @@ section "mapopt4"
             g.cm.mapsca ()
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glCMhd"
 get "<$SRCDIR>.H.kdhd"

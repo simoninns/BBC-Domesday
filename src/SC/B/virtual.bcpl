@@ -21,7 +21,7 @@
 
 Section "virtual keyboard"
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.H.sdhd"
 get "<$SRCDIR>.H.sdphd"

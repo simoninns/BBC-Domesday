@@ -31,7 +31,7 @@
          23.12.87 12       MH          Numbered marks
 **/
 
-GET "LIBHDR"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.sdhd"
 GET "<$SRCDIR>.H.sdphd"

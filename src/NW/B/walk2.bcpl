@@ -17,7 +17,7 @@
          16.9.87   2       MH          changes to PLAN
 **/
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glNWhd"
 get "<$SRCDIR>.H.kdhd"

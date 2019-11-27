@@ -26,7 +26,7 @@
 
 SECTION "ctext3"
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 get "<$SRCDIR>.GH.glhd"
 get "<$SRCDIR>.GH.glCPhd"
 get "<$SRCDIR>.H.sdhd"

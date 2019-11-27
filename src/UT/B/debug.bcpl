@@ -17,7 +17,7 @@
 
 SECTION "Debugger"
 
-GET "LibHdr"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 
 STATIC
 $( /* Version of 2 Jun 87 11:13:20

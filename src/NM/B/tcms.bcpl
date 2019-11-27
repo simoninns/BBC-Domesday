@@ -1,5 +1,5 @@
 section "test"
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 
 let start() be
 $(

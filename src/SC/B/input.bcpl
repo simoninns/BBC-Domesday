@@ -22,7 +22,7 @@
 
 Section "input"
 
-GET "libhdr"
+GET "<$SRCDIR>.LIBHDR.libhdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.kdhd"
 GET "<$SRCDIR>.H.sdhd"

@@ -29,7 +29,7 @@ needs "FLCONV"
 needs "FLSQRT"
 $>RCP
 
-get "libhdr"
+get "<$SRCDIR>.LIBHDR.libhdr"
 $<RCP
 get "fphdr"
 $>RCP
