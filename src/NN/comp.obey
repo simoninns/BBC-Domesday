@@ -1,5 +1,6 @@
 *| compile AES NN (children)
 *|
+cdir c
 co area
 c1 auto1
 c1 auto2

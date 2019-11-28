@@ -29,7 +29,7 @@
 Section "ud.write"
 
 GET "<$SRCDIR>.LIBHDR.libhdr"
-GET "SYSHDR"
+GET "<$SRCDIR>.LIBHDR.syshdr"
 GET "<$SRCDIR>.gh.glhd"
 GET "<$SRCDIR>.h.sdhd"
 GET "<$SRCDIR>.h.uthd"

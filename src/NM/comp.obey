@@ -1,5 +1,6 @@
 *| compile AES NM parent source
 *|
+cdir c
 co analyse1
 c1 analyse2
 c1 analyse3

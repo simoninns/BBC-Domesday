@@ -22,7 +22,7 @@
 SECTION "number"
 
 GET "<$SRCDIR>.LIBHDR.libhdr"
-GET "SYSHDR"
+GET "<$SRCDIR>.LIBHDR.syshdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.sdhd"
 

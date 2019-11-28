@@ -1,4 +1,5 @@
 *| compile the Chart overlay
+cdir c
 co chart0
 co chart1
 co chart2

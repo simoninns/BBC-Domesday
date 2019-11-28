@@ -1,4 +1,5 @@
 *|  compile video handler
+cdir c
 co vh1
 co vh2
 co vh3

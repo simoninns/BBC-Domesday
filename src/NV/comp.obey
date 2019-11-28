@@ -1,4 +1,5 @@
 *|  compile NV
+cdir c
 co nv0
 co nv1
 co nv2

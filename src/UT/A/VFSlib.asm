@@ -14,7 +14,7 @@
 ;  OSGbpb is a general routine; the others are specific to VFS
 ;
 
-        GET     :4.Alib.BCPLMacs
+        GET     <$SRCDIR>.LIBHDR.bcplmacs
 
 r1              RN      1
 r2              RN      2

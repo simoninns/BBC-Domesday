@@ -24,7 +24,7 @@
 SECTION "Area0"
 
 GET "<$SRCDIR>.LIBHDR.libhdr"
-GET "syshdr"
+GET "<$SRCDIR>.LIBHDR.syshdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.GH.gldyhd"
 GET "<$SRCDIR>.GH.glNAhd"

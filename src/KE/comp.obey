@@ -1,4 +1,5 @@
 *| compile the kernel(s)
+cdir c
 co kernel1
 co kernel2
 *|

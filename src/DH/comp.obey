@@ -1,4 +1,5 @@
 *|  compile the Data Handler
+cdir c
 co dh1
 co dh2
 co seldisc

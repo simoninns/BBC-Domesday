@@ -46,7 +46,7 @@ Section "ut.write"
 STATIC $( s.vec = 0 ; s.off = 0  $) // used for redefined WRCH
 
 GET "<$SRCDIR>.LIBHDR.libhdr"
-GET "SYSHDR"
+GET "<$SRCDIR>.LIBHDR.syshdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.sdhd"
 GET "<$SRCDIR>.H.uthd"

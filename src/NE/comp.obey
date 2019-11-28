@@ -1,4 +1,5 @@
 *| compile the National Text overlay
+cdir c
 co natinit
 co ntext1
 co ntext2

@@ -1,4 +1,5 @@
 *| compile all SC source
+cdir c
 co graph1
 co graph2
 co text1

@@ -1,4 +1,5 @@
 *| compile the state table init
+cdir c
 co stinit
 co rcom
 co rexam

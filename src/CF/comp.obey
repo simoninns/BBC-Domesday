@@ -1,4 +1,5 @@
 *| compile the Community find overlay
+cdir c
 co find0
 co find1
 co find2

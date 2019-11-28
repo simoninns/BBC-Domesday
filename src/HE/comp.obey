@@ -1,4 +1,5 @@
 *| compile all HE source
+cdir c
 co helpinit
 co help0
 co help1

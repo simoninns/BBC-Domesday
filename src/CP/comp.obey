@@ -1,4 +1,5 @@
 *| compile the PHTX overlay
+cdir c
 co cominit
 co compho1
 co compho2

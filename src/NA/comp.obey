@@ -1,4 +1,5 @@
 *| compile the AREA overlay
+cdir c
 co area0
 co area
 co area2

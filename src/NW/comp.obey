@@ -1,3 +1,4 @@
 *| compile the NW source
+cdir c
 co walk1
 co walk2

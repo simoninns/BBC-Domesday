@@ -1,4 +1,5 @@
 *| compile the PHOTO overlay
+cdir c
 co natinit
 co natpho1
 co natpho2

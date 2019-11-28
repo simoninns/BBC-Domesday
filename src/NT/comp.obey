@@ -1,4 +1,5 @@
 *| compile the AES national contents (NT) overlay
+cdir c
 co nt0
 co nt1
 co nt2

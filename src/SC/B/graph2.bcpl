@@ -45,7 +45,7 @@
 SECTION "sc.graph2" // graphics package
 
 GET "<$SRCDIR>.LIBHDR.libhdr"
-GET "SYSHDR"
+GET "<$SRCDIR>.LIBHDR.syshdr"
 GET "<$SRCDIR>.GH.glHD"   // globals
 GET "<$SRCDIR>.H.SDHD"   // manifests header
 GET "<$SRCDIR>.H.SDPHD"  // private manifests

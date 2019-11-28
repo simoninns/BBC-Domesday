@@ -1,5 +1,6 @@
 *| compile the text parts of PHTX overlay
 *|
+cdir c
 co gentext1
 co gentext2
 *|

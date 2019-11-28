@@ -40,7 +40,7 @@ def copy_recursively(src, dst):
 def remove_unwanted_files(path):
     for root, dirs, files in os.walk(path):
         for currentFile in files:
-            exts = ('.bcpl', '.obey', '.comm')
+            exts = ('.bcpl', '.obey', '.comm', '.asm')
             if not currentFile.lower().endswith(exts):
                 os.remove(os.path.join(root, currentFile))
 
@@ -70,6 +70,12 @@ def apply_filetypes(directory):
                 dst = os.path.join(subdir, filename.replace(".comm",",ffe"))
                 os.rename(src, dst) # Rename the file
 
+            # .asm files should have type &fff
+            if filename.find('.asm') > 0:
+                src = os.path.join(subdir, filename)
+                dst = os.path.join(subdir, filename.replace(".asm",",fff"))
+                os.rename(src, dst) # Rename the file
+
 # Find and replace tokens recursively in files
 def find_and_replace(directory, find, replace, filePattern):
     for path, dirs, files in os.walk(os.path.abspath(directory)):
@@ -81,9 +87,11 @@ def find_and_replace(directory, find, replace, filePattern):
             with open(filepath, "w") as f:
                 f.write(s)
 
+
+
 # Main program
 target_root_dir = "ADFS::4.$.Domesday"
-target_src_dir = target_root_dir + ".ARC"
+target_src_dir = target_root_dir + ".src"
 target_log_dir = target_root_dir + ".log"
 target_tools_dir = target_root_dir + ".tools"
 
@@ -97,9 +105,9 @@ else:
     os.mkdir("./root")
 
 print("Creating source directory...")
-if os.path.exists("./root/ARC"):
+if os.path.exists("./root/src"):
     # If the directory already exists, remove it (it is recreated by the copy below)
-    shutil.rmtree("./root/ARC")
+    shutil.rmtree("./root/src")
 
 print("Creating tools directory...")
 if os.path.exists("./root/tools"):
@@ -114,17 +122,21 @@ if os.path.exists("./root/log"):
 else:
     os.mkdir("./root/log")
 
+
+
 # Make a copy of the source code in the target directory
-print("Copying source files to ARC...")
-copy_recursively("../src", "./root/ARC")
+print("Copying source files to src...")
+copy_recursively("../src", "./root/src")
 
 # Remove any source files we don't need
-print("Removing unwanted files from ARC..")
-remove_unwanted_files("./root/ARC")
+print("Removing unwanted files from src..")
+remove_unwanted_files("./root/src")
 
 # Make a copy of the tools in the target directory
 print("Copying tools files to tools...")
 copy_recursively("./tools", "./root/tools")
+
+
 
 # Find and replace the <$ROOTDIR> token in .bcpl files
 print("Setting root directory in BCPL source files...")
@@ -134,9 +146,15 @@ find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.bcpl")
 print("Setting root directory in command files...")
 find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.comm")
 
-# Find and replace the <$SRCDIR> token in .obey files
+# Find and replace the <$ROOTDIR> token in .obey files
 print("Setting root directory in obey files...")
 find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.obey")
+
+# Find and replace the <$ROOTDIR> token in .asm files
+print("Setting root directory in asm files...")
+find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.asm")
+
+
 
 # Find and replace the <$SRCDIR> token in .bcpl files
 print("Setting source directory in BCPL source files...")
@@ -150,6 +168,12 @@ find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.comm")
 print("Setting source directory in obey files...")
 find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.obey")
 
+# Find and replace the <$SRCDIR> token in .asm files
+print("Setting source directory in asm files...")
+find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.asm")
+
+
+
 # Find and replace the <$LOGDIR> token in .bcpl files
 print("Setting log directory in BCPL source files...")
 find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.bcpl")
@@ -162,6 +186,12 @@ find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.comm")
 print("Setting log directory in obey files...")
 find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.obey")
 
+# Find and replace the <$LOGDIR> token in .asm files
+print("Setting log directory in asm files...")
+find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.asm")
+
+
+
 # Find and replace the <$TOOLSDIR> token in .bcpl files
 print("Setting tools directory in BCPL source files...")
 find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.bcpl")
@@ -173,6 +203,12 @@ find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.comm")
 # Find and replace the <$TOOLSDIR> token in .obey files
 print("Setting tools directory in obey files...")
 find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.obey")
+
+# Find and replace the <$TOOLSDIR> token in .asm files
+print("Setting tools directory in asm files...")
+find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.asm")
+
+
 
 # Apply Archimedes file types
 print("Replacing file extensions with RISC OS file types...")

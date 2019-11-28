@@ -1,4 +1,5 @@
 *|  compile CM
+cdir c
 co map0
 co map1
 co map2

@@ -39,7 +39,7 @@
 SECTION "utils1"
 
 GET "<$SRCDIR>.LIBHDR.libhdr"
-GET "SYSHDR"
+GET "<$SRCDIR>.LIBHDR.syshdr"
 GET "<$SRCDIR>.GH.glhd"
 GET "<$SRCDIR>.H.kdhd"
 GET "<$SRCDIR>.H.sdhd"
