@@ -15,7 +15,8 @@ Join l.mapoverlay l.phtx l.find -to l.community
 Join l.walk l.contents l.natfind l.area l.chart l.text l.photo l.mapproc -to l.national
 *|
 *| now make the runnable kernel
-*|                                     
-Join <$LIBDIR>.lib l.kernel KE.c.kernel l.community l.national l.help -to r.kernel
+*|                    
+cdir r      
+Join <$ALIBDIR>.lib l.kernel KE.c.kernel l.community l.national l.help -to r.kernel
 *spool
 *dir <$SRCDIR>.utils
