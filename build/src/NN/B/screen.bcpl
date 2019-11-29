@@ -1,0 +1,77 @@
+/**
+         NM.SCREEN - LIBRARY SCREEN COPY UTILITIES
+         -----------------------------------------
+
+         NAME OF FILES CONTAINING RUNNABLE CODE:
+
+         cnmRETR
+         cnmCOMP
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         04/08/86 1        D.R.Freed   Initial version
+**/
+
+section "nmscreen"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.iohd"
+get ":0.h.uthd"
+get ":0.h.dhhd"
+get ":0.h.nmhd"
+
+
+/*
+      g.nm.save.screen
+
+         saves the screen to shadow screen RAM so that it can be
+         easily restored later
+
+         the menu bar area is not saved
+
+         the RAM worksapce is also used by Help and the saved screen
+         will be lost if Help is visited
+*/
+
+let g.nm.save.screen () be
+$(
+   // copy main screen to shadow screen using areal vector cache as an
+   // intermediate work area
+   g.ut.copy.screen (m.io.wa.nm.areal, m.nm.areal.vector.size, m.ut.main)
+$)
+
+
+/*
+      g.nm.restore.screen
+
+         restores the screen, either by reading it back from the shadow
+         screen RAM or, if Help has prevented this, by replotting the
+         variable and re-windowing if necessary
+
+         the menu bar area will be blacked out
+*/
+
+and g.nm.restore.screen (help.visited.flag) be
+$(
+   test help.visited.flag then
+
+      $(
+         // replot variable, re-window if it was windowed before
+         // and reload this child overlay
+         g.nm.replot (FALSE, FALSE, g.nm.s!m.nm.windowed)
+
+         // save this restored screen in case it is needed again
+         g.nm.save.screen ()
+      $)
+
+   else
+
+      // copy screen back from shadow using same intermediate work area
+      g.ut.copy.screen (m.io.wa.nm.areal, m.nm.areal.vector.size,
+                        m.ut.shadow)
+$)
+
+.
+

@@ -1,0 +1,21 @@
+section "test"
+get "libhdr"
+
+let start() be
+$(
+   let str1 = vec 50
+   and str2 = vec 50
+
+   selectinput (findinput ("/C"))
+   selectoutput (findoutput ("/C"))
+
+   writes ("String 1 ?")
+   rditem (str1, 50)
+   rdch ()
+   writes ("String 2 ?")
+   rditem (str2, 50)
+
+   writef ("*n CompString = %n *n", COMPSTRING (str1, str2))
+$)
+.
+

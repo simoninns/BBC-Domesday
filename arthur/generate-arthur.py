@@ -36,14 +36,6 @@ def copy_recursively(src, dst):
             shutil.copy(src, dst)
         else: raise
 
-# Remove unwanted files from path
-def remove_unwanted_files(path):
-    for root, dirs, files in os.walk(path):
-        for currentFile in files:
-            exts = ('.bcpl', '.obey', '.comm', '.asm')
-            if not currentFile.lower().endswith(exts):
-                os.remove(os.path.join(root, currentFile))
-
 # Apply file type based on file extension:
 # .bcpl = &fff (ASCII text)
 # .asm = &fff
@@ -87,13 +79,21 @@ def find_and_replace(directory, find, replace, filePattern):
             with open(filepath, "w") as f:
                 f.write(s)
 
+# Replace a token with an actual directory location
+def replace_token(token, target_dir):
+    # Find and replace the token in .bcpl files
+    find_and_replace("./root", token, target_dir, "*.bcpl")
 
+    # Find and replace the token in .comm files
+    find_and_replace("./root", token, target_dir, "*.comm")
 
-# Main program
-target_root_dir = "ADFS::4.$.Domesday"
-target_src_dir = target_root_dir + ".src"
-target_log_dir = target_root_dir + ".log"
-target_tools_dir = target_root_dir + ".tools"
+    # Find and replace the token in .obey files
+    find_and_replace("./root", token, target_dir, "*.obey")
+
+    # Find and replace the token in .asm files
+    find_and_replace("./root", token, target_dir, "*.asm")
+
+# Main program -----------------------------------------------------------------------
 
 # Ensure that the target directories exists before copying
 print("Creating root directory...")
@@ -109,10 +109,15 @@ if os.path.exists("./root/src"):
     # If the directory already exists, remove it (it is recreated by the copy below)
     shutil.rmtree("./root/src")
 
-print("Creating tools directory...")
-if os.path.exists("./root/tools"):
+print("Creating library directory...")
+if os.path.exists("./root/library"):
     # If the directory already exists, remove it (it is recreated by the copy below)
-    shutil.rmtree("./root/tools")
+    shutil.rmtree("./root/library")
+
+print("Creating headers directory...")
+if os.path.exists("./root/alib"):
+    # If the directory already exists, remove it (it is recreated by the copy below)
+    shutil.rmtree("./root/alib")
 
 print("Creating log directory...")
 if os.path.exists("./root/log"):
@@ -125,93 +130,60 @@ else:
 
 
 # Make a copy of the source code in the target directory
-print("Copying source files to src...")
-copy_recursively("../src", "./root/src")
+print("Copying source files...")
+copy_recursively("../build/src", "./root/src")
 
-# Remove any source files we don't need
-print("Removing unwanted files from src..")
-remove_unwanted_files("./root/src")
+# Make a copy of the libaries in the target directory
+print("Copying library files...")
+copy_recursively("../build/library", "./root/library")
 
-# Make a copy of the tools in the target directory
-print("Copying tools files to tools...")
-copy_recursively("./tools", "./root/tools")
+# Make a copy of the headers in the target directory
+print("Copying header files...")
+copy_recursively("../build/headers", "./root/alib")
 
-
-
-# Find and replace the <$ROOTDIR> token in .bcpl files
-print("Setting root directory in BCPL source files...")
-find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.bcpl")
-
-# Find and replace the <$ROOTDIR> token in .comm files
-print("Setting root directory in command files...")
-find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.comm")
-
-# Find and replace the <$ROOTDIR> token in .obey files
-print("Setting root directory in obey files...")
-find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.obey")
-
-# Find and replace the <$ROOTDIR> token in .asm files
-print("Setting root directory in asm files...")
-find_and_replace("./root", "<$ROOTDIR>", target_root_dir, "*.asm")
+# Make a copy of the boot scipt in the target directory
+print ("Copying boot script")
+shutil.copy("../build/Boot.comm", "./root/!Boot.comm")
 
 
 
-# Find and replace the <$SRCDIR> token in .bcpl files
-print("Setting source directory in BCPL source files...")
-find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.bcpl")
+# Find and replace the tokens
+target_root_dir = "ADFS::4.$"
+target_src_dir = target_root_dir + ".src"
+target_log_dir = target_root_dir + ".log"
+target_library_dir = target_root_dir + ".library"
+target_header_dir = target_root_dir + ".alib"
 
-# Find and replace the <$SRCDIR> token in .comm files
-print("Setting source directory in command files...")
-find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.comm")
+print("Setting root directory in files...")
+replace_token("<$ROOTDIR>", target_root_dir)
 
-# Find and replace the <$SRCDIR> token in .obey files
-print("Setting source directory in obey files...")
-find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.obey")
+print("Setting source directory in files...")
+replace_token("<$SRCDIR>", target_src_dir)
 
-# Find and replace the <$SRCDIR> token in .asm files
-print("Setting source directory in asm files...")
-find_and_replace("./root", "<$SRCDIR>", target_src_dir, "*.asm")
+print("Setting log directory in files...")
+replace_token("<$LOGDIR>", target_log_dir)
 
+print("Setting library directory in files...")
+replace_token("<$LIBDIR>", target_library_dir)
 
-
-# Find and replace the <$LOGDIR> token in .bcpl files
-print("Setting log directory in BCPL source files...")
-find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.bcpl")
-
-# Find and replace the <$LOGDIR> token in .comm files
-print("Setting log directory in command files...")
-find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.comm")
-
-# Find and replace the <$LOGDIR> token in .obey files
-print("Setting log directory in obey files...")
-find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.obey")
-
-# Find and replace the <$LOGDIR> token in .asm files
-print("Setting log directory in asm files...")
-find_and_replace("./root", "<$LOGDIR>", target_log_dir, "*.asm")
-
-
-
-# Find and replace the <$TOOLSDIR> token in .bcpl files
-print("Setting tools directory in BCPL source files...")
-find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.bcpl")
-
-# Find and replace the <$TOOLSDIR> token in .comm files
-print("Setting tools directory in command files...")
-find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.comm")
-
-# Find and replace the <$TOOLSDIR> token in .obey files
-print("Setting tools directory in obey files...")
-find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.obey")
-
-# Find and replace the <$TOOLSDIR> token in .asm files
-print("Setting tools directory in asm files...")
-find_and_replace("./root", "<$TOOLSDIR>", target_tools_dir, "*.asm")
+print("Setting header directory in files...")
+replace_token("<$HEADERDIR>", target_header_dir)
 
 
 
 # Apply Archimedes file types
 print("Replacing file extensions with RISC OS file types...")
 apply_filetypes("./root")
+
+
+
+# Remove unwanted files from target
+print("Removing unwanted files...")
+for root, dirs, files in os.walk("./root"):
+        for currentFile in files:
+            exts = ('.md')
+            if currentFile.lower().endswith(exts):
+                os.remove(os.path.join(root, currentFile))
+
 
 print("Done")

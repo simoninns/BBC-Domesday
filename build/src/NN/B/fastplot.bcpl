@@ -1,0 +1,96 @@
+/**
+         NM.PLOT - LIBRARY PLOT BLOCK ROUTINE
+         ------------------------------------
+
+         NAME OF FILES CONTAINING RUNNABLE CODE:
+
+         cnmDISP
+         cnmWIND
+         cnmRETR
+
+         REVISION HISTORY:
+
+         DATE     VERSION  AUTHOR      DETAILS OF CHANGE
+         18/04/86 1        D.R.Freed   Initial version
+**/
+
+section "nmplot"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.sdhd"
+get ":0.h.dhhd"
+get ":0.h.nmhd"
+
+
+/**
+         G.NM.PLOT.BLOCK - PLOT A BLOCK OF GRID SQUARES
+         ----------------------------------------------
+
+         Plots a block of squares at specified grid square
+         coordinates and of specified size in specified colour
+
+         INPUTS:
+
+         Grid square east coordinate
+         Grid square north coordinate
+         Size of block sides (block must be square)
+         Colour of block
+
+         OUTPUTS:
+
+         none
+
+         GLOBALS MODIFIED:
+
+         none
+
+
+         SPECIAL NOTES FOR CALLERS:
+
+         May be used to plot a single square, a fine block or a
+         uniform block.
+
+         NB: COMPARE3 (link sub-operation) contains the routine
+             link.block which is closely based on this routine
+             but is separate for efficiency reasons; if this
+             routine is optimised to speed up the display time
+             then link.block should be similarly modified
+
+         PROGRAM DESIGN LANGUAGE:
+
+         g.nm.plot.block [east, north, size, colour]
+         ---------------
+
+         calculate x and y start positions in pixels
+         convert pixels to Domesday graphics coordinates
+         calculate size in Domesday graphics coordinates
+         plot square in specified colour
+**/
+
+let g.nm.plot.block (grid.sq.east, grid.sq.north, block.size, colour) be
+$(
+   let res, x1, y1, size.x, size.y =  ?, ?, ?, ?, ?
+
+   res := g.context!m.resolution    // for efficiency
+
+   x1 := ( ( ( (grid.sq.east * res - g.nm.s!m.nm.km.low.e) *
+                                    g.nm.s!m.nm.x.pix.per.grid.sq) /
+                                       res) + g.nm.s!m.nm.x.min ) << 3
+
+   y1 := ( ( ( (grid.sq.north * res - g.nm.s!m.nm.km.low.n) *
+                                    g.nm.s!m.nm.y.pix.per.grid.sq) /
+                                       res) + g.nm.s!m.nm.y.min ) << 2
+
+   size.x := ( (block.size * g.nm.s!m.nm.x.pix.per.grid.sq) << 3) - 1
+   size.y := ( (block.size * g.nm.s!m.nm.y.pix.per.grid.sq) << 2) - 1
+
+//   g.sc.movea (m.sd.display, x1, y1)
+   VDU ("25,%,%;%;", 4, x1, y1 + m.sd.disY0) // for speed experiments
+   g.sc.selcol (colour)
+//   g.sc.rect (m.sd.plot, size.x, size.y)
+   VDU ("25,%,%;%;", #x61, size.x, size.y)   // for speed experiments
+$)
+
+.
+

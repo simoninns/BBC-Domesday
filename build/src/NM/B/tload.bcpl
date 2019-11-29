@@ -1,0 +1,195 @@
+/**
+      Tests the routines in NM.LOAD1 and NM.LOAD2
+
+         g.nm.load.dataset.header
+         g.nm.load.raster.sub.dataset
+         g.nm.load.areal.sub.dataset
+         g.nm.load.coarse.index
+         g.nm.load.fine.index
+**/
+
+section "tload"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.uthd"
+get ":5.h.nmhd"
+
+
+let start() be
+$(
+   let ch, posn =  ?, ?
+   and sector = vec 2
+
+   g.ut.errorstream := 0
+
+   get.globals ()
+
+   writes ("*n     Tests for NM.LOAD *n*n")
+
+   writes ("Insert disc DATA1 in drive 4 and hit any key... *n")
+   ch := rdch()   // throwaway char in buffer
+   ch := rdch()
+
+   runprog ("**adfs")
+   runprog ("**dir :4")
+
+   g.nm.init.frame.buffer()
+
+   writes ("*n Number of cut points (3,4,5) ? ")
+   g.nm.s!m.nm.num.auto.cut.points := readn()
+
+   writes ("*n Absolute sector number LOW ? ")
+   sector!m.lsw := readn()
+   writes ("*n Absolute sector number HIGH ? ")
+   sector!m.msw := readn()
+
+   g.nm.load.dataset.header (sector)
+
+   if (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data) then
+      $(
+         writes ("*n Areal unit ? ")
+         g.context!m.areal.unit := readn()
+         g.nm.look.for.subset (g.context!m.areal.unit, @posn)
+         g.nm.load.areal.sub.dataset (posn)
+
+         writes ("*n Absolute sector number of boundary dataset LOW ? ")
+         sector!m.lsw := readn()
+         writes ("*n Absolute sector number of boundary dataset HIGH ? ")
+         sector!m.msw := readn()
+         g.nm.load.dataset.header (sector)
+      $)
+
+   writes ("*n Resolution (1-10) ? ")
+   g.context!m.resolution := readn()
+   g.nm.look.for.subset (g.context!m.resolution, @posn)
+   g.nm.load.raster.sub.dataset (posn)
+
+   writes ("*n*n Globals are as follows:*n*n")
+
+   writef ("dataset.record.number = %n *n", g.nm.s!m.nm.dataset.record.number)
+   writef ("dataset.type = %n *n", g.nm.s!m.nm.dataset.type)
+   writef ("private text address = %x4 %x4h *n",
+            g.nm.s!(m.nm.private.text.address + m.msw),
+            g.nm.s!(m.nm.private.text.address + m.lsw))
+   writef ("descriptive text address = %x4 %x4h *n",
+            g.nm.s!(m.nm.descriptive.text.address + m.msw),
+            g.nm.s!(m.nm.descriptive.text.address + m.lsw))
+   writef ("technical text address = %x4 %x4h *n",
+            g.nm.s!(m.nm.technical.text.address + m.msw),
+            g.nm.s!(m.nm.technical.text.address + m.lsw))
+
+   writef ("Primary units string = %s *n", g.nm.s + m.nm.primary.units.string)
+   writef ("Secondary units string = %s *n",
+            g.nm.s + m.nm.secondary.units.string)
+   writef ("data type = %n *n", g.nm.s!m.nm.data.type)
+
+   writes ("*n Sub-dataset: *n*n")
+
+   writef ("sub.dataset.index.record.number = %n *n",
+            g.nm.s!m.nm.sub.dataset.index.record.number)
+   writef ("sub.dataset.index.offset = %n *n",
+            g.nm.s!m.nm.sub.dataset.index.offset)
+   writef ("data.record.number = %n *n", g.nm.s!m.nm.data.record.number)
+   writef ("data.offset = %n *n", g.nm.s!m.nm.data.offset)
+   writef ("gr.start.e = %n *n", g.nm.s!m.nm.gr.start.e)
+   writef ("gr.start.n = %n *n", g.nm.s!m.nm.gr.start.n)
+   writef ("gr.end.e = %n *n", g.nm.s!m.nm.gr.end.e)
+   writef ("gr.end.n = %n *n", g.nm.s!m.nm.gr.end.n)
+   writef ("primary.norm.factor = %n *n", g.nm.s!m.nm.primary.norm.factor)
+   writef ("secondary.norm.factor = %n *n", g.nm.s!m.nm.secondary.norm.factor)
+
+   if (g.nm.s!m.nm.dataset.type = m.nm.areal.mappable.data) then
+      writef ("num.areas = %n *n", g.nm.s!m.nm.num.areas)
+
+   writef ("data.size = %n *n", g.nm.s!m.nm.data.size)
+
+   writes ("*n Default ranges in g.nm.class.upb: *n*n")
+
+   for i = 1 to m.nm.num.of.class.intervals do
+      writef ("Upb %n = %n(L) %n(H) *n", i,
+               g.nm.class.upb!(i*m.nm.max.data.size + m.lsw),
+               g.nm.class.upb!(i*m.nm.max.data.size + m.msw))
+
+   writes ("*n Summary data: *n*n")
+
+   writef ("min.data.value = %n(L) %n(H) *n",
+            g.nm.s!(m.nm.min.data.value+m.lsw),
+            g.nm.s!(m.nm.min.data.value+m.msw))
+   writef ("max.data.value = %n(L) %n(H) *n",
+            g.nm.s!(m.nm.max.data.value+m.lsw),
+            g.nm.s!(m.nm.max.data.value+m.msw))
+   writef ("nat.average = %n(L) %n(H) *n",
+            g.nm.s!(m.nm.nat.average+m.lsw),
+            g.nm.s!(m.nm.nat.average+m.msw))
+   writes ("*n Equal class intervals: *n*n")
+   for i = 1 to m.nm.num.of.class.intervals do
+      writef ("Upb %n = %n(L) %n(H) *n", i,
+               g.nm.s!(m.nm.equal.classes + i*m.nm.max.data.size + m.lsw),
+               g.nm.s!(m.nm.equal.classes + i*m.nm.max.data.size + m.msw))
+   writes ("*n Nested means class intervals: *n*n")
+   for i = 1 to 3 do
+      writef ("Upb %n = %n(L) %n(H) *n", i,
+            g.nm.s!(m.nm.nested.means.classes + i*m.nm.max.data.size + m.lsw),
+            g.nm.s!(m.nm.nested.means.classes + i*m.nm.max.data.size + m.msw))
+   writes ("*n Quantile class intervals: *n*n")
+   for i = 1 to m.nm.num.of.class.intervals do
+      writef ("Upb %n = %n(L) %n(H) *n", i,
+               g.nm.s!(m.nm.quantile.classes + i*m.nm.max.data.size + m.lsw),
+               g.nm.s!(m.nm.quantile.classes + i*m.nm.max.data.size + m.msw))
+
+   $(repeat
+      writes ("*n*n Coarse index:*n*n")
+
+      writef ("num.we.blocks = %n *n", g.nm.s!m.nm.num.we.blocks)
+      writef ("num.sn.blocks = %n *n", g.nm.s!m.nm.num.sn.blocks)
+
+      for i = 0 to g.nm.s!m.nm.num.we.blocks * g.nm.s!m.nm.num.sn.blocks - 1 do
+         writef ("%n: Record number = %n , Offset = %n *n",
+                  i,
+                  g.nm.s!(m.nm.coarse.index.record.number + i),
+                  g.nm.s!(m.nm.coarse.index.offset + i))
+
+      writes ("*n*n Fine index ( -ve to quit ) ? ")
+      posn := readn()
+
+      if posn >= 0 then
+         $(
+            g.nm.load.fine.index (
+               g.nm.s!(m.nm.coarse.index.record.number + posn),
+               g.nm.s!(m.nm.coarse.index.offset + posn))
+
+            for i = 0 to 15 do
+               writef ("%n: Record number = %n , Offset = %n *n",
+                  i,
+                  g.nm.s!(m.nm.fine.index.record.number + i),
+                  g.nm.s!(m.nm.fine.index.offset + i))
+         $)
+   $)repeat
+
+      repeatuntil posn < 0
+
+   writef ("*n*n Size of g.nm.s = %n*n", m.nm.global.statics.size)
+$)
+
+and get.globals() be
+$(
+   g.nm.frame := getvec (m.nm.frame.size - 1)
+   g.nm.areal := getvec (m.nm.max.num.areas * m.nm.max.data.size)
+   g.nm.values := getvec (m.nm.fine.blocksize * m.nm.fine.blocksize *
+                                                            m.nm.max.data.size)
+   g.nm.class.upb := getvec (m.nm.num.of.class.intervals * m.nm.max.data.size)
+   g.nm.class.colour := getvec (m.nm.num.of.class.intervals)
+
+   g.nm.s := getvec (m.nm.global.statics.size)
+$)
+
+.
+
+
+
+
+
+
+
+

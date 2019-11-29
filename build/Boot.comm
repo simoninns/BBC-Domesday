@@ -1,0 +1,19 @@
+*| Environment set up
+*| Simon Inns 20191126
+*|
+*lib <$LIBDIR>
+set file$path ,<$HEADERDIR>.
+set root &
+*|
+set alias$jn Join <$HEADERDIR> c.%0 -to r.%0
+*|
+set alias$co BCPL b.%0 -to c.%0
+set alias$c1 go 8000 b.%0 -to c.%0 
+set alias$as Aasm a.%0 -to o.%0 -quit
+setmacro alias$cmp co <cname>
+setmacro alias$asm as <cname>
+*|
+*| There must be a tmp folder in $ or 
+*| the BCPL 'C' command will fail in a
+*| weird way (and not mention why)
+cdir $.tmp

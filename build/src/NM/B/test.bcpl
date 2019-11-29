@@ -1,0 +1,59 @@
+section "test"
+get "libhdr"
+
+manifest
+$(
+version = 1
+revision = 2
+$)
+
+let router (procedure.name, a, b, c) be
+$(
+   procedure.name (a, b, c)
+$)
+
+and proc.a (a, b, c) be
+$(
+   let num = 32767
+   writef ("*n proc.a: id.num= %n, args:- %n %n %n *n", num, a, b, c)
+$)
+
+and proc.b (a, b, c) be
+$(
+   let num = 65535
+   writef ("*n proc.b: id.num = %n, args:- %n %n %n *n", num, a, b, c)
+$)
+
+and start() be
+$(
+   let char = ?
+
+   selectinput (findinput ("/C"))
+   selectoutput (findoutput ("/C"))
+
+   writes ("Version ")
+   writen   (version)
+   writes   (".")
+   writen   (revision)
+   wrch ('*n')
+
+   $( writes ("procedure a,b or eXit ? ")
+      char := rdch ()
+      if char ~= 'x' then
+         $(
+            test char = 'a'
+               then router (proc.a, 1, 2, 3)
+            else test char = 'b'
+                  then router (proc.b, 1, 2, 3)
+                  else $( writes ("**** Invalid reply")
+                          wrch ('*n')
+                       $)
+            char := rdch ()   // throw away CR
+         $)
+   $) repeatuntil char = 'x'
+$)
+.
+
+
+
+

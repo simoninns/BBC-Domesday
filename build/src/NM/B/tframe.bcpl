@@ -1,0 +1,82 @@
+/**
+      Tests the routines in NM.FRAME
+
+         g.nm.init.frame.buffer
+         g.nm.current.frame.number
+         g.nm.inc.frame.ptr
+         g.nm.read.frame
+**/
+
+section "tframe"
+get "libhdr"
+get ":0.h.glhd"
+get ":0.h.gl2hd"
+get ":0.h.dhhd"
+get ":0.h.nmhd"
+
+
+let start() be
+$(
+   let ch, ptr, n, words = ?, ?, ?, ?
+
+   g.ut.errorstream := 0
+
+   get.globals ()
+
+
+   runprog ("**vfs")
+
+   g.nm.init.frame.buffer()
+
+   writes ("*n Words? *n")
+   rdch ()
+   words := readn ()
+$(
+   writes ("*n Frame no? *n")
+   rdch ()
+   n := readn ()
+
+   g.nm.read.frame (n)
+
+   dump.frame (0, words, @ptr)
+$) repeatuntil n = 999
+
+$)
+
+and dump.frame (start, num.words, ptr) be
+$(
+   !ptr := 0
+
+   if start ~= 0 then
+      for i = 1 to start do
+         g.nm.inc.frame.ptr (ptr)
+
+   for i = 1 to num.words do
+      $(
+         writef ("%n,%n ", g.nm.frame%(!ptr*2 + m.lsb),
+                           g.nm.frame%(!ptr*2 + m.msb) )
+
+         if i ~= num.words then
+            g.nm.inc.frame.ptr (ptr)
+      $)
+$)
+
+and get.globals() be
+$(
+   g.nm.frame := getvec (m.nm.frame.size - 1)
+   g.nm.areal := getvec (m.nm.max.num.areas * m.nm.max.data.size)
+   g.nm.values := getvec (m.nm.fine.blocksize * m.nm.fine.blocksize *
+                                                            m.nm.max.data.size)
+   g.nm.class.upb := getvec (m.nm.num.of.class.intervals * m.nm.max.data.size)
+   g.nm.class.colour := getvec (m.nm.num.of.class.intervals)
+
+   g.nm.s := getvec (m.nm.global.statics.size)
+$)
+
+.
+
+
+
+
+
+
