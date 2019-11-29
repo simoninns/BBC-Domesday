@@ -26,6 +26,7 @@ import shutil
 import os
 import errno
 import fnmatch
+import argparse
 
 # Perform a recursive copy of folders and files
 def copy_recursively(src, dst):
@@ -95,6 +96,14 @@ def replace_token(token, target_dir):
 
 # Main program -----------------------------------------------------------------------
 
+# Deal with command line arguments
+parser = argparse.ArgumentParser(description="Arthur build environment generator")
+parser.add_argument("--target", default="ADFS::4.$", type=str, help="Specify the target ADFS folder (Default is ADFS::4.$)")
+args = parser.parse_args()
+target_root_dir = args.target
+print("Target ADFS folder is ", target_root_dir)
+
+
 # Ensure that the target directories exists before copying
 print("Creating root directory...")
 if os.path.exists("./root"):
@@ -148,7 +157,6 @@ shutil.copy("../build/Boot.comm", "./root/!Boot.comm")
 
 
 # Find and replace the tokens
-target_root_dir = "ADFS::4.$"
 target_src_dir = target_root_dir + ".src"
 target_log_dir = target_root_dir + ".log"
 target_library_dir = target_root_dir + ".library"
