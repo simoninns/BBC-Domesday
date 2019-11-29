@@ -4,7 +4,7 @@
 ;*  Lastedit:   17 Aug 87 17:21:30  by Paul Cunnell (Logica)          *
 ;**********************************************************************
 
-        GET     <$SRCDIR>.LIBHDR.bcplmacs
+        GET     <$ALIBDIR>.bcplmacs
 
 r1              RN      1
 r2              RN      2

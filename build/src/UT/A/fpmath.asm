@@ -5,7 +5,7 @@
 ;*              Copyright (c) 1986 by Acorn Computers Ltd             *
 ;**********************************************************************
 
-        GET     <$SRCDIR>.LIBHDR.bcplmacs
+        GET     <$ALIBDIR>.bcplmacs
 
         Module FPMath, "15 Jul 87 21:56:09"
 
