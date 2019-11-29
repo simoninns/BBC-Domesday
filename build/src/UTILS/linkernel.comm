@@ -17,6 +17,6 @@ Join l.walk l.contents l.natfind l.area l.chart l.text l.photo l.mapproc -to l.n
 *| now make the runnable kernel
 *|                    
 cdir r      
-Join <$ALIBDIR>.lib l.kernel KE.c.kernel l.community l.national l.help -to r.kernel
+Join <$HEADERDIR>.lib l.kernel KE.c.kernel l.community l.national l.help -to r.kernel
 *spool
 *dir <$SRCDIR>.utils

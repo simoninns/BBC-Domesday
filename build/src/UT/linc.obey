@@ -1,9 +1,9 @@
 *|  join UT for AES
-copy o.VFSlib  <$ALIBDIR>.Lib.xVFSlib ~C~VF
-copy o.graflib <$ALIBDIR>.Lib.xGraf  ~C~VF
-copy c.RCPlib  <$ALIBDIR>.Lib.xRCP   ~C~VF
-copy c.FPlib   <$ALIBDIR>.Lib.xFPlib ~C~VF   
-copy c.Debug   <$ALIBDIR>.Lib.xDebug ~C~VF  
+copy o.VFSlib  <$HEADERDIR>.Lib.xVFSlib ~C~VF
+copy o.graflib <$HEADERDIR>.Lib.xGraf  ~C~VF
+copy c.RCPlib  <$HEADERDIR>.Lib.xRCP   ~C~VF
+copy c.FPlib   <$HEADERDIR>.Lib.xFPlib ~C~VF   
+copy c.Debug   <$HEADERDIR>.Lib.xDebug ~C~VF  
 *dir c
 Join utils1 utils2 utils3 utils4 calc32b errtext -to k1
 Join k1 print write grid1 grid2 bookmark helplnk download -to kernel  
