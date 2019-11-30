@@ -4,7 +4,10 @@ This directory contains back-ups from the original Acorn A500 containing the sou
 The files are as follows:
 
 ## A500_Arthur_ROM.zip
-The original Arthur 1.20 ROM (this ROM image is zipped and will need to be unzipped on a modern PC before use)
+The original Arthur 1.20 ROM (this ROM image is zipped and will need to be unzipped on a modern PC before use).  Note that this is a single deinterleaved copy of the ROM and is only suitable for emulation.
+
+## A500_Arthur_Individual_ROMs.zip
+The original Arthur 1.20 ROM as 4 individual ROM images.  These images can be burnt to 27C512 EPROMs and used in a real A500 or A310 machine.
 
 ## A500EXALL.zip
 A full *EX listing of the original hard drive contents
