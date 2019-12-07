@@ -267,3 +267,58 @@ The following section of the source should create the required executable in the
     SI - STINIT2
     NE - TEXT
     NW - WALK
+
+## Generated files available on the original A500 image
+The following generated files are present on the original A500 build image:
+
+    $.ARC.R/
+    DOM001
+    DOM002
+    fast
+    HTRECS
+    kernel
+    mapdata1
+    names
+    pagetest
+    slow
+    states
+    stinit
+    words
+
+    $.t/
+    cnmauto
+    cnmcorr
+    cnmdetl
+    cnmdisp
+    cnmlink
+    cnmmanu
+    cnmrank
+    cnmretr
+    cnmwind
+    cnmwrit
+    mapproc
+
+    $.ARC.l/
+    aatext
+    area
+    chart
+    community
+    contents
+    cphoto
+    film
+    find
+    help
+    kernel
+    map
+    mapopt
+    mapoverlay
+    mapproc
+    natfind
+    national
+    nm
+    nn
+    photo
+    phtx
+    sctext
+    text
+    walk
