@@ -72,20 +72,35 @@ Various directories available under the src directory:
     * VIEW - Word list
 * Community functions
     * CF - Community Find overlay
+        * Find using "Map by Grid Reference", "Map by Place Name" and "Text and Photos by Topic"
     * CM - Community Map
-    * CO - Community Map Options
-    * CP - Community PHTX overlay
+        * Community map text overlay and Map Record Translation Tables (for locating file locations of maps)
+    * CO - Community Map Overlay
+        * Map overlay options handlers including sideways scrolling between maps
+    * CP - Community Photograph and text captions (PHTX) overlay
+        * Routines for displaying photographs with text overlays
     * CT - Community Text parts of PHTX overlay
+        * Text handling for the photograph overlays.  Text content is divided int "AA" and "Schools text", 
 * National functions
     * NA - National Area overlay
+        * Routines for establishing an area of interest and then providing a text overlay of options for the area
     * NC - National Chart overlay
+        * Routines for creating and displaying charts based on national statistics data
     * NE - National Essay (text overlay)
+        * National essays are a collection of text articles included on the National disc.  Contains routines for displaying essays
     * NF - National Find
+        * Routines for finding content on the National disc.  Code comments state this is a 'chopped-down' version of the Community Find Overlay (CF)
     * NM - National Mappable Analyse
-    * NN - National Map (description not clear)
+        * Routines for handling National disc mappable data (i.e. statistics that are tied to mappable locations)
+    * NN - National Map
+        * Routines for handling National mapping data (and interacting with the gazetteer)
     * NP - National Photo overlay
+        * Routines for displaying National photo sets
     * NT - National Text overlay
+        * Routines for handling the National contents data
     * NV - National Video
+        * Routines for handling the video content on the CLV (side B) of the National disc
     * NW - National Walk
+        * Routines to provide the surrogate walks (including the top-level gallery itself)
 
 
