@@ -240,3 +240,30 @@ Note: These content lists are taken from the CAMiLEON Project backup of the disc
     WALK       LR (25)  00000000  00000000  00000AAA  092310  
     WORDS      LR (26)  00000000  00000000  00000290  0000D8  
     
+## Source file generation modules
+The following section of the source should create the required executable in the 'r' directory:
+
+    NA - AREA
+    NC - CHART
+    NN - CNMAUTO
+    NN - CNMCORR
+    NN - CNMDETL
+    NN - CNMDISP
+    NN - CNMLINK
+    NN - CNMMANU
+    NN - CNMRETR
+    NN - CNMWIND
+    NN - CNMWRIT
+    NT - CONTENTS
+    NV - FILM
+    CF - FIND (Community)
+    NF - FIND (National)
+    HE - HELP
+    CO - MAP
+    CM - MAP
+    NP - PHOTO
+    CT - PHTX
+    SI - STINIT1
+    SI - STINIT2
+    NE - TEXT
+    NW - WALK
