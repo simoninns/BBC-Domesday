@@ -44,31 +44,48 @@ This is a work in progress (and there is no documentation for the environment) -
 # Source code map
 Various directories available under the src directory:
 
-* CF - Community Find overlay
-* CM - Community Map
-* CO - Community Map Options
-* CP - Community PHTX overlay
-* CT - Community Text parts of PHTX overlay
-* DH - Data Handler
-* GH - Global Headers
-* GHDRS - Global Headers
-* H - Headers
-* HDRS - Headers
-* HE - Help
-* KE - Kernel
-* NA - National Area overlay
-* NC - National Chart overlay
-* NE - National Essay (text overlay)
-* NF - National Find
-* NM - National Mappable Analyse
-* NN - National Map (description not clear)
-* NP - National Photo overlay
-* NT - National Text overlay
-* NV - National Video
-* NW - National Walk
-* SC - System Calls (description not clear)
-* SI - State table initialisation
-* UT - Utilities package
-* UTILS - Utilities
-* VH - Video Handler
-* VIEW - Word list
+* System functions
+    * DH - Data Handler
+        * The Data Handler contains routines for accessing data files from the Domesday LaserDisc
+    * GH - Global Headers
+        * Contains the master system global definition files.  All modules 'get' these headers as they contain the definition of all global variables for the system (this prevents overlap of globals due to local definitions)
+    * GHDRS - Global Headers
+        * Same as GH (could be due to the Archimedes port of the code?)
+    * H - Headers
+        * Contains header definitions for all system, community and national modules
+    * HDRS - Headers
+        * Same as H (could be due to the Archimedes port of the code?)
+    * HE - Help
+        * Contains the help 'overlay' which sets up the help menu and contains the code for navigating the available help features
+    * KE - Kernel
+        * The kernel is the core of the Domesday system. It initialises the system and state tables. It contains the primary state processing loop for the system. 
+    * SC - System Calls
+        * Contains modules that communicate with physical hardware (such as the mouse driver)
+    * SI - State table initialisation
+        * Contains modules to generate the required state tables.  This is not part of the core retrieval software - it creates a executable called STINIT that is responsibile for creating the state tables required by the kernel.  STINIT is used during the build process to make the required tables (but is not executed as part of the normal runtime activity of the Domesday retrieval sytem)
+    * UT - Utility functions
+        * Contains various utilities used by the rest of the modules (such as debug, bookmark load/save, etc.)
+    * UTILS - Utilities
+        * This contains the overall build command scripts to assemble the runnable kernel image and Community/National specific code
+    * VH - Video Handler
+        * The video handler contains routines for accessing video content from the Domesday LaserDisc including FCode interaction and frame number polling
+    * VIEW - Word list
+* Community functions
+    * CF - Community Find overlay
+    * CM - Community Map
+    * CO - Community Map Options
+    * CP - Community PHTX overlay
+    * CT - Community Text parts of PHTX overlay
+* National functions
+    * NA - National Area overlay
+    * NC - National Chart overlay
+    * NE - National Essay (text overlay)
+    * NF - National Find
+    * NM - National Mappable Analyse
+    * NN - National Map (description not clear)
+    * NP - National Photo overlay
+    * NT - National Text overlay
+    * NV - National Video
+    * NW - National Walk
+
+
