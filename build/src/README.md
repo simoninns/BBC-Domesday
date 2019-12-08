@@ -40,7 +40,7 @@ Various directories available under the src directory:
     * SC - System Calls
         * Contains modules that communicate with physical hardware (such as the mouse driver)
     * SI - State table initialisation
-        * Contains modules to generate the required state tables.  This is not part of the core retrieval software - it creates a executable called STINIT that is responsibile for creating the state tables required by the kernel.  STINIT is used during the build process to make the required tables (but is not executed as part of the normal runtime activity of the Domesday retrieval sytem)
+        * Contains modules to generate the required state tables.  This is not part of the core retrieval software - it creates a executable called STINIT that is responsible for creating the state tables required by the kernel.  STINIT is used during the build process to make the required tables (but is not executed as part of the normal runtime activity of the Domesday retrieval system)
     * UT - Utility functions
         * Contains various utilities used by the rest of the modules (such as debug, bookmark load/save, etc.)
     * UTILS - Utilities
@@ -311,7 +311,7 @@ Note: l.film is orphaned by the build process (i.e. not linked into the final ke
     * NV.c.nv2
 
 ## A500 version state table generation
-In the A500 version the state tables are generated separately from the kernal:
+In the A500 version the state tables are generated separately from the kernel:
 
 * r.stinit
     * $.Alib.Lib
