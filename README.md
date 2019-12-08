@@ -41,79 +41,27 @@ Note: There is currently a bug in the original A500 build environment that cause
 # Using the source
 This is a work in progress (and there is no documentation for the environment) - so either experiment and report back your findings, or watch this space.
 
-# Source code map
-Various directories available under the src directory:
-
-* System functions
-    * DH - Data Handler
-        * The Data Handler contains routines for accessing data files from the Domesday LaserDisc
-    * GH - Global Headers
-        * Contains the master system global definition files.  All modules 'get' these headers as they contain the definition of all global variables for the system (this prevents overlap of globals due to local definitions)
-    * GHDRS - Global Headers
-        * Same as GH (could be due to the Archimedes port of the code?)
-    * H - Headers
-        * Contains header definitions for all system, community and national modules
-    * HDRS - Headers
-        * Same as H (could be due to the Archimedes port of the code?)
-    * HE - Help
-        * Contains the help 'overlay' which sets up the help menu and contains the code for navigating the available help features
-    * KE - Kernel
-        * The kernel is the core of the Domesday system. It initialises the system and state tables. It contains the primary state processing loop for the system. 
-    * SC - System Calls
-        * Contains modules that communicate with physical hardware (such as the mouse driver)
-    * SI - State table initialisation
-        * Contains modules to generate the required state tables.  This is not part of the core retrieval software - it creates a executable called STINIT that is responsibile for creating the state tables required by the kernel.  STINIT is used during the build process to make the required tables (but is not executed as part of the normal runtime activity of the Domesday retrieval sytem)
-    * UT - Utility functions
-        * Contains various utilities used by the rest of the modules (such as debug, bookmark load/save, etc.)
-    * UTILS - Utilities
-        * This contains the overall build command scripts to assemble the runnable kernel image and Community/National specific code
-    * VH - Video Handler
-        * The video handler contains routines for accessing video content from the Domesday LaserDisc including FCode interaction and frame number polling
-    * VIEW - Word list
-* Community functions
-    * CF - Community Find overlay
-        * Find using "Map by Grid Reference", "Map by Place Name" and "Text and Photos by Topic"
-    * CM - Community Map
-        * Community map text overlay and Map Record Translation Tables (for locating file locations of maps)
-    * CO - Community Map Overlay
-        * Map overlay options handlers including sideways scrolling between maps
-    * CP - Community Photograph and text captions (PHTX) overlay
-        * Routines for displaying photographs with text overlays
-    * CT - Community Text parts of PHTX overlay
-        * Text handling for the photograph overlays.  Text content is divided int "AA" and "Schools text", 
-* National functions
-    * NA - National Area overlay
-        * Routines for establishing an area of interest and then providing a text overlay of options for the area
-    * NC - National Chart overlay
-        * Routines for creating and displaying charts based on national statistics data
-    * NE - National Essay (text overlay)
-        * National essays are a collection of text articles included on the National disc.  Contains routines for displaying essays
-    * NF - National Find
-        * Routines for finding content on the National disc.  Code comments state this is a 'chopped-down' version of the Community Find Overlay (CF)
-    * NM - National Mappable Analyse
-        * Routines for handling National disc mappable data (i.e. statistics that are tied to mappable locations)
-    * NN - National Map
-        * Routines for handling National mapping data (and interacting with the gazetteer)
-    * NP - National Photo overlay
-        * Routines for displaying National photo sets
-    * NT - National Text overlay
-        * Routines for handling the National contents data
-    * NV - National Video
-        * Routines for handling the video content on the CLV (side B) of the National disc
-    * NW - National Walk
-        * Routines to provide the surrogate walks (including the top-level gallery itself)
-
 # Domesday LaserDisc Contents
 Note: These content lists are taken from the CAMiLEON Project backup of the disc data (using the ADFS *EX command).
+
+The following fields are shown by the *EX command in the listings below:
+
+* Object name
+* Attributes
+* Sequence
+* Load address
+* Execution address
+* Length in bytes
+* Start sector
 
 ## National
     National            (41)
     Drive:2             Option 02 (Run )
     Dir. $              Lib. "Unset"   
 
-    !BOOT      LR (01)  00000E00  00000E00  00004050  000018  
-    AREA       LR (02)  00000000  00000000  00001750  0A77C0  
-    CHART      LR (03)  00000000  00000000  000049E6  0A78E0  
+    !BOOT      LR (01)  00000E00  00000E00  00004050  000018  (16,464 bytes)
+    AREA       LR (02)  00000000  00000000  00001750  0A77C0  (5,968 bytes)
+    CHART      LR (03)  00000000  00000000  000049E6  0A78E0  (‭18,918‬ bytes)
     CNMAUTO    LR (04)  00000000  00000000  000016B4  0A7808  
     CNMCORR    LR (05)  00000000  00000000  00001744  0A7820  
     CNMDETL    LR (06)  00000000  00000000  0000080A  0A7838  
@@ -124,13 +72,13 @@ Note: These content lists are taken from the CAMiLEON Project backup of the disc
     CNMWIND    LR (0B)  00000000  00000000  00000740  0A78B0  
     CNMWRIT    LR (0C)  00000000  00000000  00000DBE  0A78C8  
     CONTENTS   LR (0D)  00000000  00000000  00000D0A  0A4FB8  
-    DATA1      LR (0E)  00000000  00000000  099D0800  00B298  
-    DATA2      LR (0F)  00000000  00000000  03A9C800  0A9DB8  
+    DATA1      LR (0E)  00000000  00000000  099D0800  00B298  (‭161,286,144‬ bytes)
+    DATA2      LR (0F)  00000000  00000000  03A9C800  0A9DB8  (‭61,458,432‬ bytes)
     FILM       LR (10)  00000000  00000000  00000A88  0A7988  
     FIND       LR (11)  00000000  00000000  00002BF0  0A7A30  
     FONT2      LR (12)  FFFF2800  FFFF2800  00000744  000090  
     GALLERY    LR (13)  00000000  00000000  0000D5BC  004BC0  
-    GAZETTEER  LR (14)  00000000  00000000  00127000  0A6548  
+    GAZETTEER  LR (14)  00000000  00000000  00127000  0A6548  (‭1,208,320‬ bytes)
     HELP       LR (15)  00000000  00000000  000045AA  0A79A0  
     HELPTEXT   LR (16)  00000000  00000000  00043000  0A7AA8  
     HIERARCHY  LR (17)  00000000  00000000  00042000  0A60F8  
