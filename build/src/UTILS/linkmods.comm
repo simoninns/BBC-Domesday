@@ -21,6 +21,6 @@ Join DH.c.kernel SC.c.kernel UT.c.kernel VH.c.kernel -to l.kernel
 dir <$SRCDIR>.SI
 c linc 
 | -- Show the contents of the l directory using EX:
-ex l
+ex <$SRCDIR>.l
 dir <$SRCDIR>.UTILS
 spool
