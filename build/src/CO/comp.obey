@@ -1,5 +1,6 @@
-*|  compile CM options
-cdir c
+| -- src.CO.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module CO - Community Map Options
+cdir <$SRCDIR>.CO.c
 co mapopt1
 co mapopt2
 co mapopt3

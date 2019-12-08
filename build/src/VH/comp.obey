@@ -1,5 +1,6 @@
-*|  compile video handler
-cdir c
+| -- src.VH.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module VH - Video Handler
+cdir <$SRCDIR>.VH.c
 co vh1
 co vh2
 co vh3

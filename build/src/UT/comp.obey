@@ -1,6 +1,6 @@
-*| compile the UTilities package
-cdir c
-cdir o
+| -- src.UT.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module UT - Utility functions
+cdir <$SRCDIR>.UT.c
 co utils1
 co utils2
 co utils3
@@ -17,5 +17,7 @@ co RCPlib
 co FPlib
 co Debug
 co download
+| -- UT - Assembling ARM code
+cdir <$SRCDIR>.UT.o
 c <$LIBDIR>.assemble VFSlib
 c <$LIBDIR>.assemble graflib

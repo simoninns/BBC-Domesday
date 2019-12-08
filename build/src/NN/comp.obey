@@ -1,5 +1,6 @@
-*| compile AES NN (children)
-*|
+| -- src.NN.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module NN - National Map
+cdir <$SRCDIR>.NN.c
 cdir c
 co area
 c1 auto1

@@ -1,28 +1,26 @@
-*| LINKMODS AES Version 1 18.5.87
-*| link the system kernel modules...
-*| ... and make l.kernel   
-*SPOOL <$LOGDIR>.linkmods
-*time
-*dir <$SRCDIR>.KE
+spool <$LOGDIR>.linkmods
+| -- src.UTILS.linkmods - Domesday86 Acorn Archimedes build
+| -- Links modules KE, UT, SC, DH, VH and HE - Modules
+dir <$SRCDIR>.KE
 c linc
-*dir <$SRCDIR>.UT
+dir <$SRCDIR>.UT
 c linc
-*dir <$SRCDIR>.SC
+dir <$SRCDIR>.SC
 c linc
-*dir <$SRCDIR>.DH
+dir <$SRCDIR>.DH
 c linc
-*dir <$SRCDIR>.VH
-c linc     
-*| make the state tables
-*dir <$SRCDIR>.SI
-c linc        
-*dir <$SRCDIR>.HE
+dir <$SRCDIR>.VH
 c linc
-*| now make l.kernel - all but the KE package
-*dir <$SRCDIR>                                                       
-*remove l.kernel
+dir <$SRCDIR>.HE
+c linc
+| -- Link l.kernel (does not include the KE module)
+dir <$SRCDIR>                                                       
+remove l.kernel
 Join DH.c.kernel SC.c.kernel UT.c.kernel VH.c.kernel -to l.kernel
-*ex l
-*time
-*SPOOL
-*dir <$SRCDIR>.utils
+| -- Link the state tables...
+dir <$SRCDIR>.SI
+c linc 
+| -- Show the contents of the l directory using EX:
+ex l
+dir <$SRCDIR>.UTILS
+spool

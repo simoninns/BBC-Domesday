@@ -53,7 +53,7 @@ Various directories available under the src directory:
         * Find using "Map by Grid Reference", "Map by Place Name" and "Text and Photos by Topic"
     * CM - Community Map
         * Community map text overlay and Map Record Translation Tables (for locating file locations of maps)
-    * CO - Community Map Overlay
+    * CO - Community Map Options
         * Map overlay options handlers including sideways scrolling between maps
     * CP - Community Photograph and text captions (PHTX) overlay
         * Routines for displaying photographs with text overlays

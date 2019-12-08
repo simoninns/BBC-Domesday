@@ -1,5 +1,6 @@
-*| compile the National Text overlay
-cdir c
+| -- src.NE.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module NE - National Essay (text overlay)
+cdir <$SRCDIR>.NE.c
 co natinit
 co ntext1
 co ntext2

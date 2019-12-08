@@ -1,2 +1,4 @@
-*| link the AES national contents (NT) overlay
-Join c.nt0 c.nt1 c.nt2 c.nt3 -to <$SRCDIR>.l.contents
+| -- src.NT.linc - Domesday86 Acorn Archimedes build
+| -- Linking module NT - National Text overlay
+dir <$SRCDIR>.NT.c
+Join nt0 nt1 nt2 nt3 -to <$SRCDIR>.l.contents

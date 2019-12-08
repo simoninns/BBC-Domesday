@@ -1,4 +1,4 @@
-*| Link NV (Film)
-*dir c
-Join nv0 nv1 nv2 -to <$SRCDIR>.L.film
-*back
+| -- src.NV.linc - Domesday86 Acorn Archimedes build
+| -- Linking module NV - National Video
+dir <$SRCDIR>.NV.c
+Join nv0 nv1 nv2 -to <$SRCDIR>.l.film

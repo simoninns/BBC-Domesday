@@ -1,5 +1,6 @@
-*| compile the state table init
-cdir c
+| -- src.SI.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module SI - State table initialisation
+cdir <$SRCDIR>.SI.c
 co stinit
 co rcom
 co rexam

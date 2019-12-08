@@ -1,5 +1,6 @@
-*| compile the PHTX overlay
-cdir c
+| -- src.CP.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module CP - Community Photograph and text captions (PHTX) overlay
+cdir <$SRCDIR>.CP.c
 co cominit
 co compho1
 co compho2

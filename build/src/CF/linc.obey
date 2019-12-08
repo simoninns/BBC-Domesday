@@ -1,4 +1,4 @@
-*| link the Community find overlay
-*dir c
+| -- src.CF.linc - Domesday86 Acorn Archimedes build
+| -- Linking module CF - The Community Find overlay
+dir <$SRCDIR>.CF.c
 Join find0 find1 find2 find3 find4 find5 find6 find7 find8 -to <$SRCDIR>.l.find
-*back

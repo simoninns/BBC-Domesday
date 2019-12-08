@@ -1,28 +1,25 @@
-*| LINKNAT AES Version 1.0 17.6.87
-*| link the national disc overlays
-*|          
-*spool <$LOGDIR>.linkNAT    
-*time
-*dir <$SRCDIR>.NA    
+spool <$LOGDIR>.linknat
+| -- src.UTILS.linknat - Domesday86 Acorn Archimedes build
+| -- Links modules NA, NC. NE, NF, NM, NN, NP, NT, NV, NW - National disc
+dir <$SRCDIR>.NA    
 c linc
-*dir <$SRCDIR>.NC         
+dir <$SRCDIR>.NC         
 c linc
-*dir <$SRCDIR>.NE         
+dir <$SRCDIR>.NE         
 c linc
-*dir <$SRCDIR>.NF         
+dir <$SRCDIR>.NF         
 c linc
-*dir <$SRCDIR>.NM         
+dir <$SRCDIR>.NM         
 c linc
-*dir <$SRCDIR>.NN         
+dir <$SRCDIR>.NN         
 c linc
-*dir <$SRCDIR>.NP         
+dir <$SRCDIR>.NP         
 c linc
-*dir <$SRCDIR>.NT         
+dir <$SRCDIR>.NT         
 c linc
-*dir <$SRCDIR>.NV         
+dir <$SRCDIR>.NV         
 c linc
-*dir <$SRCDIR>.NW         
+dir <$SRCDIR>.NW         
 c linc
-*time
-*spool
-*dir <$SRCDIR>.utils   
+dir <$SRCDIR>.utils
+spool  

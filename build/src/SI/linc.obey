@@ -1,9 +1,12 @@
-*| link and run the state table init - does not need packing
-*dir c
-*remove <$SRCDIR>.r.stinit
+| -- src.SI.linc - Domesday86 Acorn Archimedes build
+| -- Linking module SI - State table initialisation
+dir <$SRCDIR>.SI.c
 Join stinit rcom rexam rgalwal rhe rnm rsear -to t1
-Join $.Alib.Lib t1 scom sexam sgalwal she snm ssear -to <$SRCDIR>.r.stinit
-*delete t1
-*dir ^ 
-*| run it !!
-*run <$SRCDIR>.r.stinit
+Join scom sexam sgalwal she snm ssear -to t2
+remove <$SRCDIR>.r.stinit
+cdir <$SRCDIR>.r
+Join $.Alib.Lib t1 t2 -to <$SRCDIR>.r.stinit
+remove t1
+remove t2
+| -- Running r.stinit to build the state tables...
+run <$SRCDIR>.r.stinit

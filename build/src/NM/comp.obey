@@ -1,6 +1,6 @@
-*| compile AES NM parent source
-*|
-cdir c
+| -- src.NM.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module NM - National Mappable Analyse
+cdir <$SRCDIR>.NM.c
 co analyse1
 c1 analyse2
 c1 analyse3

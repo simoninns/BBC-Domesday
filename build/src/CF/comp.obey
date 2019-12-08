@@ -1,5 +1,6 @@
-*| compile the Community find overlay
-cdir c
+| -- src.CF.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module CF - The Community Find overlay
+cdir <$SRCDIR>.CF.c
 co find0
 co find1
 co find2

@@ -1,20 +1,17 @@
-*| link ADS NN 'children' to L.nn; then link mapproc
-*dir C
-*|
-Join area auto1 auto2 auto3 auto4 class32 context correl1 correl2     -to X1
-Join detail1 detail2 display1 display2 fpwrite link manual1 manual2   -to X2
-Join mpadd mpconv mpdisp mpdiv name plot rank write                   -to X3
-Join retr1 retr2 retr3 retr4 sortrank tiefactor treesort valid window -to X4
-Join rankop1 rankop2 rankop4 -to X5
-*| write
-*|
-Join X1 X2 X3 X4 X5 -to  <$SRCDIR>.L.nn
-*rem. X1
-*rem. X2
-*rem. X3
-*rem. X4
-*rem. X5
-*|
-Join <$SRCDIR>.L.nm <$SRCDIR>.L.nn  -to  <$SRCDIR>.L.mapproc
-*|
-*dir ^
+| -- src.NN.linc - Domesday86 Acorn Archimedes build
+| -- Linking module NN - National Map
+dir <$SRCDIR>.NN.c
+Join area auto1 auto2 auto3 auto4 class32 context correl1 correl2     -to t1
+Join detail1 detail2 display1 display2 fpwrite link manual1 manual2   -to t2
+Join mpadd mpconv mpdisp mpdiv name plot rank write                   -to t3
+Join retr1 retr2 retr3 retr4 sortrank tiefactor treesort valid window -to t4
+Join rankop1 rankop2 rankop4 -to t5
+Join t1 t2 t3 t4 t5 -to <$SRCDIR>.l.nn
+remove t1
+remove t2
+remove t3
+remove t4
+remove t5
+| -- Joining l.nm and l.nn into l.mapproc
+dir <$SRCDIR>.l
+Join nm nn -to mapproc

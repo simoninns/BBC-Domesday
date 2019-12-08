@@ -1,5 +1,6 @@
-*|  compile CM
-cdir c
+| -- src.CM.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module CM - Community Map overlay
+cdir <$SRCDIR>.CM.c
 co map0
 co map1
 co map2

@@ -1,5 +1,6 @@
-*| compile all HE source
-cdir c
+| -- src.HE.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module HE - Help
+cdir <$SRCDIR>.HE.c
 co helpinit
 co help0
 co help1

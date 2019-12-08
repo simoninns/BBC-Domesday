@@ -1,5 +1,6 @@
-*|  compile NV
-cdir c
+| -- src.NV.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module NV - National Video
+cdir <$SRCDIR>.NV.c
 co nv0
 co nv1
 co nv2

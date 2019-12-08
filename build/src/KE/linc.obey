@@ -1,6 +1,4 @@
-*|  link kernels
-*dir c                    
-*| standalone kernel
+| -- src.KE.linc - Domesday86 Acorn Archimedes build
+| -- Linking module KE - Kernel
+dir <$SRCDIR>.KE.c
 Join init root general sram kernel1 kernel2 -to kernel
-*| non-standalone kernel n'existe pas !
-*back

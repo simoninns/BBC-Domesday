@@ -1,9 +1,8 @@
-*| sublink CM Options, then link Map
-*remove <$SRCDIR>.l.mapopt
-*remove <$SRCDIR>.r.map
-*dir c
+| -- src.CO.linc - Domesday86 Acorn Archimedes build
+| -- Linking module CO - Community Map Options
+dir <$SRCDIR>.CO.c
+remove <$SRCDIR>.l.mapopt
 Join mapopt1 mapopt2 mapopt3 mapopt4 mapopt5 mapopt6 mapopt7 mapopt8 -to <$SRCDIR>.l.mapopt
-*back
-*dir <$SRCDIR>.l
+| -- Joining l.map (from CM module) with l.mapopt into l.mapoverlay
+dir <$SRCDIR>.l
 Join mapopt map -to mapoverlay
-*back

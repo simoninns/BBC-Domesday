@@ -1,8 +1,5 @@
-*| BUILDSYS AES Version 1 10.6.87
-*|
-*| do everything
-*time
-*dir <$SRCDIR>.utils
+| -- src.UTILS.buildsys - Domesday86 Acorn Archimedes build
+| -- Runs compsys and linksys to build and link complete system
+dir <$SRCDIR>.UTILS
 c compsys
 c linksys
-*time

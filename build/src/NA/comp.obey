@@ -1,5 +1,6 @@
-*| compile the AREA overlay
-cdir c
+| -- src.NA.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module NA - National Area overlay
+cdir <$SRCDIR>.NA.c
 co area0
 co area
 co area2

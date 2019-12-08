@@ -1,4 +1,5 @@
-*| compile the NW source
-cdir c
+| -- src.NW.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module NW - National Walk
+cdir <$SRCDIR>.NW.c
 co walk1
 co walk2

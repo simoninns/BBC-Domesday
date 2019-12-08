@@ -1,8 +1,8 @@
-*| LINKSYS AES Version 1 10.6.87
-*|
-*| link everything
-*cdir <$SRCDIR>.l
-*dir <$SRCDIR>.utils
+| -- src.UTILS.linksys - Domesday86 Acorn Archimedes build
+| -- Runs linkmods, linkcom, linknat and linkkernel to link modules, community,
+| -- national and the kernel
+cdir <$SRCDIR>.l
+dir <$SRCDIR>.utils
 c linkmods
 c linkcom
 c linknat

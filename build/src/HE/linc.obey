@@ -1,2 +1,4 @@
-*| link HE overlay
-Join c -to <$SRCDIR>.l.help
+| -- src.HE.linc - Domesday86 Acorn Archimedes build
+| -- Linking module HE - Help
+dir <$SRCDIR>.HE.c
+Join helpinit help0 help1 helpA helpB helpC helpD htext1 htext2 htext4 htext5 htext6 htext7 -to <$SRCDIR>.l.help

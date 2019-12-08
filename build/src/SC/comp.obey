@@ -1,5 +1,6 @@
-*| compile all SC source
-cdir c
+| -- src.SC.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module SC - System Calls
+cdir <$SRCDIR>.SC.c
 co graph1
 co graph2
 co text1

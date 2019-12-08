@@ -1,5 +1,6 @@
-*|  compile the Data Handler
-cdir c
+| -- src.DH.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module DH - Data Handler
+cdir <$SRCDIR>.DH.c
 co dh1
 co dh2
 co seldisc

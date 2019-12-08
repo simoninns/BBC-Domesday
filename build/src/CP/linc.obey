@@ -1,7 +1,7 @@
-*| sublink Photo, then link the PHTX overlay
-*|
-Join c.cominit c.compho1 c.compho2 -to <$SRCDIR>.l.cphoto   
-*|   
-*dir <$SRCDIR>.l
+| -- src.CP.linc - Domesday86 Acorn Archimedes build
+| -- Linking module CP - Community Photograph and text captions (PHTX) overlay
+dir <$SRCDIR>.CP.c
+Join cominit compho1 compho2 -to <$SRCDIR>.l.cphoto   
+| -- Joining l.cphoto, l.sctext and l.aatext into l.phtx
+dir <$SRCDIR>.l
 Join cphoto sctext aatext -to phtx
-*back  

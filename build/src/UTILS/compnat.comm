@@ -1,28 +1,25 @@
-*spool <$LOGDIR>.compNAT
-*| compNAT AES Version 1.0 20.5.87
-*| national disc overlays
-*|     
-*time
-*dir ^.NA    
+spool <$LOGDIR>.compnat
+| -- src.UTILS.compnat - Domesday86 Acorn Archimedes build
+| -- Builds modules NA, NC. NE, NF, NM, NN, NP, NT, NV, NW - National disc
+dir <$SRCDIR>.NA    
 c comp
-*dir ^.NC         
+dir <$SRCDIR>.NC         
 c comp
-*dir ^.NE         
+dir <$SRCDIR>.NE         
 c comp
-*dir ^.NF         
+dir <$SRCDIR>.NF         
 c comp
-*dir ^.NM         
+dir <$SRCDIR>.NM         
 c comp
-*dir ^.NN         
+dir <$SRCDIR>.NN         
 c comp
-*dir ^.NP         
+dir <$SRCDIR>.NP         
 c comp
-*dir ^.NT         
+dir <$SRCDIR>.NT         
 c comp
-*dir ^.NV         
+dir <$SRCDIR>.NV         
 c comp
-*dir ^.NW         
+dir <$SRCDIR>.NW         
 c comp
-*dir <$SRCDIR>.utils
-*time
-*spool
+dir <$SRCDIR>.UTILS
+spool

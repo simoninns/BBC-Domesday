@@ -1,5 +1,6 @@
-*| compile all national find source
-cdir c
+| -- src.NF.comp - Domesday86 Acorn Archimedes build
+| -- Compiling module NF - National Find
+cdir <$SRCDIR>.NF.c
 co find0
 co find1
 co find2
