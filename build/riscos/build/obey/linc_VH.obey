@@ -1,0 +1,5 @@
+| -- build.obey.linc_VH - Domesday86 Acorn Archimedes build
+| -- Linking module VH - Video Handler
+dir <$SRCDIR>.VH.c
+remove kernel
+Join vh1 vh2 vh3 -to kernel

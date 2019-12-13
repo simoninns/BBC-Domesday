@@ -1,0 +1,16 @@
+| -- build.buildsys - Domesday86 Acorn Archimedes build
+| -- Runs compsys and linksys to build and link complete system
+|
+| -- Configure the environment
+lib <$LIBDIR>
+set file$path ,<$HEADERDIR>.
+set root &
+set alias$jn Join <$HEADERDIR> c.%0 -to r.%0
+set alias$co BCPL %0 -to c.%0
+set alias$c1 go 8000 %0 -to c.%0 
+set alias$as Aasm %0 -to o.%0 -quit
+| -- There must be a tmp folder in $ or the BCPL 'C' command will fail
+cdir $.tmp
+| -- Build and link...
+c <$BUILDDIR>.compsys
+c <$BUILDDIR>.linksys

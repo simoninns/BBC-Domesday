@@ -1,0 +1,11 @@
+| -- build.obey.comp_NE - Domesday86 Acorn Archimedes build
+| -- Compiling module NE - National Essay (text overlay)
+cdir <$SRCDIR>.NE.c
+dir <$SRCDIR>.NE
+co natinit
+co ntext1
+co ntext2
+co ntext3
+co ntext4
+co ntext5
+co ntext6

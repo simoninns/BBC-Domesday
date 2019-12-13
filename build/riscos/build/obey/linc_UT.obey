@@ -1,0 +1,6 @@
+| -- build.obey.linc_UT - Domesday86 Acorn Archimedes build
+| -- Linking module UT - Utility functions
+dir <$SRCDIR>.UT.c
+Join utils1 utils2 utils3 utils4 calc32b errtext -to k1
+Join k1 print write grid1 grid2 bookmark helplnk download -to kernel  
+remove k1

@@ -1,0 +1,14 @@
+spool <$LOGDIR>.linknat
+| -- build.linknat - Domesday86 Acorn Archimedes build
+| -- Links modules NA, NC. NE, NF, NM, NN, NP, NT, NV, NW - National disc
+c <$BUILDDIR>.obey.linc_NA
+c <$BUILDDIR>.obey.linc_NC
+c <$BUILDDIR>.obey.linc_NE
+c <$BUILDDIR>.obey.linc_NF
+c <$BUILDDIR>.obey.linc_NM
+c <$BUILDDIR>.obey.linc_NN
+c <$BUILDDIR>.obey.linc_NP
+c <$BUILDDIR>.obey.linc_NT
+c <$BUILDDIR>.obey.linc_NV
+c <$BUILDDIR>.obey.linc_NW
+spool  

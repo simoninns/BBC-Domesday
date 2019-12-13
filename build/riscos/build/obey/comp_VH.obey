@@ -1,0 +1,7 @@
+| -- build.obey.comp_VH - Domesday86 Acorn Archimedes build
+| -- Compiling module VH - Video Handler
+cdir <$SRCDIR>.VH.c
+dir <$SRCDIR>.VH
+co vh1
+co vh2
+co vh3

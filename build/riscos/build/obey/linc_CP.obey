@@ -1,0 +1,8 @@
+| -- build.obey.linc_CP - Domesday86 Acorn Archimedes build
+| -- Linking module CP - Community Photograph and text captions (PHTX) overlay
+dir <$SRCDIR>.CP.c
+Join cominit compho1 compho2 -to <$SRCDIR>.l.cphoto   
+| -- Joining l.cphoto, l.sctext and l.aatext into l.phtx
+| -- Note: On a first run this might fail as the l.map isn't linked yet (the CT script should take care of it)
+dir <$SRCDIR>.l
+Join cphoto sctext aatext -to phtx

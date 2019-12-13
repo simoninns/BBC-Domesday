@@ -1,0 +1,8 @@
+| -- build.obey.linc_CM - Domesday86 Acorn Archimedes build
+| -- Linking module CM - Community Map overlay
+dir <$SRCDIR>.CM.c
+remove <$SRCDIR>.l.map
+Join map0 map1 map2 map3 map4 map5 map6 cm0 cm1 cm2 cm3 cm4 -to <$SRCDIR>.l.map
+| -- Joining l.map with l.mapopt (from CO module) into l.mapoverlay
+dir <$SRCDIR>.l
+Join mapopt map -to mapoverlay

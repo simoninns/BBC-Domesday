@@ -4,8 +4,9 @@ This folder contains the source code of the BCPL and ARM assembly code for the D
 # File types
 In order to preserve file-types within git the following extensions are used:
 
-* .bcpl - A BCPL source file
-* .asm - An ARM assembly file
+* .b - A BCPL source file
+* .h - A BCPL header file
+* .a - An ARM assembly file
 * .obey - A RISC OS 'Obey' file (list of star commands)
 * .comm - A RISC OS 'Command' file (list of commands)
 * .txt - An ASCII text file
@@ -13,8 +14,9 @@ In order to preserve file-types within git the following extensions are used:
 # RISC OS File type mapping
 The following mappings should be used to convert file extensions to RISC OS file-types
 
-* .bcpl = &fff (ASCII text)
-* .asm = &fff
+* .b = &fff (ASCII text)
+* .h = &fff
+* .a = &fff
 * .obey = &feb (Obey command file)
 * .comm = &ffe (Command file)
 * .txt = &fff

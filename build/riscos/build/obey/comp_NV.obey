@@ -1,0 +1,7 @@
+| -- build.obey.comp_NV - Domesday86 Acorn Archimedes build
+| -- Compiling module NV - National Video
+cdir <$SRCDIR>.NV.c
+dir <$SRCDIR>.NV
+co nv0
+co nv1
+co nv2

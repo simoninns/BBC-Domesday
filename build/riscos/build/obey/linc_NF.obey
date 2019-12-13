@@ -1,0 +1,4 @@
+| -- build.obey.linc_NF - Domesday86 Acorn Archimedes build
+| -- Linking module NF - National Find
+dir <$SRCDIR>.NF.c
+Join find0 find1 find2 find3 find5 find7 find9 -to <$SRCDIR>.l.natfind

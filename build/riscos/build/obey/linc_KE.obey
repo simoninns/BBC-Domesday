@@ -1,0 +1,4 @@
+| -- build.obey.linc_KE - Domesday86 Acorn Archimedes build
+| -- Linking module KE - Kernel
+dir <$SRCDIR>.KE.c
+Join init root general sram kernel1 kernel2 -to kernel

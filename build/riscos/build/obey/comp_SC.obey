@@ -1,0 +1,19 @@
+| -- build.obey.comp_SC - Domesday86 Acorn Archimedes build
+| -- Compiling module SC - System Calls
+cdir <$SRCDIR>.SC.c
+dir <$SRCDIR>.SC
+co chart9
+co getact
+co graph1
+co graph2
+co icon
+co input
+co menu
+co mouse
+co number
+co setfont
+co text1
+co text2
+co text3
+co textlnk
+co virtual

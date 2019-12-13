@@ -1,0 +1,9 @@
+| -- build.obey.comp_NA - Domesday86 Acorn Archimedes build
+| -- Compiling module NA - National Area overlay
+cdir <$SRCDIR>.NA.c
+dir <$SRCDIR>.NA
+co area0
+co area
+co area2
+co area3
+co area4

@@ -1,0 +1,10 @@
+spool <$LOGDIR>.linkcom
+| -- build.linkcom - Domesday86 Acorn Archimedes build
+| -- Links modules CM, CO, CP, CT and CF - Community disc
+cdir <$SRCDIR>.l
+c <$BUILDDIR>.obey.linc_CM
+c <$BUILDDIR>.obey.linc_CO
+c <$BUILDDIR>.obey.linc_CP
+c <$BUILDDIR>.obey.linc_CT
+c <$BUILDDIR>.obey.linc_CF
+spool

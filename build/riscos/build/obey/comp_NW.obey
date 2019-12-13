@@ -1,0 +1,6 @@
+| -- build.obey.comp_NW - Domesday86 Acorn Archimedes build
+| -- Compiling module NW - National Walk
+cdir <$SRCDIR>.NW.c
+dir <$SRCDIR>.NW
+co walk1
+co walk2

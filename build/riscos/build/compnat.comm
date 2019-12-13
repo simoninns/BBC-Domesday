@@ -1,0 +1,14 @@
+spool <$LOGDIR>.compnat
+| -- build.compnat - Domesday86 Acorn Archimedes build
+| -- Builds modules NA, NC. NE, NF, NM, NN, NP, NT, NV, NW - National disc
+c <$BUILDDIR>.obey.comp_NA
+c <$BUILDDIR>.obey.comp_NC
+c <$BUILDDIR>.obey.comp_NE
+c <$BUILDDIR>.obey.comp_NF
+c <$BUILDDIR>.obey.comp_NM
+c <$BUILDDIR>.obey.comp_NN
+c <$BUILDDIR>.obey.comp_NP
+c <$BUILDDIR>.obey.comp_NT
+c <$BUILDDIR>.obey.comp_NV
+c <$BUILDDIR>.obey.comp_NW
+spool

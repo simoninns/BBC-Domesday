@@ -1,5 +1,0 @@
-| -- src.DH.linc - Domesday86 Acorn Archimedes build
-| -- Linking module DH - Data Handler
-dir <$SRCDIR>.DH.c
-remove kernel
-Join dh1 dh2 seldisc userdata -to kernel

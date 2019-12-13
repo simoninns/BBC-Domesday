@@ -1,4 +1,0 @@
-| -- src.NA.linc - Domesday86 Acorn Archimedes build
-| -- Linking module NA - National Area overlay
-dir <$SRCDIR>.NA.c
-Join area0 area area2 area3 area4 -to <$SRCDIR>.l.area

@@ -1,0 +1,8 @@
+| -- build.obey.comp_DH - Domesday86 Acorn Archimedes build
+| -- Compiling module DH - Data Handler
+cdir <$SRCDIR>.DH.c
+dir <$SRCDIR>.DH
+co dh1
+co dh2
+co seldisc
+co userdata

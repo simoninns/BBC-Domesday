@@ -1,0 +1,7 @@
+| -- build.obey.comp_CP - Domesday86 Acorn Archimedes build
+| -- Compiling module CP - Community Photograph and text captions (PHTX) overlay
+cdir <$SRCDIR>.CP.c
+dir <$SRCDIR>.CP
+co cominit
+co compho1
+co compho2

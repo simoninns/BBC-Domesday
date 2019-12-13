@@ -1,0 +1,10 @@
+spool <$LOGDIR>.compker  
+| -- build.compker - Domesday86 Acorn Archimedes build
+| -- Builds modules KE, DH, SC, VH, UT and HE - Kernel
+c <$BUILDDIR>.obey.comp_KE
+c <$BUILDDIR>.obey.comp_DH
+c <$BUILDDIR>.obey.comp_SC
+c <$BUILDDIR>.obey.comp_VH
+c <$BUILDDIR>.obey.comp_UT
+c <$BUILDDIR>.obey.comp_HE
+spool

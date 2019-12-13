@@ -1,4 +1,0 @@
-| -- src.NE.linc - Domesday86 Acorn Archimedes build
-| -- Linking module NE - National Essay (text overlay)
-dir <$SRCDIR>.NE.c
-Join natinit ntext1 ntext2 ntext3 ntext4 ntext5 ntext6 -to <$SRCDIR>.l.text

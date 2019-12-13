@@ -1,0 +1,5 @@
+spool <$LOGDIR>.compstt 
+| -- build.compstt - Domesday86 Acorn Archimedes build
+| -- Builds module SI - State table initialisation
+c <$BUILDDIR>.obey.comp_SI
+spool

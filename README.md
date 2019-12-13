@@ -14,25 +14,23 @@ Clone the repo onto a Linux machine using a command such as:
 
     git clone https://github.com/simoninns/BBC-Domesday
 
-Next move into the 'arthur' directory (note: this seems to compile ok in Arthur 1.20, RISC OS 2 and RISC OS 3):
+Next move into the 'riscos' directory (note: this seems to compile ok in Arthur 1.20, RISC OS 2, linking fails in RISC OS 3):
 
-    cd BBC-Domesday/arthur
+    cd BBC-Domesday/riscos
 
-Now run the generate-arthur python script using the correct target location for your build machine:
+Now run the generate-riscos python script using the correct target location for your build machine:
 
-    python3 generate-arthur.py --target="ADFS::4.$.Domesday"
+    python3 generate-riscos.py --target="ADFS::4.$.Domesday"
 
-This will generate a set of source files under arthur/root.  The build scripts and source files will be written with the correct file paths according to the --target you set.  The python script will also replace the original file extensions with a hexadecimal number representing the RISC OS file type.
+This will generate a set of source files under riscos/root.  The build scripts and source files will be written with the correct file paths according to the --target you set.  The python script will also replace the original file extensions with a hexadecimal number representing the RISC OS file type.
 
 Move the contents of the root directory (without the top-level 'root') to the target environment.  You can either FTP the contents to the hostfs directory of arculator or use a RISC OS tool like !FTPc to transfer it to a real machine (don't forget to turn on the hexadecimal file extension stripping in !FTPc before transferring).  If using hostfs, transfer the files from hostfs to the virtual hard drive before using (according to the target directory you set earlier).
 
-Next, from the Archimedes CLI perform the following (this is an example, change the values according to your set-up):
+Next, from the Archimedes CLI perform the following (this is an example, change the file-path according to your set-up):
 
-    *MOUNT 4
-    *DIR ADFS::4.$.Domesday
-    *!boot
-    *DIR SRC.UTILS
-    *BUILDSYS
+    *mount 4
+    *dir ADFS::4.$.build
+    *buildsys
 
 That's it, the original A500 code should now compile and link as if it were the original machine.  Note that the build scripts spool the output of the build to the log folder (at the top of your build location) - you can review the final build state from those files.
 

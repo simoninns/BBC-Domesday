@@ -1,8 +1,0 @@
-| -- src.UTILS.compsys - Domesday86 Acorn Archimedes build
-| -- Runs compker, compcom, compnat and compstt to build kernel, community,
-| -- national and build the state tables
-dir <$SRCDIR>.UTILS
-c compker
-c compcom
-c compnat
-c compstt

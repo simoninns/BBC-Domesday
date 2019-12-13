@@ -1,0 +1,7 @@
+| -- build.compsys - Domesday86 Acorn Archimedes build
+| -- Runs compker, compcom, compnat and compstt to build kernel, community,
+| -- national and build the state tables
+c <$BUILDDIR>.compker
+c <$BUILDDIR>.compcom
+c <$BUILDDIR>.compnat
+c <$BUILDDIR>.compstt

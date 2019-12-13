@@ -1,0 +1,8 @@
+| -- build.linksys - Domesday86 Acorn Archimedes build
+| -- Runs linkmods, linkcom, linknat and linkkernel to link modules, community,
+| -- national and the kernel
+cdir <$SRCDIR>.l
+c <$BUILDDIR>.linkmods
+c <$BUILDDIR>.linkcom
+c <$BUILDDIR>.linknat
+c <$BUILDDIR>.linkernel

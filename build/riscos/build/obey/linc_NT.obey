@@ -1,0 +1,4 @@
+| -- build.obey.linc_NT - Domesday86 Acorn Archimedes build
+| -- Linking module NT - National Text overlay
+dir <$SRCDIR>.NT.c
+Join nt0 nt1 nt2 nt3 -to <$SRCDIR>.l.contents

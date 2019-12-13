@@ -1,0 +1,17 @@
+| -- build.obey.linc_NN - Domesday86 Acorn Archimedes build
+| -- Linking module NN - National Map
+dir <$SRCDIR>.NN.c
+Join area auto1 auto2 auto3 auto4 class32 context correl1 correl2     -to t1
+Join detail1 detail2 display1 display2 fpwrite link manual1 manual2   -to t2
+Join mpadd mpconv mpdisp mpdiv name plot rank write                   -to t3
+Join retr1 retr2 retr3 retr4 sortrank tiefactor treesort valid window -to t4
+Join rankop1 rankop2 rankop4 -to t5
+Join t1 t2 t3 t4 t5 -to <$SRCDIR>.l.nn
+remove t1
+remove t2
+remove t3
+remove t4
+remove t5
+| -- Joining l.nm and l.nn into l.mapproc
+dir <$SRCDIR>.l
+Join nm nn -to mapproc

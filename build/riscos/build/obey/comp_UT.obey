@@ -1,0 +1,33 @@
+| -- build.obey.comp_UT - Domesday86 Acorn Archimedes build
+| -- Compiling module UT - Utility functions
+cdir <$SRCDIR>.UT.c
+dir <$SRCDIR>.UT
+co utils1
+co utils2
+co utils3
+co utils4
+co calc32b
+co write
+co print
+co grid1
+co grid2
+co errtext
+co bookmark
+co helplnk
+co RCPlib
+co FPlib
+co Debug
+co download
+| -- UT - Assembling ARM code
+cdir <$SRCDIR>.UT.o
+as VFSlib
+as graflib
+| -- Copying BCPL libraries to headers.lib directory - xRCP, xFPlib and xDebug
+dir <$SRCDIR>.UT.c
+copy RCPlib  <$HEADERDIR>.lib.xRCP    ~C~VF
+copy FPlib   <$HEADERDIR>.lib.xFPlib  ~C~VF
+copy Debug   <$HEADERDIR>.lib.xDebug  ~C~VF
+| -- Copying assembly libraries to headers.lib directory - xVFSlib and xGraf
+dir <$SRCDIR>.UT.o
+copy VFSlib  <$HEADERDIR>.lib.xVFSlib ~C~VF
+copy graflib <$HEADERDIR>.lib.xGraf   ~C~VF

@@ -1,7 +1,0 @@
-spool <$LOGDIR>.compstt 
-| -- src.UTILS.compstt - Domesday86 Acorn Archimedes build
-| -- Builds module SI - State table initialisation
-dir <$SRCDIR>.SI
-c comp
-dir <$SRCDIR>.UTILS
-spool

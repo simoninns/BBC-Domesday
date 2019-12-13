@@ -1,4 +1,0 @@
-| -- src.NW.linc - Domesday86 Acorn Archimedes build
-| -- Linking module NW - National Walk
-dir <$SRCDIR>.NW.c
-Join walk1 walk2 -to <$SRCDIR>.l.walk

@@ -1,0 +1,10 @@
+| -- build.obey.comp_KE - Domesday86 Acorn Archimedes build
+| -- Compiling module KE - Kernel
+cdir <$SRCDIR>.KE.c
+dir <$SRCDIR>.KE
+co kernel1
+co kernel2
+co root
+co general
+co sram
+co init

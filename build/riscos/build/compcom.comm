@@ -1,0 +1,9 @@
+spool <$LOGDIR>.compcom
+| -- build.riscos.compcom - Domesday86 Acorn Archimedes build
+| -- Builds modules CO, CM, CP, CT and CF - Community disc
+c <$BUILDDIR>.obey.comp_CO
+c <$BUILDDIR>.obey.comp_CM
+c <$BUILDDIR>.obey.comp_CP
+c <$BUILDDIR>.obey.comp_CT
+c <$BUILDDIR>.obey.comp_CF
+spool    

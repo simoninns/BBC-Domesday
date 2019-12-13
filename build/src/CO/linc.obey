@@ -1,9 +1,0 @@
-| -- src.CO.linc - Domesday86 Acorn Archimedes build
-| -- Linking module CO - Community Map Options
-dir <$SRCDIR>.CO.c
-remove <$SRCDIR>.l.mapopt
-Join mapopt1 mapopt2 mapopt3 mapopt4 mapopt5 mapopt6 mapopt7 mapopt8 -to <$SRCDIR>.l.mapopt
-| -- Joining l.map (from CM module) with l.mapopt into l.mapoverlay
-| -- Note: On a first run this might fail as the l.map isn't linked yet (the CP script should take care of it)
-dir <$SRCDIR>.l
-Join mapopt map -to mapoverlay

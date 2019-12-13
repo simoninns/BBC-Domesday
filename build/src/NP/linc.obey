@@ -1,4 +1,0 @@
-| -- src.NP.linc - Domesday86 Acorn Archimedes build
-| -- Linking module NP - National Photo overlay
-dir <$SRCDIR>.NP.c
-Join natinit natpho1 natpho2 natpho3 -to <$SRCDIR>.l.photo

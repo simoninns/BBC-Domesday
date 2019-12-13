@@ -1,5 +1,0 @@
-| -- src.UTILS.buildsys - Domesday86 Acorn Archimedes build
-| -- Runs compsys and linksys to build and link complete system
-dir <$SRCDIR>.UTILS
-c compsys
-c linksys

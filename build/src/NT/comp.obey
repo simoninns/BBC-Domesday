@@ -1,7 +1,0 @@
-| -- src.NT.comp - Domesday86 Acorn Archimedes build
-| -- Compiling module NT - National Text overlay
-cdir <$SRCDIR>.NT.c
-co nt0
-co nt1
-co nt2
-co nt3

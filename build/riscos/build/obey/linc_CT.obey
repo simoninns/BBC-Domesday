@@ -1,0 +1,8 @@
+| -- build.obey.linc_CT - Domesday86 Acorn Archimedes build
+| -- Linking module CT - Community Map overlay
+dir <$SRCDIR>.CT.c
+Join gentext1 gentext2 ctext1 ctext2 ctext3 ctext4 -to <$SRCDIR>.l.sctext
+Join aatext1 aatext2 aatext3 aatext4 -to <$SRCDIR>.l.aatext
+| -- Joining l.cphoto, l.aatext and l.sctext into l.phtx
+dir <$SRCDIR>.l
+Join cphoto aatext sctext -to phtx
