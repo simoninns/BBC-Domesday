@@ -357,4 +357,4 @@ The help files (which must be linked before generating the kernel) are combined 
     * HE.c.htext7
 
 ## Words list
-There is a words.txt file located in the VIEW directory.  These words are present on the LaserDiscs but it is unclear where they are used in the BCPL code.
+There is a words.txt file located in the VIEW directory.  They are loaded into a vector called G.menuwords in the kernel; see file KE/root.b.
